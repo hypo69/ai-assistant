@@ -13,7 +13,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-12 00:20:00
+# Updated: 2026-11-19 23:16:30
 # =============================================================================
 
 from __future__ import annotations
@@ -158,3 +158,56 @@ async def test_david_moshe_audio_upload_copies_transcript(tmp_path: Path) -> Non
     assert "transcripts/02_transcript_david_moshe_shmulik_v3.md" in doc_ids
     assert "entities/זינה.md" in doc_ids
     assert "deals/עסקת רכישת זינה.md" in doc_ids
+
+
+def test_import_deal_package_paperless_first(tmp_path: Path) -> None:
+    """Проверяет Paperless-first импорт пакета сделки: OCR-текст и paperless_id фиксируются в MD и БД."""
+    from unittest.mock import MagicMock
+
+    wm = WorkspaceManager(
+        base_dir=tmp_path / "data_ai",
+        workspaces_dir=tmp_path / "workspaces",
+    )
+    ws_id = "דוד_משה"
+    wm.create_or_select_workspace(ws_id, name="דוד משה", language="he")
+    ws_path = wm.registry.workspace_path(ws_id)
+
+    pkg_dir = tmp_path / "deal_pkg"
+    sub = pkg_dir / "01_Legal_and_Purchase"
+    sub.mkdir(parents=True, exist_ok=True)
+    (sub / "02_handover_protocol_zina_v3.pdf").write_bytes(b"%PDF-1.4 hebrew mock")
+
+    fake_conn = MagicMock()
+    fake_conn.ping.return_value = True
+    fake_conn.ingest_file.return_value = {
+        "paperless_id": 42,
+        "content": "פרוטוקול מסירה ובדיקה בשטח — הפרה זינה",
+        "metadata": {"id": 42, "title": "02_handover_protocol_zina_v3"},
+    }
+    fake_conn.close.return_value = None
+
+    with patch("apps.ai_assistant.core.paperless_connector.PaperlessConnector.from_config", return_value=fake_conn):
+        res = wm.scenario_service.import_deal_package(
+            wm=wm,
+            workspace_id=ws_id,
+            ws_path=ws_path,
+            deal_dir="עסקת קניית פרה",
+            package_dir=pkg_dir,
+        )
+
+    assert res["paperless_ids"] == [42]
+    assert res["generated_mds"] == ["עסקת קניית פרה/01_Legal_and_Purchase/02_handover_protocol_zina_v3.md"]
+    fake_conn.ingest_file.assert_called_once()
+    fake_conn.close.assert_called_once()
+
+    md_path = ws_path / "עסקת קניית פרה" / "01_Legal_and_Purchase" / "02_handover_protocol_zina_v3.md"
+    assert md_path.exists()
+    md_text = md_path.read_text(encoding="utf-8")
+    assert "Paperless ID: `#42`" in md_text
+    assert "פרוטוקול מסירה ובדיקה בשטח" in md_text
+    assert "language: he" in md_text
+
+    docs = wm.store.list_documents(ws_id)
+    matched = [d for d in docs if d["document_id"] == "עסקת קניית פרה/01_Legal_and_Purchase/02_handover_protocol_zina_v3.md"]
+    assert len(matched) == 1
+    assert matched[0]["paperless_id"] == 42
