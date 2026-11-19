@@ -24,7 +24,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 23:42:30
+# Updated: 2026-11-19 22:45:00
 # =============================================================================
 
 from __future__ import annotations
@@ -480,6 +480,31 @@ class WatchdogPdfPipeline:
 
         return fallback
 
+    @staticmethod
+    def _preserve_source_pdf_link(ws_path: Path, target_rel_doc: str, md_content: str) -> str:
+        """Сохраняет ссылку на исходный PDF (`source_pdf` / `**מקור PDF:**`) из прежнего .md при обновлении."""
+        if "source_pdf:" in md_content or "**מקור PDF:**" in md_content or "[[assets/" in md_content:
+            return md_content
+
+        existing_path = Path(ws_path) / target_rel_doc
+        if not existing_path.exists() or not existing_path.is_file():
+            return md_content
+
+        try:
+            old_raw = existing_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return md_content
+
+        match = re.search(r'\[\[(assets/[^\]]+\.pdf)\]\]', old_raw, flags=re.IGNORECASE)
+        if not match:
+            return md_content
+
+        asset_link = match.group(1)
+        lines = md_content.splitlines()
+        if lines and lines[0].lstrip().startswith("# "):
+            return "\n".join([lines[0], "", f"**מקור PDF:** `[[{asset_link}]]`", *lines[1:]]).rstrip() + "\n"
+        return f"**מקור PDF:** `[[{asset_link}]]`\n\n{md_content}"
+
     async def process_pdf(
         self,
         ws_id: str,
@@ -490,6 +515,7 @@ class WatchdogPdfPipeline:
         """Выполняет полный цикл обработки добавленного PDF-файла и возвращает отчёт."""
         ws_info = self.wm.get_workspace(ws_id) or {"workspace_id": ws_id, "name": ws_id, "language": "ru"}
         ws_name = str(ws_info.get("name") or ws_id)
+        ws_lang = str(ws_info.get("language") or "ru").strip().lower()
 
         paperless_id, md_content, paperless_meta, ocr_source = await self._ingest_via_paperless(
             file_path=file_path,
@@ -514,6 +540,7 @@ class WatchdogPdfPipeline:
         target_dir = decision["target_dir"]
         commit_message = decision["commit_message"]
         target_rel_doc = f"{target_dir}/{file_path.stem}.md" if target_dir else f"{file_path.stem}.md"
+        md_content = self._preserve_source_pdf_link(ws_path, target_rel_doc, md_content)
 
         if self.suppress_callback:
             self.suppress_callback(ws_path, 6.0)
@@ -524,6 +551,7 @@ class WatchdogPdfPipeline:
             document_id=target_rel_doc,
             content=md_content,
             commit_message=commit_message if auto_git_commit else None,
+            language=ws_lang,
             paperless_id=paperless_id,
         )
 

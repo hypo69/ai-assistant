@@ -15,7 +15,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 23:44:30
+# Updated: 2026-11-19 22:45:30
 # =============================================================================
 
 from __future__ import annotations
@@ -270,3 +270,71 @@ def test_sanitization_and_gemini_candidate_resolution() -> None:
     formatted = format_paperless_markdown("doc.pdf", "Текст документа", paperless_id=7)
     assert formatted.startswith("# doc\n")
     assert "Paperless ID: `#7`" in formatted
+
+
+@pytest.mark.asyncio
+async def test_watchdog_ignores_assets_pdf_and_preserves_language_and_source_pdf(tmp_path: Path) -> None:
+    """Watchdog игнорирует PDF в assets/, а конвейер сохраняет язык рабочей области и ссылку source_pdf."""
+    wm = WorkspaceManager(
+        base_dir=tmp_path / "base_data",
+        workspaces_dir=tmp_path / "workspaces",
+    )
+    wm.create_or_select_workspace("he_ws", name="דוד משה", description="מסמכים", language="he")
+    cfg_path = tmp_path / "config.json"
+    save_watchdog_config({"enabled": True, "auto_git_commit": True, "debounce_seconds": 0.2}, cfg_path)
+
+    ws_path = Path(wm.registry.get_workspace("he_ws")["path"])
+    deal_dir = ws_path / "עסקת קניית פרה"
+    existing_dir = deal_dir / "01_Legal_and_Purchase"
+    existing_dir.mkdir(parents=True, exist_ok=True)
+    existing_md = existing_dir / "02_handover_protocol_zina_v3.md"
+    existing_md.write_text(
+        "# 02_handover_protocol_zina_v3\n\n"
+        "**מקור PDF:** `[[assets/01_Legal_and_Purchase/02_handover_protocol_zina_v3.pdf]]`\n\n"
+        "פרוטוקול מסירה ישן\n",
+        encoding="utf-8",
+    )
+
+    assets_pdf = deal_dir / "assets" / "01_Legal_and_Purchase" / "02_handover_protocol_zina_v3.pdf"
+    assets_pdf.parent.mkdir(parents=True, exist_ok=True)
+    assets_pdf.write_bytes(b"%PDF-1.4 hebrew")
+
+    fake_conn = _fake_paperless_connector(
+        paperless_id=301,
+        content="פרוטוקול מסירה ובדיקה בשטח - הפרה זינה",
+        title="02_handover_protocol_zina_v3",
+    )
+
+    def _chat_factory(system_instruction: str, provider: str, model: str):
+        mock_chat = MagicMock()
+
+        async def _ask(q: str, **kwargs):
+            return json.dumps({
+                "target_dir": "עסקת קניית פרה/01_Legal_and_Purchase",
+                "commit_message": "עדכון פרוטוקול מסירה",
+            }, ensure_ascii=False)
+
+        mock_chat.ask = _ask
+        return mock_chat
+
+    pipeline = WatchdogPdfPipeline(
+        workspace_manager=wm,
+        paperless_factory=lambda: fake_conn,
+        chat_model_factory=_chat_factory,
+    )
+    wd = WorkspaceWatchdogService(workspace_manager=wm, config_path=cfg_path, pdf_pipeline=pipeline)
+
+    # 1. PDF внутри assets/ рабочей области должен игнорироваться watchdog
+    ws_target = WatchTarget(kind="workspace", workspace_id="he_ws", root_path=ws_path)
+    assert wd._should_ignore_path(ws_target, assets_pdf) is True
+
+    # 2. Обновление PDF сохраняет язык 'he' и ссылку [[assets/...pdf]]
+    ext_pdf = tmp_path / "02_handover_protocol_zina_v3.pdf"
+    ext_pdf.write_bytes(b"%PDF-1.4 hebrew ext")
+    res = await pipeline.process_pdf(ws_id="he_ws", ws_path=ws_path, file_path=ext_pdf, auto_git_commit=True)
+
+    assert res["status"] == "ok"
+    updated_text = existing_md.read_text(encoding="utf-8")
+    assert "language: he" in updated_text
+    assert "[[assets/01_Legal_and_Purchase/02_handover_protocol_zina_v3.pdf]]" in updated_text
+    assert "פרוטוקול מסירה ובדיקה בשטח" in updated_text

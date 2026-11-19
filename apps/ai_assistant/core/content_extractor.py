@@ -21,7 +21,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 20:35:00
+# Updated: 2026-11-19 22:11:01
 # =============================================================================
 
 from __future__ import annotations
@@ -257,9 +257,10 @@ class ContentExtractor:
 
                     pdf_bytes = await asyncio.to_thread(file_path.read_bytes)
                     prompt = (
-                        "Преобразуй содержимое этого PDF-документа в аккуратный и структурированный Markdown на русском языке. "
-                        "Сохраняй структуру разделов, списки, формулы и таблицы. "
-                        "Выведи только распознанный Markdown-текст без вводных фраз."
+                        "Convert the contents of this PDF document into clean, structured Markdown. "
+                        "STRICTLY preserve the original language of the document (e.g., Hebrew, English, Russian, etc.) — DO NOT translate any text. "
+                        "Preserve section headings, lists, formulas, and tables. "
+                        "Output only the extracted Markdown text without any introductory or closing remarks."
                     )
                     part = types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")
                     for attempt in range(3):
@@ -303,9 +304,10 @@ class ContentExtractor:
                     img_bytes = await asyncio.to_thread(file_path.read_bytes)
                     mime = IMAGE_MIME_TYPES.get(file_path.suffix.lower(), "image/png")
                     prompt = (
-                        "Выполни оптическое распознавание текста (OCR) этого изображения. "
-                        "Извлеки весь видимый текст, таблицы, надписи и структурируй в аккуратном формате Markdown на русском языке. "
-                        "Выведи только распознанный текст без вступительных или служебных фраз."
+                        "Perform optical character recognition (OCR) on this image. "
+                        "Extract all visible text, tables, and labels into clean structured Markdown. "
+                        "STRICTLY preserve the original language of the text in the image — DO NOT translate any text. "
+                        "Output only the recognized Markdown text without any introductory or service remarks."
                     )
                     part = types.Part.from_bytes(data=img_bytes, mime_type=mime)
                     for attempt in range(3):

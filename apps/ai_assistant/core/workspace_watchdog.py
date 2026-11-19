@@ -24,7 +24,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 23:43:30
+# Updated: 2026-11-19 22:45:00
 # =============================================================================
 
 from __future__ import annotations
@@ -47,6 +47,7 @@ from watchdog.observers import Observer
 from header import __root__
 from logger import logger
 from apps.ai_assistant.core.content_extractor import ContentExtractor
+from apps.ai_assistant.core.git_i18n import get_git_commit_msg
 from apps.ai_assistant.core.obsidian_vault import strip_obsidian_enrichment
 from apps.ai_assistant.core.service_file_authenticator import ServiceFileAuthenticator
 from apps.ai_assistant.core.watchdog_pdf_pipeline import WatchdogPdfPipeline
@@ -274,6 +275,9 @@ class WorkspaceWatchdogService:
                 return True
 
         if target.kind == "workspace":
+            # Игнорируем PDF-оригиналы в каталогах assets/, чтобы исключить повторный перезапуск WatchdogPdfPipeline
+            if file_path.suffix.lower() == ".pdf" and any(part.lower() == "assets" for part in rel_parts[:-1]):
+                return True
             # Игнорируем автогенерированные служебные файлы Obsidian/системы и индексы, чтобы не зациклиться
             if ServiceFileAuthenticator.is_service_file(name, file_path=file_path if file_path.exists() else None):
                 return True
@@ -513,9 +517,12 @@ class WorkspaceWatchdogService:
                 ws_path = target.root_path
                 self.suppress_workspace(ws_path, seconds=3.0)
 
+                ws_lang = self.wm._get_ws_lang(ws_id) if hasattr(self.wm, "_get_ws_lang") else "ru"
+
                 if event_type == "deleted":
                     if auto_git_commit:
-                        await asyncio.to_thread(self._commit_workspace_changes, ws_path, f"Watchdog: удаление {file_path.name}")
+                        del_msg = get_git_commit_msg("watchdog_delete", lang=ws_lang, name=file_path.name)
+                        await asyncio.to_thread(self._commit_workspace_changes, ws_path, del_msg)
                     self._stats["events_processed"] += 1
                     self._record_event(target, file_path, event_type, "git_commit_delete")
                     return {"status": "ok", "action": "git_commit_delete"}
@@ -523,7 +530,8 @@ class WorkspaceWatchdogService:
                 if is_media:
                     if not auto_transcribe:
                         if auto_git_commit:
-                            await asyncio.to_thread(self._commit_workspace_changes, ws_path, f"Watchdog: изменения в {ws_id}")
+                            ch_msg = get_git_commit_msg("watchdog_ws_changes", lang=ws_lang, ws=ws_id)
+                            await asyncio.to_thread(self._commit_workspace_changes, ws_path, ch_msg)
                         self._stats["media_skipped_by_config"] += 1
                         self._stats["events_processed"] += 1
                         self._record_event(target, file_path, event_type, "media_skipped", "auto_transcribe_media=false")
@@ -564,8 +572,9 @@ class WorkspaceWatchdogService:
 
                 # Любой другой неотфильтрованный файл в рабочей области — коммитим изменения в Git
                 if auto_git_commit:
+                    change_msg = get_git_commit_msg("watchdog_change", lang=ws_lang, name=file_path.name)
                     committed = await asyncio.to_thread(
-                        self._commit_workspace_changes, ws_path, f"Watchdog: изменение {file_path.name}"
+                        self._commit_workspace_changes, ws_path, change_msg
                     )
                     self._stats["events_processed"] += 1
                     self._record_event(target, file_path, event_type, "git_commit" if committed else "no_git_diff")
@@ -696,13 +705,15 @@ class WorkspaceWatchdogService:
         self._stats["media_transcribed"] += 1
         logger.console(f"[WorkspaceWatchdog] Авто-транскрибация завершена: {file_path.name} ({len(transcript)} симв.)")
 
+        ws_lang = self.wm._get_ws_lang(ws_id) if hasattr(self.wm, "_get_ws_lang") else "ru"
+
         if is_workspace_internal:
             await asyncio.to_thread(
                 self.wm.import_document,
                 workspace_id=ws_id,
                 document_id=doc_id,
                 content=transcript,
-                commit_message=f"Watchdog: транскрибация медиа {doc_id}",
+                commit_message=get_git_commit_msg("watchdog_transcribe", lang=ws_lang, name=doc_id),
             )
         else:
             await asyncio.to_thread(
@@ -711,14 +722,14 @@ class WorkspaceWatchdogService:
                 document_id=doc_id,
                 content=transcript,
                 file_path=str(file_path),
-                commit_message=f"Watchdog: транскрибация внешнего медиа {doc_id}",
+                commit_message=get_git_commit_msg("watchdog_transcribe_external", lang=ws_lang, name=doc_id),
             )
 
         if auto_git_commit:
             await asyncio.to_thread(
                 self._commit_workspace_changes,
                 ws_path,
-                f"Watchdog: транскрибация и обновление {doc_id}",
+                get_git_commit_msg("watchdog_transcribe_update", lang=ws_lang, name=doc_id),
             )
         return {"status": "ok", "action": "media_transcribed", "document_id": doc_id, "detail": f"{len(transcript)} chars"}
 
