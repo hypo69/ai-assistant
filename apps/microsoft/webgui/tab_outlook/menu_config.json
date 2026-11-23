@@ -1,0 +1,34 @@
+{
+  "$schema": "webgui-menu-v1",
+  "tab_id": "tab-outlook",
+  "draggable": true,
+  "subtabs": {
+    "nav_id": "outlook-subtabs-nav",
+    "storage_key": "tab-outlook_subtabs_order",
+    "items": [
+      {
+        "id": "inbox",
+        "button_id": "nav-outlook-inbox-tab",
+        "pane_id": "tab-pane-outlook-inbox",
+        "panel_id": "panel-outlook-inbox",
+        "icon": "bi bi-inbox text-primary",
+        "label_i18n": "ui.outlook.txt_inbox",
+        "title_i18n": "outlook.subtabs.inboxTitle",
+        "default_title": "{{outlook.subtabs.inboxTitle}}",
+        "order": 0
+      },
+      {
+        "id": "compose",
+        "button_id": "nav-outlook-compose-tab",
+        "pane_id": "tab-pane-outlook-compose",
+        "panel_id": "panel-outlook-compose",
+        "icon": "bi bi-pencil-square text-success",
+        "label_i18n": "ui.outlook.txt_compose",
+        "title_i18n": "outlook.subtabs.composeTitle",
+        "default_title": "{{outlook.subtabs.composeTitle}}",
+        "order": 1
+      }
+    ]
+  },
+  "blocks": {}
+}

@@ -12,7 +12,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-26 01:00:00
+# Updated: 2026-11-16 02:15:00
 # =============================================================================
 
 from __future__ import annotations
@@ -72,18 +72,18 @@ async def test_index_html_contains_system_tour_integration() -> None:
         html = res.text
         assert "system_tour.css" in html, "system_tour.css не подключен в index.html"
         assert "system_tour.js" in html, "system_tour.js не подключен в index.html"
-        assert 'id="btn-start-system-tour"' in html, "Кнопка тура в навигационной панели отсутствует"
-        assert 'id="ide-nav-tour-btn"' in html, "Кнопка тура в боковом меню IDE отсутствует"
+        assert 'id="modal-btn-start-system-tour"' in html, "Кнопка тура в модальном окне настроек отсутствует"
+        assert 'id="ide-nav-tour-btn"' not in html, "Кнопка тура не должна находиться в боковой панели Activity Bar"
         assert 'id="help-btn-start-tour"' in html, "Кнопка тура в модальном окне справки отсутствует"
 
 
 @pytest.mark.asyncio
-async def test_workspace_tab_contains_system_tour_button() -> None:
-    """Проверяет наличие кнопки гид-тура в основной вкладке tab_workspace."""
+async def test_modal_settings_contains_system_tour_button() -> None:
+    """Проверяет наличие кнопки гид-тура с подсказкой system_tour в index.html."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.get("/html/tab_workspace/index.html")
-        assert res.status_code == 200, "Файл tab_workspace/index.html недоступен"
+        res = await client.get("/")
+        assert res.status_code == 200, "Главная страница index.html недоступна"
         html = res.text
         assert 'data-term="system_tour"' in html, "Атрибут подсказки system_tour отсутствует на кнопке"
 

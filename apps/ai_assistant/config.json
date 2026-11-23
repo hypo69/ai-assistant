@@ -7,8 +7,8 @@
     "gc_interval_hours": 48,
     "aggressive": false,
     "auto_prune": true,
-    "last_gc_run": "2026-11-10T18:03:26.420364+00:00",
-    "last_gc_status": "Успешно завершено за 0.0 сек (2026-11-10T18:03:26.420364+00:00)"
+    "last_gc_run": "2026-11-23T14:10:26.350405+00:00",
+    "last_gc_status": "Диагностика: Наблюдение. Повторить измерение (2026-11-23T14:10:26.350405+00:00)"
   },
   "watchdog": {
     "enabled": true,
@@ -16,34 +16,27 @@
     "auto_git_commit": true,
     "debounce_seconds": 2
   },
-  "active_workspace": "דוד_משה",
-  "last_active_workspace": "דוד_משה",
+  "active_workspace": "mcp_ws",
+  "last_active_workspace": "mcp_ws",
+  "last_active_tab": "tab-create-workspace",
+  "last_active_url": "#tab-create-workspace",
   "llm": {
-    "default_model": "agy-gemini-3.1-flash-lite",
-    "default_provider": "agy"
+    "default_model": "gemini-3.1-flash-lite",
+    "default_provider": "gemini"
   },
   "scenarios": {
     "david_moshe_telegram": {
       "enabled": true,
       "workspace_id": "דוד_משה",
       "workspace_name": "דוד משה",
-      "workspace_aliases": [
-        "דוד משה",
-        "דוד_משה",
-        "דוד מושה",
-        "דוד_מושה"
-      ],
-      "trigger_file_names": [
-        "דוד משה - שמוליк שיחת טלפון.mp3",
-        "דוד משה - שמוליк שיחת טלפון",
-        "דוד משה שמוליק שיחת טלפון",
-        "דוד_משה_-_שמוליק_שיחת_טלפון.mp3",
-        "02_transcript_david_moshe_shmulik_v3.md",
-        "שיחה בין דוד משה לשמוליק",
-        "שיחה_בין_דוד_משה_לשמוליק"
-      ],
-      "target_file_path": "C:\\Users\\onela\\Desktop\\דוד מושה — רשימת מסמכים\\02_transcript_david_moshe_shmulik_v3.md",
-      "delay_seconds": 10
+      "deal_dir": "עסקת קניית פרה",
+      "open_chat_on_complete": true
     }
+  },
+  "active_tab": "tab-create-workspace",
+  "active_url": "#tab-create-workspace",
+  "workspace": {
+    "default_language": "en",
+    "config_file": "core/workspace_config.json"
   }
 }

@@ -17,7 +17,7 @@
 # Package: scripts.cli.commands
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-17 00:57:00
+# Updated: 2026-11-16 04:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -32,8 +32,13 @@ import sys
 from typing import Any, Dict, List, Optional
 
 from logger import logger
-from apps.windows.sdk.core.universal_langchain_agent import UniversalLangChainAgent
-from apps.windows.sdk.modules.process_manager.router import investigate_powershell
+
+try:
+    from apps.windows.sdk.core.universal_langchain_agent import UniversalLangChainAgent
+    from apps.windows.sdk.modules.process_manager.router import investigate_powershell
+except ImportError:
+    UniversalLangChainAgent = None  # type: ignore
+    investigate_powershell = None  # type: ignore
 
 
 def register_investigate_parser(subparsers: argparse._SubParsersAction) -> None:

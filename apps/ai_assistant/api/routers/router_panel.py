@@ -5,25 +5,25 @@
 # Description:
 #   Слой API: Универсальный REST API роутер для панелей интерфейса (Panel API)
 #   модуля умного версионирования и верификации (Smart Version History).
-#   Обеспечивает обработку запросов GET /v1/panel/{panel_id} и GET /api/v1/panel/{panel_id},
+#   Обеспечивает обработку запросов GET /api/v1/panel/{panel_id},
 #   возвращая структурированные данные панелей и метаданные SQL-запросов.
 #
 # Usage Examples:
-#   GET /v1/panel/panel-timeline
-#   GET /v1/panel/panel-commits
-#   GET /v1/panel/panel-wikillm-entities
-#   GET /v1/panel/panel-knowledge-links
-#   GET /v1/panel/panel-rag-chunks
-#   GET /v1/panel/panel-verification-pipeline
-#   GET /v1/panel/panel-system-status
-#   GET /v1/panel/panel-timeline/sql
+#   GET /api/v1/panel/panel-timeline
+#   GET /api/v1/panel/panel-commits
+#   GET /api/v1/panel/panel-wikillm-entities
+#   GET /api/v1/panel/panel-knowledge-links
+#   GET /api/v1/panel/panel-rag-chunks
+#   GET /api/v1/panel/panel-verification-pipeline
+#   GET /api/v1/panel/panel-system-status
+#   GET /api/v1/panel/panel-timeline/sql
 #
 # File: router_panel.py
 # Project: ai-windows-admin
 # Package: apps.ai_assistant.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-19 18:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -161,7 +161,7 @@ def _fetch_panel_data(
     table_name = meta.get("table", panel_key)
 
     target_repo = resolve_repo_path(workspace_id=workspace_id, repo_path=repo_path)
-    git_adapter = GitAdapter(repo_path=target_repo) if (workspace_id or repo_path) else _git_adapter
+    git_adapter = GitAdapter(repo_path=target_repo)
     resolved_repo_str = str(target_repo)
 
     data: List[Dict[str, Any]] = []
@@ -187,6 +187,8 @@ def _fetch_panel_data(
                     {
                         "commit_hash": c.commit_hash,
                         "short_hash": c.commit_hash[:8],
+                        "timestamp": c.timestamp,
+                        "message": c.message,
                         "file_path": ch.file_path,
                         "change_type": ch.change_type,
                         "insertions": getattr(ch, "insertions", 1),
@@ -361,11 +363,10 @@ def _fetch_panel_data(
     return table_name, sql_template.replace(":limit", str(limit)), data, resolved_repo_str
 
 
-router = APIRouter(tags=["AI Assistant Universal Panel API"])
+router = APIRouter(prefix="/api/v1/panel", tags=["AI Assistant Universal Panel API"])
 
 
-@router.get("/v1/panel/{panel_id:path}/sql", response_model=PanelSqlMetaResponse)
-@router.get("/api/v1/panel/{panel_id:path}/sql", response_model=PanelSqlMetaResponse, include_in_schema=False)
+@router.get("/{panel_id:path}/sql", response_model=PanelSqlMetaResponse)
 async def get_panel_sql(panel_id: str) -> PanelSqlMetaResponse:
     """Возвращает скомпилированный SQL-шаблон для указанной панели."""
     key = _resolve_panel_key(panel_id)
@@ -377,8 +378,7 @@ async def get_panel_sql(panel_id: str) -> PanelSqlMetaResponse:
     )
 
 
-@router.get("/v1/panel/{panel_id:path}", response_model=PanelDataResponse)
-@router.get("/api/v1/panel/{panel_id:path}", response_model=PanelDataResponse, include_in_schema=False)
+@router.get("/{panel_id:path}", response_model=PanelDataResponse)
 async def get_panel_data(
     panel_id: str,
     limit: int = Query(default=60, ge=1, le=5000, description="Максимальное количество возвращаемых строк"),

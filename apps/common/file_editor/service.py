@@ -17,7 +17,7 @@
 # Package: apps.common.file_editor
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 20:20:00
+# Updated: 2026-11-19 20:15:30
 # =============================================================================
 
 from __future__ import annotations
@@ -179,9 +179,11 @@ class FileEditorService:
 
         content_text: Optional[str] = None
         lines_count = 0
+        direction = "ltr"
         if not is_binary:
             content_text = raw_bytes.decode("utf-8", errors="replace")
             lines_count = max(1, len(content_text.splitlines()))
+            direction = SupportedFileCatalog.detect_text_direction(content_text, clean_rel)
 
         # Передаём Base64-представление для бинарных файлов, картинок, PDF и режима Hex-редактора
         slice_bytes = raw_bytes[:max_hex_preview_bytes]
@@ -197,6 +199,7 @@ class FileEditorService:
             "line_ending": line_ending,
             "encoding": "utf-8",
             "lines_count": lines_count,
+            "direction": direction,
             "fnv1a_hash": fnv1a_hex,
             "descriptor": descriptor.model_dump(),
             "content": content_text,

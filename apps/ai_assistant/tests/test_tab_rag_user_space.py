@@ -13,7 +13,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-23 19:25:00
+# Updated: 2026-11-16 04:33:00
 # =============================================================================
 
 from __future__ import annotations
@@ -76,11 +76,11 @@ async def test_knowledge_store_document_chunks_retrieval(tmp_path) -> None:
 
 @pytest.mark.asyncio
 async def test_panel_rag_chunks_api_with_workspace() -> None:
-    """Проверяет эндпоинт /v1/panel/panel-rag-chunks для рабочей области."""
+    """Проверяет эндпоинт /api/v1/panel/panel-rag-chunks для рабочей области."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Проверяем получение чанков для активной или default области
-        res = await client.get("/v1/panel/panel-rag-chunks?limit=10")
+        res = await client.get("/api/v1/panel/panel-rag-chunks?limit=10")
         assert res.status_code == 200
         data = res.json()
         assert data["status"] == "ok"
@@ -88,7 +88,7 @@ async def test_panel_rag_chunks_api_with_workspace() -> None:
         assert isinstance(data["data"], list)
 
         # Проверяем метаданные SQL
-        res_sql = await client.get("/v1/panel/panel-rag-chunks/sql")
+        res_sql = await client.get("/api/v1/panel/panel-rag-chunks/sql")
         assert res_sql.status_code == 200
         sql_data = res_sql.json()
         assert "document_chunks" in sql_data["sql"] or "rag_chunks" in sql_data["sql"]
@@ -139,6 +139,9 @@ async def test_tab_rag_static_assets_serving() -> None:
         assert res_html.status_code == 200
         assert "rag-workspace-select" in res_html.text
         assert "panel-rag-chunks" in res_html.text
+        assert "rag-build-btn" in res_html.text
+        assert "rag-build-all-btn" in res_html.text
+        assert "rag-workspace-status-badge" in res_html.text
 
         # main.js
         res_main = await client.get("/html/tab_rag/main.js")
@@ -150,3 +153,36 @@ async def test_tab_rag_static_assets_serving() -> None:
         assert res_panel.status_code == 200
         assert "renderRagChunksPanel" in res_panel.text
         assert "executeHybridSearch" in res_panel.text
+        assert "updateWorkspaceRagStatus" in res_panel.text
+        assert "buildCurrentWorkspaceRag" in res_panel.text
+        assert "buildAllWorkspacesRag" in res_panel.text
+
+
+@pytest.mark.asyncio
+async def test_workspace_rag_status_and_build_endpoints() -> None:
+    """Проверяет эндпоинты получения статуса и перестроения RAG рабочей области."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Проверяем статус RAG для default
+        res_status = await client.get("/api/v1/workspaces/default/rag/status")
+        assert res_status.status_code == 200
+        data_status = res_status.json()
+        assert data_status["workspace_id"] == "default"
+        assert "status" in data_status
+        assert "vectors_count" in data_status
+        assert "chunks_count" in data_status
+
+        # 2. Проверяем сборку RAG для конкретной рабочей области
+        res_build = await client.post("/api/v1/workspaces/default/rag/build?scan_files=false")
+        assert res_build.status_code == 200
+        data_build = res_build.json()
+        assert data_build["workspace_id"] == "default"
+        assert data_build["status"] in ("rebuilt", "ready")
+
+        # 3. Проверяем сборку RAG для всех РО
+        res_all = await client.post("/api/v1/workspaces/rag/build-all?scan_files=false")
+        assert res_all.status_code == 200
+        data_all = res_all.json()
+        assert data_all["status"] == "ok"
+        assert data_all["total_workspaces"] > 0
+        assert isinstance(data_all["results"], list)

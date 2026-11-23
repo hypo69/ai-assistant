@@ -12,7 +12,7 @@
 # Package: apps/ai_assistant/tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 16:12:00
+# Updated: 2026-11-19 17:05:00
 # =============================================================================
 
 from __future__ import annotations
@@ -124,13 +124,13 @@ def test_faiss_index_stored_inside_workspace(tmp_path: Path) -> None:
     expected_faiss_dir = tmp_path / "workspaces" / ws_id / ".workspace" / "faiss_indices"
     assert expected_faiss_dir.is_dir()
 
-    # Проверяем, что файлы индекса лежат именно внутри рабочего пространства
-    assert rag.index_file == expected_faiss_dir / f"ws_{ws_id}.faiss"
-    assert rag.meta_file == expected_faiss_dir / f"ws_{ws_id}.json"
-    assert (expected_faiss_dir / f"ws_{ws_id}.json").exists()
+    # Проверяем, что SQLite-файл индекса лежит именно внутри рабочего пространства
+    assert rag.index_file == expected_faiss_dir / f"ws_{ws_id}.sqlite"
+    assert rag.meta_file == expected_faiss_dir / f"ws_{ws_id}.sqlite"
+    assert (expected_faiss_dir / f"ws_{ws_id}.sqlite").exists()
 
     # Проверяем, что в старой центральной папке индекс не создавался
-    assert not (tmp_path / "base" / "faiss_indices" / f"ws_{ws_id}.json").exists()
+    assert not (tmp_path / "base" / "faiss_indices" / f"ws_{ws_id}.sqlite").exists()
 
     # 2. Проверка автоматической миграции устаревшего индекса
     legacy_ws = "legacy_ws"
@@ -330,3 +330,41 @@ def test_workspace_manager_with_slash_path_lists_workspaces(tmp_path: Path) -> N
     wm = WorkspaceManager(workspaces_dir=ws_custom)
     items = wm.list_workspaces()
     assert any(w["workspace_id"] == "ws_1" for w in items)
+
+
+def test_hebrew_workspace_without_explicit_language_has_no_cyrillic(tmp_path: Path) -> None:
+    """Проверяет, что создание ивритского рабочего пространства без явного language не подмешивает кириллицу."""
+    import re
+
+    wm = WorkspaceManager(base_dir=tmp_path / "base", workspaces_dir=tmp_path / "workspaces")
+    ws = wm.create_or_select_workspace(workspace_id="דוד_משה", name="דוד משה")
+
+    assert ws["language"] == "he"
+    ws_path = Path(ws["path"])
+
+    # Проверяем .workspace/config.json
+    cfg = json.loads((ws_path / ".workspace" / "config.json").read_text(encoding="utf-8"))
+    assert cfg["language"] == "he"
+
+    # Проверяем README.md — только иврит, без кириллицы
+    readme_text = (ws_path / "README.md").read_text(encoding="utf-8")
+    assert readme_text.startswith("lang=he")
+    assert not re.search(r"[а-яА-ЯёЁ]", readme_text), f"Найдена кириллица в README.md: {readme_text}"
+
+    # Проверяем .gitignore — без кириллицы
+    gitignore_text = (ws_path / ".gitignore").read_text(encoding="utf-8")
+    assert not re.search(r"[а-яА-ЯёЁ]", gitignore_text), f"Найдена кириллица в .gitignore: {gitignore_text}"
+
+    # Проверяем _Knowledge_Base.md — только иврит, без кириллицы
+    kb_path = wm.obsidian.rebuild_knowledge_base_index(ws["workspace_id"])
+    kb_text = kb_path.read_text(encoding="utf-8")
+    assert "language: he" in kb_text
+    assert "מאגר הידע המרכזי" in kb_text
+    assert not re.search(r"[а-яА-ЯёЁ]", kb_text), f"Найдена кириллица в _Knowledge_Base.md: {kb_text}"
+
+    # Проверяем, что Pydantic-схема WorkspaceCreateRequest не хардкодит 'ru' по умолчанию
+    from apps.ai_assistant.api.routers.router_knowledge import WorkspaceCreateRequest
+    req = WorkspaceCreateRequest(workspace_id="דוד_משה", name="דוד משה")
+    assert req.language is None
+
+

@@ -10,7 +10,7 @@ File: index.html
 Package: apps/ai_assistant/api/webgui/tab_contacts
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-28 19:00:00
+Updated: 2026-11-15 20:23:00
 =============================================================================
 -->
 <div class="container-fluid p-3" id="tab-contacts-container">
@@ -19,24 +19,34 @@ Updated: 2026-10-28 19:00:00
     <div>
       <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
         <span class="fs-4">👥</span>
-        <span data-i18n="ui.contacts.title" id="contacts-span-title">Телефонная книга (Контакты)</span>
+        <span data-i18n="ui.contacts.title" id="contacts-span-title">{{ui.contacts.title}}</span>
       </h4>
-      <div class="small text-muted" data-i18n="ui.contacts.subtitle" id="contacts-div-subtitle">
-        Управление адресной книгой, номерами телефонов и адресами через Google People API
-      </div>
+      <div class="small text-muted" data-i18n="ui.contacts.subtitle" id="contacts-div-subtitle">{{ui.contacts.subtitle}}</div>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
       <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 shadow-sm d-flex align-items-center gap-1.5" id="contacts-account-badge">
         <i class="bi bi-google"></i>
-        <span data-i18n="ui.contacts.connected" id="contacts-account-email">Google Contacts</span>
+        <span data-i18n="ui.contacts.connected" id="contacts-account-email">{{ui.contacts.connected}}</span>
       </span>
       <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 shadow-sm fw-semibold" id="btn-contacts-create" type="button">
         <i class="bi bi-person-plus"></i>
-        <span data-i18n="ui.contacts.btn_create" id="contacts-span-create">Добавить контакт</span>
+        <span data-i18n="ui.contacts.btn_create" id="contacts-span-create">{{ui.contacts.btn_create}}</span>
       </button>
-      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 shadow-sm" id="btn-contacts-refresh" title="Обновить список контактов" data-i18n-title="contacts.refreshTitle" type="button">
+      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="contacts.btn_import_fakes_title" id="btn-contacts-import-fakes" title="{{contacts.btn_import_fakes_title}}" type="button">
+        <i class="bi bi-person-lines-fill"></i>
+        <span data-i18n="contacts.btn_import_fakes" id="contacts-span-import-fakes">{{contacts.btn_import_fakes}}</span>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="contacts.btn_export_title" id="btn-contacts-export" title="{{contacts.btn_export_title}}" type="button">
+        <i class="bi bi-download"></i>
+        <span class="d-none d-sm-inline" data-i18n="contacts.btn_export" id="contacts-span-export">{{contacts.btn_export}}</span>
+      </button>
+      <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="contacts.btn_clear_all_title" id="btn-contacts-clear-all" title="{{contacts.btn_clear_all_title}}" type="button">
+        <i class="bi bi-trash3"></i>
+        <span class="d-none d-sm-inline" data-i18n="contacts.btn_clear_all" id="contacts-span-clear-all">{{contacts.btn_clear_all}}</span>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="contacts.refreshTitle" id="btn-contacts-refresh" title="{{contacts.refreshTitle}}" type="button">
         <i class="bi bi-arrow-clockwise"></i>
-        <span class="d-none d-sm-inline" data-i18n="ui.contacts.btn_refresh" id="contacts-span-refresh">Обновить</span>
+        <span class="d-none d-sm-inline" data-i18n="ui.contacts.btn_refresh" id="contacts-span-refresh">{{ui.contacts.btn_refresh}}</span>
       </button>
     </div>
   </div>
@@ -50,14 +60,14 @@ Updated: 2026-10-28 19:00:00
             <span class="input-group-text bg-body-tertiary border-end-0">
               <i class="bi bi-search text-muted"></i>
             </span>
-            <input class="form-control border-start-0" id="contacts-search-input" placeholder="Поиск по имени, номеру телефона или email..." type="text"/>
-            <button class="btn btn-outline-secondary" id="btn-contacts-search-clear" title="Сбросить" data-i18n-title="contacts.clearSearchTitle" type="button">
+            <input class="form-control border-start-0" data-i18n-placeholder="placeholders.contacts.txt_44de5fd4" id="contacts-search-input" placeholder="{{placeholders.contacts.txt_44de5fd4}}" type="text"/>
+            <button class="btn btn-outline-secondary" data-i18n-title="contacts.clearSearchTitle" id="btn-contacts-search-clear" title="{{contacts.clearSearchTitle}}" type="button">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
         </div>
         <div class="col-12 col-md-6 col-lg-7 text-md-end">
-          <span class="small text-muted" id="contacts-counter">Всего контактов: 0</span>
+          <span class="small text-muted" data-i18n="ui.contacts.txt_0f70b917" id="contacts-counter">{{ui.contacts.txt_0f70b917}}</span>
         </div>
       </div>
     </div>
@@ -67,72 +77,133 @@ Updated: 2026-10-28 19:00:00
   <div id="contacts-cards-container">
     <div class="d-flex justify-content-center py-5" id="contacts-loading-spinner">
       <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Загрузка...</span>
+        <span class="visually-hidden" data-i18n="common.loading" id="cnt-span-loading">{{common.loading}}</span>
       </div>
     </div>
     <div class="row g-3" id="contacts-cards-list"></div>
     <div class="text-center py-5 d-none" id="contacts-empty-state">
       <i class="bi bi-person-x fs-1 text-muted d-block mb-2"></i>
-      <h6 class="text-muted" data-i18n="ui.contacts.no_contacts" id="cnt-h6-no-contacts">Контакты не найдены</h6>
-      <p class="small text-muted mb-0" data-i18n="ui.contacts.create_hint" id="cnt-p-create-hint">Используйте кнопку «Добавить контакт», чтобы сохранить новый номер.</p>
+      <h6 class="text-muted" data-i18n="ui.contacts.no_contacts" id="cnt-h6-no-contacts">{{ui.contacts.no_contacts}}</h6>
+      <p class="small text-muted mb-0" data-i18n="ui.contacts.create_hint" id="cnt-p-create-hint">{{ui.contacts.create_hint}}</p>
     </div>
   </div>
 </div>
 
 <!-- Модальное окно добавления контакта -->
-<div class="modal fade" id="modal-contacts-create" tabindex="-1" aria-hidden="true">
+<div aria-hidden="true" class="modal fade" id="modal-contacts-create" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
       <div class="modal-header border-bottom">
         <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
           <i class="bi bi-person-plus text-primary"></i>
-          <span data-i18n="ui.contacts.modal_create_title" id="cnt-span-modal-create-title">Новый контакт</span>
+          <span data-i18n="ui.contacts.modal_create_title" id="cnt-span-modal-create-title">{{ui.contacts.modal_create_title}}</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
       </div>
       <div class="modal-body">
         <form id="form-contacts-create">
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_given_name" id="cnt-label-given-name">Имя *</label>
-              <input type="text" class="form-control form-control-sm" id="cnt-create-given-name" required placeholder="Иван">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_given_name" id="cnt-label-given-name">{{ui.contacts.label_given_name}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_acd41b5f" id="cnt-create-given-name" placeholder="{{placeholders.contacts.txt_acd41b5f}}" required="" type="text"/>
             </div>
             <div class="col-6">
-              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_family_name" id="cnt-label-family-name">Фамилия</label>
-              <input type="text" class="form-control form-control-sm" id="cnt-create-family-name" placeholder="Иванов">
-            </div>
-          </div>
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_phone" id="cnt-label-phone">Номер телефона</label>
-              <input type="tel" class="form-control form-control-sm" id="cnt-create-phone" placeholder="+7 (999) 000-00-00">
-            </div>
-            <div class="col-6">
-              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_email" id="cnt-label-email">Email адрес</label>
-              <input type="email" class="form-control form-control-sm" id="cnt-create-email" placeholder="ivan@example.com">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_family_name" id="cnt-label-family-name">{{ui.contacts.label_family_name}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_cd1a2693" id="cnt-create-family-name" placeholder="{{placeholders.contacts.txt_cd1a2693}}" type="text"/>
             </div>
           </div>
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_org" id="cnt-label-org">Компания</label>
-              <input type="text" class="form-control form-control-sm" id="cnt-create-org" placeholder="Компания / Проект">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_phone" id="cnt-label-phone">{{ui.contacts.label_phone}}</label>
+              <input class="form-control form-control-sm" id="cnt-create-phone" placeholder="+7 (999) 000-00-00" type="tel"/>
             </div>
             <div class="col-6">
-              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_title" id="cnt-label-title">Должность</label>
-              <input type="text" class="form-control form-control-sm" id="cnt-create-title" placeholder="Инженер">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_email" id="cnt-label-email">{{ui.contacts.label_email}}</label>
+              <input class="form-control form-control-sm" id="cnt-create-email" placeholder="ivan@example.com" type="email"/>
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_org" id="cnt-label-org">{{ui.contacts.label_org}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_5316e54c" id="cnt-create-org" placeholder="{{placeholders.contacts.txt_5316e54c}}" type="text"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_title" id="cnt-label-title">{{ui.contacts.label_title}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_e6d7dd4d" id="cnt-create-title" placeholder="{{placeholders.contacts.txt_e6d7dd4d}}" type="text"/>
             </div>
           </div>
           <div class="mb-2">
-            <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_notes" id="cnt-label-notes">Заметки</label>
-            <textarea class="form-control form-control-sm" id="cnt-create-notes" rows="2" placeholder="Дополнительная информация..."></textarea>
+            <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_notes" id="cnt-label-notes">{{ui.contacts.label_notes}}</label>
+            <textarea class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_565a58ba" id="cnt-create-notes" placeholder="{{placeholders.contacts.txt_565a58ba}}" rows="2"></textarea>
           </div>
           <div class="alert alert-danger d-none py-1 small mb-0 mt-2" id="contacts-create-error"></div>
         </form>
       </div>
       <div class="modal-footer border-top">
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" data-i18n="ui.contacts.btn_cancel" id="cnt-btn-modal-cancel">Отмена</button>
-        <button type="button" class="btn btn-sm btn-primary" id="btn-contacts-save">
-          <i class="bi bi-check-lg me-1"></i> <span data-i18n="ui.contacts.btn_save" id="cnt-span-btn-save">Сохранить</span>
+        <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" data-i18n="ui.contacts.btn_cancel" id="cnt-btn-modal-cancel" type="button">{{ui.contacts.btn_cancel}}</button>
+        <button class="btn btn-sm btn-primary" id="btn-contacts-save" type="button">
+          <i class="bi bi-check-lg me-1"></i> <span data-i18n="ui.contacts.btn_save" id="cnt-span-btn-save">{{ui.contacts.btn_save}}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно редактирования контакта -->
+<div aria-hidden="true" class="modal fade" id="modal-contacts-edit" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+          <i class="bi bi-pencil-square text-primary"></i>
+          <span data-i18n="contacts.modal_edit_title" id="cnt-span-modal-edit-title">{{contacts.modal_edit_title}}</span>
+        </h5>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-contacts-edit">
+          <input type="hidden" id="cnt-edit-resource-name"/>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_given_name" id="cnt-edit-label-given-name">{{ui.contacts.label_given_name}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_acd41b5f" id="cnt-edit-given-name" placeholder="{{placeholders.contacts.txt_acd41b5f}}" required="" type="text"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_family_name" id="cnt-edit-label-family-name">{{ui.contacts.label_family_name}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_cd1a2693" id="cnt-edit-family-name" placeholder="{{placeholders.contacts.txt_cd1a2693}}" type="text"/>
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_phone" id="cnt-edit-label-phone">{{ui.contacts.label_phone}}</label>
+              <input class="form-control form-control-sm" id="cnt-edit-phone" placeholder="+7 (999) 000-00-00" type="tel"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_email" id="cnt-edit-label-email">{{ui.contacts.label_email}}</label>
+              <input class="form-control form-control-sm" id="cnt-edit-email" placeholder="ivan@example.com" type="email"/>
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_org" id="cnt-edit-label-org">{{ui.contacts.label_org}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_5316e54c" id="cnt-edit-org" placeholder="{{placeholders.contacts.txt_5316e54c}}" type="text"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_title" id="cnt-edit-label-title">{{ui.contacts.label_title}}</label>
+              <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_e6d7dd4d" id="cnt-edit-title" placeholder="{{placeholders.contacts.txt_e6d7dd4d}}" type="text"/>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold" data-i18n="ui.contacts.label_notes" id="cnt-edit-label-notes">{{ui.contacts.label_notes}}</label>
+            <textarea class="form-control form-control-sm" data-i18n-placeholder="placeholders.contacts.txt_565a58ba" id="cnt-edit-notes" placeholder="{{placeholders.contacts.txt_565a58ba}}" rows="2"></textarea>
+          </div>
+          <div class="alert alert-danger d-none py-1 small mb-0 mt-2" id="contacts-edit-error"></div>
+        </form>
+      </div>
+      <div class="modal-footer border-top">
+        <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" data-i18n="ui.contacts.btn_cancel" id="cnt-edit-btn-modal-cancel" type="button">{{ui.contacts.btn_cancel}}</button>
+        <button class="btn btn-sm btn-primary" id="btn-contacts-edit-save" type="button">
+          <i class="bi bi-check-lg me-1"></i> <span data-i18n="contacts.btn_save_changes" id="cnt-span-btn-edit-save">{{contacts.btn_save_changes}}</span>
         </button>
       </div>
     </div>

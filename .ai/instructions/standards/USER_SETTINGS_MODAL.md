@@ -13,7 +13,7 @@ File: USER_SETTINGS_MODAL.md
 Package: .ai/instructions/standards
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-03 15:00:00
+Updated: 2026-11-12 02:32:00
 =============================================================================
 -->
 
@@ -69,7 +69,15 @@ Updated: 2026-11-03 15:00:00
 - **☀️ Светлые темы**: `light`, `nightview` (Тёплая бумага), `nightview-70` (Тёплая бумага 70%), `brick`, `theme-light-enterprise`
 
 ### 2.5 Языковая локализация (i18n)
-Поддерживаются 4 локали: `ru-RU`, `en-US`, `he-IL` (RTL), `uk-UA`. При переключении через селектор `#modal-lang-selector` обновляется атрибут `<html lang="..." dir="...">` и пересчитываются ключи через `i18next`.
+Поддерживаются 4 локали: `ru-RU`, `en-US`, `he-IL` (RTL), `uk-UA`. При переключении через селектор `#modal-lang-selector` обновляется атрибут `<html lang="..." dir="...">` и пересчитываются ключи через `global-i18n.js`.
+
+### 2.6 Строгий стандарт шаблонизации i18n
+В соответствии с WEBGUI.md § 4, в разметке модального окна (`user_settings_modal.html`):
+- Категорически запрещен любой хардкод текста на естественном языке в значениях по умолчанию.
+- Все текстовые узлы оформляются строго как `<span id="..." data-i18n="userSettings.key">{{userSettings.key}}</span>`.
+- Все подсказки и плейсхолдеры: `data-i18n-title="key"` с `title="{{key}}"` и `data-i18n-placeholder="key"` с `placeholder="{{key}}"`.
+- Каждый элемент с `data-i18n*` обязан иметь уникальный атрибут `id`.
+- Все ключи синхронизируются в 4 словарях `locales/{ru,en,he,uk}.json`.
 
 ---
 

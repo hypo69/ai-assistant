@@ -1,0 +1,31 @@
+{
+  "$schema": "webgui-menu-v1",
+  "tab_id": "tab-create-workspace",
+  "draggable": true,
+  "subtabs": {
+    "nav_id": "cws-subtabs-nav",
+    "storage_key": "tab-create-workspace_subtabs_order",
+    "items": [
+      {
+        "id": "sources",
+        "button_id": "btn-cws-subtab-sources",
+        "pane_id": "cws-subpane-sources",
+        "panel_id": "panel-sources",
+        "icon": "bi bi-folder-symlink text-success",
+        "label_i18n": "createWorkspaceTab.subtabSourcesLabel",
+        "title_i18n": "createWorkspaceTab.subtabSourcesTitle",
+        "order": 0
+      },
+      {
+        "id": "params",
+        "button_id": "btn-cws-subtab-params",
+        "pane_id": "cws-subpane-params",
+        "panel_id": "panel-params",
+        "icon": "bi bi-gear-wide-connected text-primary",
+        "label_i18n": "createWorkspaceTab.subtabParamsLabel",
+        "title_i18n": "createWorkspaceTab.subtabParamsTitle",
+        "order": 1
+      }
+    ]
+  }
+}

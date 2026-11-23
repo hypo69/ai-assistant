@@ -182,7 +182,7 @@ async def test_ask_stream_sse_and_sql_injection_guard() -> None:
         assert "has_changes" in res_changes.json()
 
         # 3. Проверяем защиту от SQL-инъекции в произвольном идентификаторе панели
-        res_sqli = await client.get("/v1/panel/users;DROP TABLE facts;--")
+        res_sqli = await client.get("/api/v1/panel/users;DROP TABLE facts;--")
         assert res_sqli.status_code == 200
         assert res_sqli.json()["data"] == []
 

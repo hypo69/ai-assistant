@@ -1,0 +1,98 @@
+/**
+ * =============================================================================
+ * Process Name: Common WebGUI - User Commands Tab Styles
+ * =============================================================================
+ * Description:
+ *   Таблица стилей вкладки пользовательской базы знаний команд и сниппетов.
+ *   Полная поддержка тем оформления без хардкода цветов (строго через CSS-переменные).
+ *
+ * File: style.css
+ * Package: apps/common/webgui/tab_commands
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-11-16 01:30:00
+ * =============================================================================
+ */
+
+#tab-commands {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.commands-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cmd-card {
+  background-color: var(--surface-secondary, rgba(127, 127, 127, 0.05));
+  border: 1px solid var(--border-color, rgba(127, 127, 127, 0.2));
+  border-radius: 0.5rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cmd-card:hover {
+  border-color: var(--accent-color, #0d6efd);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cmd-code-box {
+  background-color: var(--surface-tertiary, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--border-color, rgba(127, 127, 127, 0.2));
+  border-radius: 0.375rem;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-monospace, monospace);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+  position: relative;
+}
+
+.cmd-btn-copy {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.cmd-btn-copy:hover {
+  opacity: 1;
+}
+
+.cmd-runner-console {
+  background-color: var(--terminal-bg, #0d1117);
+  color: var(--terminal-fg, #c9d1d9);
+  font-family: var(--font-monospace, monospace);
+  font-size: 0.85rem;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.cmd-star-btn {
+  cursor: pointer;
+  color: var(--text-muted, #6c757d);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.cmd-star-btn:hover {
+  transform: scale(1.15);
+}
+
+.cmd-star-btn.active {
+  color: var(--status-warning, #ffc107);
+}
+
+.cmd-tag-badge {
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.cmd-tag-badge:hover {
+  opacity: 1;
+}

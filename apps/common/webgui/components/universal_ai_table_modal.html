@@ -1,6 +1,6 @@
 <!--
 =============================================================================
-Process Name: Windows WebGUI - Universal AI Table Modal Component
+Process Name: Common WebGUI - Universal AI Table Modal Component
 =============================================================================
 Description:
   Компонент универсального модального окна AI-анализатора записей таблиц со
@@ -11,140 +11,124 @@ Usage Examples:
     <!--#include file="components/universal_ai_table_modal.html" -->
 
 File: universal_ai_table_modal.html
-Project: ai-windows-admin
-Package: apps.windows.api.webgui.components
+Project: ai-assistant
+Package: apps.common.webgui.components
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-17 03:10:00
+Updated: 2026-11-16 04:30:00
 =============================================================================
 -->
 
 <!-- Universal AI Table & Diagnostic Modal Dialog -->
-<div class="modal fade" id="universal-ai-table-modal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow-lg">
-      <div class="modal-header py-2 px-3">
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <span class="fs-5 text-info" id="uai-modal-icon">🔍</span>
-          <h5 class="modal-title fw-bold text-info mb-0" id="uai-modal-title">Детали записи</h5>
-          <div id="uai-modal-badges" class="d-flex align-items-center gap-1"></div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-      </div>
-      <div class="modal-body py-3 px-3">
-        <!-- Metadata Grid -->
-        <div class="row g-2 mb-3 small" id="uai-modal-metadata-grid"></div>
-
-        <!-- AI Contextual Diagnostic Card (Чистый ответ ИИ) -->
-        <div class="card border-info p-3 uai-ai-section mb-3" id="uai-modal-ai-section">
-          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-2">
-              <h6 class="fw-bold text-info mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
-              <span class="badge border border-info text-info small px-2 py-0.5" id="uai-modal-web-status" title="Сведения обогащаются поиском в интернете" data-i18n-title="titles.auto.">
-                <i class="bi bi-globe me-1"></i>Web Grounding
-              </span>
-            </div>
-            <div class="d-flex align-items-center gap-1.5">
-              <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить расширенный шаблон промпта" data-i18n-title="titles.auto.">
-                <i class="bi bi-gear-fill me-1"></i>Промпт
-              </button>
-              <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title="Обновить AI-анализ" data-i18n-title="uai.refreshAnalysisTitle" style="display: none;">
-                <i class="bi bi-arrow-clockwise me-1"></i>Обновить
-              </button>
-            </div>
-          </div>
-          <div class="uai-explanation-content" id="uai-modal-ai-explanation"></div>
-        </div>
-
-        <!-- Collapsible Technical Sections (Скрыты по умолчанию) -->
-        <div class="mt-3 pt-2 border-top border-secondary border-opacity-25" id="uai-modal-spoilers-container">
-          <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
-            <!-- Spoiler Toggle 1: Raw Content -->
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 font-monospace" 
-                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseRawData" aria-expanded="false" id="btn-toggle-raw-data" style="display: none;">
-              <i class="bi bi-code-slash me-1"></i> Показать сырой код / данные
-            </button>
-
-            <!-- Spoiler Toggle 2: System Instruction & Config -->
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 font-monospace" 
-                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseSysInstruction" aria-expanded="false" id="btn-toggle-sys-instruction">
-              <i class="bi bi-shield-lock me-1"></i> Показать системную инструкцию
-            </button>
-          </div>
-
-          <!-- Raw / Code Content Section -->
-          <div class="collapse mb-2" id="collapseRawData">
-            <div class="card p-3 uai-raw-container bg-black bg-opacity-50 border border-secondary" id="uai-modal-raw-container">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <h6 class="small text-uppercase text-muted fw-bold mb-0" id="uai-modal-raw-title">Контекст / Данные</h6>
-              </div>
-              <pre class="m-0 small font-monospace text-info uai-raw-content" id="uai-modal-raw-content" style="white-space: pre-wrap; word-break: break-all; max-height: 220px; overflow-y: auto;"></pre>
-            </div>
-          </div>
-
-          <!-- System Instruction & Model Configuration Section -->
-          <div class="collapse" id="collapseSysInstruction">
-            <div class="card p-3 border-secondary-subtle uai-system-card" id="uai-modal-system-card">
-              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                  <span class="fs-6 text-warning">🤖</span>
-                  <h6 class="fw-bold text-warning mb-0">Системная инструкция и конфигурация ИИ</h6>
-                </div>
-                <div class="d-flex align-items-center gap-1.5 flex-wrap">
-                  <span class="badge bg-secondary-subtle text-secondary border small" id="uai-modal-panel-badge" title="ID вызывающей панели" data-i18n-title="uai.panelBadgeTitle">Панель: -</span>
-                  <span class="badge bg-secondary-subtle text-secondary border small" id="uai-modal-type-badge">Тип: -</span>
-                  <span class="badge border border-info text-info small" id="uai-modal-custom-badge" style="display: none;">Кастомная</span>
-                </div>
-              </div>
-
-              <!-- Model & Provider Selection Bar -->
-              <div class="row g-2 mb-2 align-items-center">
-                <div class="col-sm-6">
-                  <div class="input-group input-group-sm">
-                    <span class="input-group-text text-secondary small py-0">Провайдер</span>
-                    <select class="form-select form-select-sm" id="uai-modal-provider-select">
-                      <option value="gemini">Google Gemini</option>
-                      <option value="openai">OpenAI / Compatible</option>
-                      <option value="ollama">Ollama Local</option>
-                      <option value="foundry">Foundry Local</option>
-                      <option value="windows_ai">Windows Copilot+ AI</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="col-sm-6">
-                  <div class="input-group input-group-sm">
-                    <span class="input-group-text text-secondary small py-0">Модель</span>
-                    <input type="text" class="form-control form-control-sm" id="uai-modal-model-input" placeholder="По умолчанию (из config.json)">
-                  </div>
-                </div>
-              </div>
-
-              <!-- System Instruction Textarea -->
-              <div class="mb-1">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="form-label small text-secondary fw-bold mb-0">Системная инструкция (System Instruction):</label>
-                  <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-xs btn-outline-info py-0 px-2" id="btn-uai-modal-save-system" title="Сохранить измененную инструкцию для этой сущности" data-i18n-title="titles.auto.">
-                      <i class="bi bi-floppy me-1"></i>Сохранить
-                    </button>
-                    <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" id="btn-uai-modal-reset-system" title="Сбросить к системной инструкции по умолчанию" data-i18n-title="titles.auto.">
-                      <i class="bi bi-arrow-counterclockwise me-1"></i>Сброс
-                    </button>
-                  </div>
-                </div>
-                <textarea class="form-control form-control-sm font-monospace" id="uai-modal-system-instruction" rows="3" placeholder="Роль эксперта, правила анализа и формат ответа для модели..."></textarea>
-                <div class="d-flex justify-content-between align-items-center mt-1">
-                  <span class="text-secondary small" style="font-size: 0.72rem;" id="uai-modal-system-status">Инструкция передается при вызове модели и анализе</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer py-2 px-3 d-flex justify-content-between">
-        <div id="uai-modal-custom-actions" class="d-flex gap-1.5 flex-wrap"></div>
-        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-      </div>
-    </div>
-  </div>
+<div aria-hidden="true" class="modal fade" id="universal-ai-table-modal" tabindex="-1">
+<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content shadow-lg">
+<div class="modal-header py-2 px-3">
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<span class="fs-5 text-info" id="uai-modal-icon">🔍</span>
+<h5 class="modal-title fw-bold text-info mb-0" data-i18n="aiModal.recordDetails" id="uai-modal-title">{{aiModal.recordDetails}}</h5>
+<div class="d-flex align-items-center gap-1" id="uai-modal-badges"></div>
+</div>
+<button aria-label="{{common.close}}" class="btn-close" data-bs-dismiss="modal" data-i18n-aria-label="common.close" id="uai-btn-close-modal" type="button"></button>
+</div>
+<div class="modal-body py-3 px-3">
+<!-- Metadata Grid -->
+<div class="row g-2 mb-3 small" id="uai-modal-metadata-grid"></div>
+<!-- AI Contextual Diagnostic Card (Чистый ответ ИИ) -->
+<div class="card border-info p-3 uai-ai-section mb-3" id="uai-modal-ai-section">
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<h6 class="fw-bold text-info mb-0" id="uai-heading-explanation"><i class="bi bi-robot me-1"></i><span data-i18n="aiModal.explanationTitle" id="uai-explanation-title-text">{{aiModal.explanationTitle}}</span></h6>
+<span class="badge border border-info text-info small px-2 py-0.5" data-i18n-title="aiModal.webGroundingTitle" id="uai-modal-web-status" title="{{aiModal.webGroundingTitle}}">
+<i class="bi bi-globe me-1"></i><span data-i18n="aiModal.webGrounding" id="spn-ui-uai-txt-7ee2924b-text">{{aiModal.webGrounding}}</span></span>
+</div>
+<div class="d-flex align-items-center gap-1.5">
+<button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" data-i18n-title="aiModal.promptBtnTitle" id="btn-uai-modal-edit-prompt" title="{{aiModal.promptBtnTitle}}" type="button">
+<i class="bi bi-gear-fill me-1"></i><span data-i18n="aiModal.promptBtn" id="spn-ui-uai-txt-97aa2beb-text">{{aiModal.promptBtn}}</span></button>
+<button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill d-none" data-i18n-title="aiModal.refreshBtnTitle" id="btn-uai-modal-refresh" title="{{aiModal.refreshBtnTitle}}" type="button">
+<i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="aiModal.refreshBtn" id="spn-ui-uai-txt-dbe5444a-text">{{aiModal.refreshBtn}}</span></button>
+</div>
+</div>
+<div class="uai-explanation-content" id="uai-modal-ai-explanation"></div>
+</div>
+<!-- Collapsible Technical Sections (Скрыты по умолчанию) -->
+<div class="mt-3 pt-2 border-top border-secondary border-opacity-25" id="uai-modal-spoilers-container">
+<div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+<!-- Spoiler Toggle 1: Raw Content -->
+<button aria-expanded="false" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 font-monospace d-none" data-bs-target="#collapseRawData" data-bs-toggle="collapse" id="btn-toggle-raw-data" type="button">
+<i class="bi bi-code-slash me-1"></i><span data-i18n="aiModal.showRawData" id="uai-btn-raw-data-label">{{aiModal.showRawData}}</span></button>
+<!-- Spoiler Toggle 2: System Instruction & Config -->
+<button aria-expanded="false" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 font-monospace" data-bs-target="#collapseSysInstruction" data-bs-toggle="collapse" id="btn-toggle-sys-instruction" type="button">
+<i class="bi bi-shield-lock me-1"></i><span data-i18n="aiModal.showSystemInstruction" id="uai-btn-instruction-label">{{aiModal.showSystemInstruction}}</span></button>
+</div>
+<!-- Raw / Code Content Section -->
+<div class="collapse mb-2" id="collapseRawData">
+<div class="card p-3 uai-raw-container bg-black bg-opacity-50 border border-secondary" id="uai-modal-raw-container">
+<div class="d-flex justify-content-between align-items-center mb-1">
+<h6 class="small text-uppercase text-muted fw-bold mb-0" data-i18n="aiModal.contextData" id="uai-modal-raw-title">{{aiModal.contextData}}</h6>
+</div>
+<pre class="m-0 small font-monospace text-info uai-raw-content pre-scrollable-220" id="uai-modal-raw-content"></pre>
+</div>
+</div>
+<!-- System Instruction & Model Configuration Section -->
+<div class="collapse" id="collapseSysInstruction">
+<div class="card p-3 border-secondary-subtle uai-system-card" id="uai-modal-system-card">
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<span class="fs-6 text-warning">🤖</span>
+<h6 class="fw-bold text-warning mb-0" data-i18n="aiModal.systemInstructionAndConfig" id="uai-heading-system-instruction">{{aiModal.systemInstructionAndConfig}}</h6>
+</div>
+<div class="d-flex align-items-center gap-1.5 flex-wrap">
+<span class="badge bg-secondary-subtle text-secondary border small" data-i18n="aiModal.panelPrefix" data-i18n-title="aiModal.panelIdTitle" id="uai-modal-panel-badge" title="{{aiModal.panelIdTitle}}">{{aiModal.panelPrefix}}</span>
+<span class="badge bg-secondary-subtle text-secondary border small" data-i18n="aiModal.typePrefix" id="uai-modal-type-badge">{{aiModal.typePrefix}}</span>
+<span class="badge border border-info text-info small d-none" data-i18n="aiModal.customBadge" id="uai-modal-custom-badge">{{aiModal.customBadge}}</span>
+</div>
+</div>
+<!-- Model & Provider Selection Bar -->
+<div class="row g-2 mb-2 align-items-center">
+<div class="col-sm-6">
+<div class="input-group input-group-sm">
+<span class="input-group-text text-secondary small py-0" data-i18n="aiModal.providerLabel" id="uai-provider-label">{{aiModal.providerLabel}}</span>
+<select class="form-select form-select-sm" id="uai-modal-provider-select">
+<option data-i18n="aiModal.providerGemini" id="uai-opt-gemini" value="gemini">{{aiModal.providerGemini}}</option>
+<option data-i18n="aiModal.providerOpenAi" id="uai-opt-openai" value="openai">{{aiModal.providerOpenAi}}</option>
+<option data-i18n="aiModal.providerOllama" id="uai-opt-ollama" value="ollama">{{aiModal.providerOllama}}</option>
+<option data-i18n="aiModal.providerFoundry" id="uai-opt-foundry" value="foundry">{{aiModal.providerFoundry}}</option>
+<option data-i18n="aiModal.providerCopilot" id="uai-opt-copilot" value="windows_ai">{{aiModal.providerCopilot}}</option>
+</select>
+</div>
+</div>
+<div class="col-sm-6">
+<div class="input-group input-group-sm">
+<span class="input-group-text text-secondary small py-0" data-i18n="aiModal.modelLabel" id="uai-model-label">{{aiModal.modelLabel}}</span>
+<input class="form-control form-control-sm" data-i18n-placeholder="aiModal.modelDefaultPlaceholder" id="uai-modal-model-input" placeholder="{{aiModal.modelDefaultPlaceholder}}" type="text"/>
+</div>
+</div>
+</div>
+<!-- System Instruction Textarea -->
+<div class="mb-1">
+<div class="d-flex justify-content-between align-items-center mb-1">
+<label class="form-label small text-secondary fw-bold mb-0" data-i18n="aiModal.systemInstructionLabel" id="uai-instruction-label">{{aiModal.systemInstructionLabel}}</label>
+<div class="d-flex gap-1">
+<button class="btn btn-xs btn-outline-info py-0 px-2" data-i18n-title="aiModal.saveInstructionTitle" id="btn-uai-modal-save-system" title="{{aiModal.saveInstructionTitle}}" type="button">
+<i class="bi bi-floppy me-1"></i><span data-i18n="aiModal.saveInstructionBtn" id="spn-ui-uai-txt-74ea58b6-text">{{aiModal.saveInstructionBtn}}</span></button>
+<button class="btn btn-xs btn-outline-secondary py-0 px-2" data-i18n-title="aiModal.resetInstructionTitle" id="btn-uai-modal-reset-system" title="{{aiModal.resetInstructionTitle}}" type="button">
+<i class="bi bi-arrow-counterclockwise me-1"></i><span data-i18n="aiModal.resetInstructionBtn" id="spn-ui-uai-txt-1b421ddb-text">{{aiModal.resetInstructionBtn}}</span></button>
+</div>
+</div>
+<textarea class="form-control form-control-sm font-monospace" data-i18n-placeholder="aiModal.instructionPlaceholder" id="uai-modal-system-instruction" placeholder="{{aiModal.instructionPlaceholder}}" rows="3"></textarea>
+<div class="d-flex justify-content-between align-items-center mt-1">
+<span class="text-secondary small font-size-72" data-i18n="aiModal.instructionHint" id="uai-modal-system-status">{{aiModal.instructionHint}}</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="modal-footer py-2 px-3 d-flex justify-content-between">
+<div class="d-flex gap-1.5 flex-wrap" id="uai-modal-custom-actions"></div>
+<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" type="button"><span data-i18n="common.close" id="spn-common-close">{{common.close}}</span></button>
+</div>
+</div>
+</div>
 </div>

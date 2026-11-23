@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-23 17:51:00
 # =============================================================================
 
 from __future__ import annotations
@@ -578,8 +578,11 @@ class KnowledgeQAEngine:
         eff_provider = provider or self.default_provider
         eff_model = model or self.default_model
 
-        parsed_q = QuestionIntentParser.parse_question(question, language=language)
-        q_lang = parsed_q["language"]
+        # Парсим грамматику и леммы по фактическому языку текста вопроса,
+        # но целевой язык ответа (q_lang) строго следует явно переданному language (язык UI)
+        parsed_q = QuestionIntentParser.parse_question(question, language=None)
+        req_lang = str(language or "").strip().lower()[:2]
+        q_lang = req_lang if req_lang in ("ru", "he", "en", "uk", "ua") else parsed_q["language"]
 
         # Извлечение Git-контекста, если вопрос касается коммитов, версий или истории
         git_ctx, git_sources, git_fallback = await QaGitResolver.resolve(
@@ -627,7 +630,8 @@ class KnowledgeQAEngine:
                 "fact_id": top_fact.get("fact_id", ""),
             })
 
-            if effective_mode in ("cloud_assist", "cloud_enrich") and self.cloud_policy_enabled:
+            lang_mismatch = q_lang != parsed_q["language"]
+            if (effective_mode in ("cloud_assist", "cloud_enrich") or (lang_mismatch and effective_mode == "local_first")) and self.cloud_policy_enabled:
                 ctx_list = [src.get("quote", "")] + [h.get("text", "") for h in faiss_hits]
                 cloud_ans = await self._call_cloud_model(
                     workspace_id=workspace_id,
@@ -640,6 +644,8 @@ class KnowledgeQAEngine:
                 if cloud_ans:
                     cloud_used = True
                     cloud_insight = cloud_ans
+                    if lang_mismatch:
+                        answer_text = cloud_ans
                     if effective_mode == "cloud_enrich" and doc_id:
                         self.wm.graph.add_link(
                             source_id=doc_id,
@@ -706,6 +712,21 @@ class KnowledgeQAEngine:
                 status_str = "insufficient_data"
                 answer_text = get_insufficient_data_message(q_lang)
 
+        # Типизированная причина результата поиска (matched / stale / out_of_scope / absent)
+        if status_str == "success":
+            retrieval_reason = "matched"
+        else:
+            ws_docs = self.wm.store.list_documents(workspace_id)
+            if not ws_docs and not faiss_hits:
+                retrieval_reason = "out_of_scope"
+            else:
+                all_with_stale = self.wm.store.get_facts(workspace_id=workspace_id, include_stale=True)
+                stale_only = [f for f in all_with_stale if f.get("is_stale")]
+                if stale_only and self._match_facts_locally(parsed_q, stale_only):
+                    retrieval_reason = "stale"
+                else:
+                    retrieval_reason = "absent"
+
         latency_ms = round((time.perf_counter() - t0) * 1000.0, 2)
         self.wm.store.log_query(
             workspace_id=workspace_id,
@@ -730,6 +751,7 @@ class KnowledgeQAEngine:
             "cloud_insight": cloud_insight,
             "language": q_lang,
             "status": status_str,
+            "retrieval_reason": retrieval_reason,
             "sources": sources,
             "matched_fact": top_fact,
             "grammatical_details": synthesized,

@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 15:57:30
+# Updated: 2026-11-20 02:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from typing import List, Optional
 
 from logger import logger
 from apps.ai_assistant.api.schemas import EvidenceLinkSchema, get_utc_now_iso
+from apps.ai_assistant.core.store.workspace_repo import run_sqlite_with_retry
 
 TemporalCodeLink = EvidenceLinkSchema
 
@@ -57,8 +58,11 @@ class TemporalCodeGraph:
         self._mem_conn: Optional[sqlite3.Connection] = None
         self._initialized_paths: set[str] = set()
         if self.db_path == ":memory:":
-            self._mem_conn = sqlite3.connect(":memory:", timeout=15.0, check_same_thread=False)
+            self._mem_conn = sqlite3.connect(
+                ":memory:", timeout=30.0, check_same_thread=False, isolation_level="IMMEDIATE"
+            )
             self._mem_conn.row_factory = sqlite3.Row
+            self._mem_conn.execute("PRAGMA busy_timeout=30000;")
             self._init_schema(existing_conn=self._mem_conn)
             self._initialized_paths.add(":memory:")
         else:
@@ -86,16 +90,22 @@ class TemporalCodeGraph:
         if target_path == ":memory:" and self._mem_conn:
             return self._mem_conn
         path_str = str(target_path)
-        conn = sqlite3.connect(path_str, timeout=15.0, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA synchronous=NORMAL;")
-        conn.execute("PRAGMA busy_timeout=15000;")
-        with self._lock:
-            if path_str not in self._initialized_paths:
-                self._init_schema(existing_conn=conn)
-                self._initialized_paths.add(path_str)
-        return conn
+        conn = sqlite3.connect(
+            path_str, timeout=30.0, check_same_thread=False, isolation_level="IMMEDIATE"
+        )
+        try:
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA busy_timeout=30000;")
+            conn.execute("PRAGMA synchronous=NORMAL;")
+            with self._lock:
+                if path_str not in self._initialized_paths:
+                    conn.execute("PRAGMA journal_mode=WAL;")
+                    self._init_schema(existing_conn=conn)
+                    self._initialized_paths.add(path_str)
+            return conn
+        except Exception:
+            conn.close()
+            raise
 
     def _close_conn(self, conn: Optional[sqlite3.Connection]) -> None:
         """Закрывает соединение, если база не в памяти."""
@@ -191,32 +201,36 @@ class TemporalCodeGraph:
     ) -> EvidenceLinkSchema:
         """Регистрирует новую активную темпоральную связь."""
         now = get_utc_now_iso()
-        with self._lock:
-            conn = self._get_connection(workspace_id=workspace_id)
-            try:
-                with conn:
-                    conn.execute(
-                        """
-                        INSERT INTO temporal_evidence_links (
-                            source_id, target_id, relation_type, valid_from, valid_to, confidence, provenance, status, created_at
-                        ) VALUES (?, ?, ?, ?, NULL, ?, ?, 'ACTIVE', ?)
-                        ON CONFLICT(source_id, target_id, relation_type, valid_from)
-                        DO UPDATE SET confidence = excluded.confidence, provenance = excluded.provenance, status = 'ACTIVE', valid_to = NULL
-                        """,
-                        (source_id, target_id, relation_type, valid_from, confidence, provenance, now),
+
+        def _op() -> EvidenceLinkSchema:
+            with self._lock:
+                conn = self._get_connection(workspace_id=workspace_id)
+                try:
+                    with conn:
+                        conn.execute(
+                            """
+                            INSERT INTO temporal_evidence_links (
+                                source_id, target_id, relation_type, valid_from, valid_to, confidence, provenance, status, created_at
+                            ) VALUES (?, ?, ?, ?, NULL, ?, ?, 'ACTIVE', ?)
+                            ON CONFLICT(source_id, target_id, relation_type, valid_from)
+                            DO UPDATE SET confidence = excluded.confidence, provenance = excluded.provenance, status = 'ACTIVE', valid_to = NULL
+                            """,
+                            (source_id, target_id, relation_type, valid_from, confidence, provenance, now),
+                        )
+                    return EvidenceLinkSchema(
+                        source_id=source_id,
+                        target_id=target_id,
+                        relation_type=relation_type,
+                        valid_from=valid_from,
+                        valid_to=None,
+                        confidence=confidence,
+                        provenance=provenance,
+                        status="ACTIVE",
                     )
-                return EvidenceLinkSchema(
-                    source_id=source_id,
-                    target_id=target_id,
-                    relation_type=relation_type,
-                    valid_from=valid_from,
-                    valid_to=None,
-                    confidence=confidence,
-                    provenance=provenance,
-                    status="ACTIVE",
-                )
-            finally:
-                self._close_conn(conn)
+                finally:
+                    self._close_conn(conn)
+
+        return run_sqlite_with_retry(_op, context="TemporalCodeGraph")
 
     def supersede_link(
         self,
@@ -226,21 +240,25 @@ class TemporalCodeGraph:
         workspace_id: Optional[str] = None,
     ) -> bool:
         """Выполняет мягкую инвалидацию конкретной связи (переводит в статус SUPERSEDED)."""
-        with self._lock:
-            conn = self._get_connection(workspace_id=workspace_id)
-            try:
-                with conn:
-                    cursor = conn.execute(
-                        """
-                        UPDATE temporal_evidence_links
-                        SET status = 'SUPERSEDED', valid_to = ?
-                        WHERE source_id = ? AND target_id = ? AND status = 'ACTIVE'
-                        """,
-                        (invalidating_commit, source_id, target_id),
-                    )
-                    return cursor.rowcount > 0
-            finally:
-                self._close_conn(conn)
+
+        def _op() -> bool:
+            with self._lock:
+                conn = self._get_connection(workspace_id=workspace_id)
+                try:
+                    with conn:
+                        cursor = conn.execute(
+                            """
+                            UPDATE temporal_evidence_links
+                            SET status = 'SUPERSEDED', valid_to = ?
+                            WHERE source_id = ? AND target_id = ? AND status = 'ACTIVE'
+                            """,
+                            (invalidating_commit, source_id, target_id),
+                        )
+                        return cursor.rowcount > 0
+                finally:
+                    self._close_conn(conn)
+
+        return run_sqlite_with_retry(_op, context="TemporalCodeGraph")
 
     def supersede_links_by_source(
         self,
@@ -249,21 +267,25 @@ class TemporalCodeGraph:
         workspace_id: Optional[str] = None,
     ) -> int:
         """Переводит все прежние активные связи документа/источника в статус SUPERSEDED при обновлении ревизии."""
-        with self._lock:
-            conn = self._get_connection(workspace_id=workspace_id)
-            try:
-                with conn:
-                    cursor = conn.execute(
-                        """
-                        UPDATE temporal_evidence_links
-                        SET status = 'SUPERSEDED', valid_to = ?
-                        WHERE source_id = ? AND status = 'ACTIVE' AND valid_from != ?
-                        """,
-                        (invalidating_commit, source_id, invalidating_commit),
-                    )
-                    return cursor.rowcount
-            finally:
-                self._close_conn(conn)
+
+        def _op() -> int:
+            with self._lock:
+                conn = self._get_connection(workspace_id=workspace_id)
+                try:
+                    with conn:
+                        cursor = conn.execute(
+                            """
+                            UPDATE temporal_evidence_links
+                            SET status = 'SUPERSEDED', valid_to = ?
+                            WHERE source_id = ? AND status = 'ACTIVE' AND valid_from != ?
+                            """,
+                            (invalidating_commit, source_id, invalidating_commit),
+                        )
+                        return cursor.rowcount
+                finally:
+                    self._close_conn(conn)
+
+        return run_sqlite_with_retry(_op, context="TemporalCodeGraph")
 
     def get_active_links(
         self,

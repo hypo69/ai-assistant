@@ -11,13 +11,23 @@
  * Package: apps/ai_assistant/api/webgui/tab_rag/panel_rag
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-23 19:20:00
+ * Updated: 2026-11-16 04:32:00
  * =============================================================================
  */
 
 import { registerPanelRenderer, loadPanelData } from '../../js/panel-loader.js';
 
 let currentWorkspaceId = 'default';
+
+/**
+ * Извлекает идентификатор рабочей области из хэша URL (#tab-rag#workspace=<id>).
+ * @returns {string} Идентификатор рабочей области или пустая строка
+ */
+export function parseWorkspaceFromHash() {
+  const hash = window.location.hash || '';
+  const match = hash.match(/workspace=([^&#]+)/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
 
 /**
  * Отрисовывает таблицу индексированных чанков рабочей области.
@@ -68,20 +78,117 @@ export function renderRagChunksPanel(result, panelEl) {
 }
 
 /**
- * Загружает список доступных рабочих пространств в селектор вкладки.
+ * Загружает статус RAG-индекса для выбранной рабочей области и обновляет бейдж.
+ * @param {string} workspaceId - Идентификатор рабочей области
  */
-export async function loadWorkspacesList() {
+export async function updateWorkspaceRagStatus(workspaceId) {
+  const badge = document.getElementById('rag-workspace-status-badge');
+  if (!badge) return;
+  const wsId = workspaceId || currentWorkspaceId || 'default';
+  try {
+    const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(wsId)}/rag/status`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const vectors = data.vectors_count ?? 0;
+    const chunks = data.chunks_count ?? 0;
+    const docs = data.documents_count ?? 0;
+    const status = data.status || 'unknown';
+
+    let statusText = '';
+    let bgClass = 'bg-secondary-subtle text-secondary';
+    if (status === 'ready') {
+      bgClass = 'bg-success-subtle text-success';
+      statusText = `RAG готов: ${docs} док., ${chunks} чанков, ${vectors} векторов`;
+    } else if (status === 'empty') {
+      bgClass = 'bg-warning-subtle text-warning';
+      statusText = `RAG пуст (0 документов)`;
+    } else {
+      bgClass = 'bg-danger-subtle text-danger';
+      statusText = `Требуется перестроение: ${docs} док., ${chunks} чанков`;
+    }
+    badge.className = `badge ${bgClass} border font-monospace small`;
+    badge.innerHTML = `<i class="bi bi-database me-1"></i>${statusText}`;
+  } catch (err) {
+    badge.className = 'badge bg-secondary-subtle text-secondary border font-monospace small';
+    badge.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>Статус RAG недоступен`;
+  }
+}
+
+/**
+ * Запускает построение/перестроение RAG для текущей выбранной рабочей области.
+ */
+export async function buildCurrentWorkspaceRag() {
+  const select = document.getElementById('rag-workspace-select');
+  const wsId = select?.value || currentWorkspaceId || 'default';
+  const btn = document.getElementById('rag-build-btn');
+  const icon = document.getElementById('rag-build-icon');
+
+  if (btn) btn.disabled = true;
+  if (icon) icon.className = 'spinner-border spinner-border-sm';
+
+  try {
+    const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(wsId)}/rag/build`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await updateWorkspaceRagStatus(wsId);
+    loadPanelData('panel-rag-chunks', { workspace_id: wsId, force: true });
+  } catch (err) {
+    console.error('[RAG Tab] Ошибка сборки RAG:', err);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (icon) icon.className = 'bi bi-gear-wide-connected';
+  }
+}
+
+/**
+ * Запускает построение RAG-индексов для всех зарегистрированных рабочих областей.
+ */
+export async function buildAllWorkspacesRag() {
+  const select = document.getElementById('rag-workspace-select');
+  const wsId = select?.value || currentWorkspaceId || 'default';
+  const btn = document.getElementById('rag-build-all-btn');
+  const icon = document.getElementById('rag-build-all-icon');
+
+  if (btn) btn.disabled = true;
+  if (icon) icon.className = 'spinner-border spinner-border-sm';
+
+  try {
+    const res = await fetch('/api/v1/workspaces/rag/build-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await updateWorkspaceRagStatus(wsId);
+    loadPanelData('panel-rag-chunks', { workspace_id: wsId, force: true });
+  } catch (err) {
+    console.error('[RAG Tab] Ошибка сборки RAG для всех РО:', err);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (icon) icon.className = 'bi bi-stack';
+  }
+}
+
+/**
+ * Загружает список доступных рабочих пространств в селектор вкладки.
+ * @param {string} preferredWsId - Желаемый идентификатор рабочей области
+ */
+export async function loadWorkspacesList(preferredWsId = '') {
   const select = document.getElementById('rag-workspace-select');
   if (!select) return;
 
   try {
+    const hashWs = parseWorkspaceFromHash();
+    const targetWs = preferredWsId || hashWs || '';
+
     const [wsRes, activeRes] = await Promise.all([
       fetch('/api/v1/workspaces').then((r) => (r.ok ? r.json() : { workspaces: [] })),
       fetch('/api/v1/workspaces/active').then((r) => (r.ok ? r.json() : {})),
     ]);
 
     const workspaces = wsRes.workspaces || [];
-    const activeWs = activeRes.workspace_id || (typeof window.getActiveWorkspaceId === 'function' ? window.getActiveWorkspaceId() : '') || 'default';
+    const activeWs = targetWs || activeRes.workspace_id || (typeof window.getActiveWorkspaceId === 'function' ? window.getActiveWorkspaceId() : '') || 'default';
 
     if (workspaces.length > 0) {
       select.innerHTML = workspaces
@@ -98,6 +205,7 @@ export async function loadWorkspacesList() {
     }
 
     currentWorkspaceId = select.value || activeWs || 'default';
+    await updateWorkspaceRagStatus(currentWorkspaceId);
   } catch (err) {
     console.warn('[RAG Tab] Ошибка загрузки списка рабочих областей:', err);
   }
@@ -244,22 +352,37 @@ export async function executeHybridSearch(query) {
 /**
  * Инициализирует панель RAG и регистрирует обработчики событий.
  */
-export function initRagPanel() {
+export async function initRagPanel() {
   registerPanelRenderer('panel-rag-chunks', renderRagChunksPanel);
 
-  // Загружаем список рабочих областей
-  loadWorkspacesList();
+  // Загружаем список рабочих областей с учётом URL хэша
+  await loadWorkspacesList();
 
   const select = document.getElementById('rag-workspace-select');
-  select?.addEventListener('change', (e) => {
+  select?.addEventListener('change', async (e) => {
     currentWorkspaceId = e.target.value;
+    try {
+      if (window.location.hash.startsWith('#tab-rag')) {
+        window.location.hash = `#tab-rag#workspace=${encodeURIComponent(currentWorkspaceId)}`;
+      }
+    } catch (_) {}
+    document.dispatchEvent(new CustomEvent('context:changed', { detail: { workspace_id: currentWorkspaceId } }));
+    await updateWorkspaceRagStatus(currentWorkspaceId);
     loadPanelData('panel-rag-chunks', { workspace_id: currentWorkspaceId, force: true });
   });
 
-  document.getElementById('rag-refresh-btn')?.addEventListener('click', () => {
-    loadWorkspacesList().then(() => {
-      loadPanelData('panel-rag-chunks', { workspace_id: currentWorkspaceId, force: true });
-    });
+  document.getElementById('rag-build-btn')?.addEventListener('click', () => {
+    buildCurrentWorkspaceRag();
+  });
+
+  document.getElementById('rag-build-all-btn')?.addEventListener('click', () => {
+    buildAllWorkspacesRag();
+  });
+
+  document.getElementById('rag-refresh-btn')?.addEventListener('click', async () => {
+    await loadWorkspacesList(currentWorkspaceId);
+    await updateWorkspaceRagStatus(currentWorkspaceId);
+    loadPanelData('panel-rag-chunks', { workspace_id: currentWorkspaceId, force: true });
   });
 
   document.getElementById('rag-execute-search-btn')?.addEventListener('click', () => {
@@ -274,5 +397,6 @@ export function initRagPanel() {
     }
   });
 
+  await updateWorkspaceRagStatus(currentWorkspaceId);
   loadPanelData('panel-rag-chunks', { workspace_id: currentWorkspaceId });
 }

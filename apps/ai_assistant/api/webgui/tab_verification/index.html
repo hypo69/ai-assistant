@@ -11,7 +11,7 @@ File: index.html
 Package: apps/ai_assistant/api/webgui/tab_verification
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-26 00:05:00
+Updated: 2026-11-12 01:57:13
 =============================================================================
 -->
 <div class="container-fluid p-3">
@@ -19,14 +19,14 @@ Updated: 2026-10-26 00:05:00
 <div>
 <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
 <span class="fs-5">✅</span>
-<span data-i18n="tabs.verification" id="tab-verification-heading-text">Контур верификации и безопасности</span>
+<span data-i18n="tabs.verification" id="tab-verification-heading-text">{{tabs.verification}}</span>
 </h4>
-<div class="small text-muted" data-i18n="ui.vrf.txt_1589c307" id="vrf-div-1589c307">Двухшаговая проверка архитектурных связей (Candidate Proposal → Validation), фильтрация инъекций и защита секретов</div>
+<div class="small text-muted" data-i18n="ui.vrf.txt_1589c307" id="vrf-div-1589c307">{{ui.vrf.txt_1589c307}}</div>
 </div>
 <div class="d-flex align-items-center gap-2">
 <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="verification-refresh-btn">
 <i class="bi bi-arrow-clockwise"></i>
-<span data-i18n="common.refresh" id="tab-verification-refresh-btn-text">Запустить аудит</span>
+<span data-i18n="common.refresh" id="tab-verification-refresh-btn-text">{{common.refresh}}</span>
 </button>
 </div>
 </div>
@@ -34,26 +34,26 @@ Updated: 2026-10-26 00:05:00
 <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 px-3">
 <div class="fw-semibold small d-flex align-items-center gap-2">
 <i class="bi bi-shield-lock-fill text-success"></i>
-<span data-i18n="ui.vrf.txt_9e35ef53" id="vrf-span-9e35ef53">Проверки контура верификации (REST: /v1/panel/panel-verification-pipeline)</span>
+<span data-i18n="ui.vrf.txt_9e35ef53" id="vrf-span-9e35ef53">{{ui.vrf.txt_9e35ef53}}</span>
 </div>
-<span class="badge bg-success-subtle text-success border" data-i18n="ui.vrf.txt_d9a1c377" id="verification-status-badge">Все проверки пройдены</span>
+<span class="badge bg-success-subtle text-success border" data-i18n="ui.vrf.txt_d9a1c377" id="verification-status-badge">{{ui.vrf.txt_d9a1c377}}</span>
 </div>
 <div class="card-body p-0">
 <div class="table-responsive">
 <table class="table table-hover align-middle mb-0 font-size-85">
 <thead class="table-light">
 <tr>
-<th class="col-w-220" data-i18n="ui.vrf.txt_488a7bff" id="vrf-th-488a7bff" scope="col">Название проверки</th>
-<th class="col-w-100" data-i18n="ui.vrf.txt_7203f7a4" id="vrf-th-7203f7a4" scope="col">Статус</th>
-<th data-i18n="ui.vrf.txt_636e711d" id="vrf-th-636e711d" scope="col">Диагностические детали</th>
-<th class="col-w-170 text-end" data-i18n="ui.vrf.txt_b23ccc91" id="vrf-th-b23ccc91" scope="col">Время проверки</th>
+<th class="col-w-220" data-i18n="ui.vrf.txt_488a7bff" id="vrf-th-488a7bff" scope="col">{{ui.vrf.txt_488a7bff}}</th>
+<th class="col-w-100" data-i18n="ui.vrf.txt_7203f7a4" id="vrf-th-7203f7a4" scope="col">{{ui.vrf.txt_7203f7a4}}</th>
+<th data-i18n="ui.vrf.txt_636e711d" id="vrf-th-636e711d" scope="col">{{ui.vrf.txt_636e711d}}</th>
+<th class="col-w-170 text-end" data-i18n="ui.vrf.txt_b23ccc91" id="vrf-th-b23ccc91" scope="col">{{ui.vrf.txt_b23ccc91}}</th>
 </tr>
 </thead>
 <tbody id="verification-table-body">
 <tr>
 <td class="text-center py-4 text-muted" colspan="4">
 <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-<div data-i18n="ui.vrf.txt_f68a2944" id="vrf-div-f68a2944">Загрузка проверок через универсальный загрузчик панелей...</div>
+<div data-i18n="ui.vrf.txt_f68a2944" id="vrf-div-f68a2944">{{ui.vrf.txt_f68a2944}}</div>
 </td>
 </tr>
 </tbody>

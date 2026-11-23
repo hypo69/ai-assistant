@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-19 18:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -94,20 +94,20 @@ class AIDiffSummarizer:
         total_removed = len(removed_lines)
 
         summary_parts = [
-            f"Файл: {file_path or 'указанный файл'}."
+            f"Документ: {file_path or 'выбранные документы'}."
             f" Добавлено строк: {total_added}, удалено: {total_removed}."
         ]
 
         if changed_functions:
             unique_funcs = list(dict.fromkeys(changed_functions))[:5]
-            summary_parts.append(f"Затронутые функции и классы: {', '.join(unique_funcs)}.")
+            summary_parts.append(f"Затронутые разделы: {', '.join(unique_funcs)}.")
 
         if total_added > 0 and total_removed == 0:
-            summary_parts.append("Тип изменения: добавление новой функциональности или расширение конфигурации.")
+            summary_parts.append("Характер изменения: добавлены новые сведения или фрагменты текста.")
         elif total_added == 0 and total_removed > 0:
-            summary_parts.append("Тип изменения: рефакторинг и удаление устаревшего кода.")
+            summary_parts.append("Характер изменения: удалена часть устаревших или лишних данных.")
         else:
-            summary_parts.append("Тип изменения: модернизация логики работы и исправление поведения.")
+            summary_parts.append("Характер изменения: внесены правки и обновлено содержимое документа.")
 
         return " ".join(summary_parts)
 

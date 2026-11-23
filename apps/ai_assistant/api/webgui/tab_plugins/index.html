@@ -12,7 +12,7 @@ File: index.html
 Package: apps/ai_assistant/api/webgui/tab_plugins
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-26 00:05:00
+Updated: 2026-11-15 20:35:00
 =============================================================================
 -->
 <div class="container-fluid py-3">
@@ -22,16 +22,16 @@ Updated: 2026-10-26 00:05:00
 <span class="tab-header-icon fs-3">🧩</span>
 <div>
 <div class="d-flex align-items-center gap-2 flex-wrap">
-<h3 class="tab-header-title panel-header mb-0" data-i18n="ui.plg.txt_a957f0d3" id="plg-h3-a957f0d3">Плагины и Маркетплейс расширений</h3>
-<span class="badge bg-primary-subtle text-primary border" data-i18n="ui.plg.txt_8bb87ef5" id="plugins-total-count-badge">0 плагинов</span>
+<h3 class="tab-header-title panel-header mb-0" data-i18n="ui.plg.txt_a957f0d3" id="plg-h3-a957f0d3">{{ui.plg.txt_a957f0d3}}</h3>
+<span class="badge bg-primary-subtle text-primary border" data-i18n="ui.plg.txt_8bb87ef5" id="plugins-total-count-badge">{{ui.plg.txt_8bb87ef5}}</span>
 </div>
-<small class="tab-header-subtitle text-secondary" data-i18n="ui.plg.txt_954073dc" id="plg-small-954073dc">Управление установленными модулями и каталог стандартных IDE плагинов в стиле Visual Studio Code</small>
+<small class="tab-header-subtitle text-secondary" data-i18n="ui.plg.txt_954073dc" id="plg-small-954073dc">{{ui.plg.txt_954073dc}}</small>
 </div>
 </div>
 <div class="d-flex align-items-center gap-2 flex-wrap">
-<button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="titles.plg.title_d06719a3" id="btn-reload-plugins" title="Пересканировать каталог plugins/ и обновить статус">
+<button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="titles.plg.title_d06719a3" id="btn-reload-plugins" title="{{titles.plg.title_d06719a3}}">
 <i class="bi bi-arrow-clockwise"></i>
-<span data-i18n="ui.plg.txt_62f5367b" id="plg-span-62f5367b">Перезагрузить реестр</span>
+<span data-i18n="ui.plg.txt_62f5367b" id="plg-span-62f5367b">{{ui.plg.txt_62f5367b}}</span>
 </button>
 </div>
 </div>
@@ -39,16 +39,22 @@ Updated: 2026-10-26 00:05:00
 <!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->
 <ul class="nav nav-tabs mb-3" id="pluginsTabNav" role="tablist">
 <li class="nav-item" role="presentation">
-<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#tab-pane-installed" data-bs-toggle="pill" id="nav-installed-tab" role="tab" type="button" data-panel-id="panel-installed" title="Раздел: Установленные плагины" data-i18n-title="plugins.subtabs.installedTitle">
+<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#tab-pane-installed" data-bs-toggle="pill" data-i18n-title="plugins.subtabs.installedTitle" data-panel-id="panel-installed" id="nav-installed-tab" role="tab" title="{{plugins.subtabs.installedTitle}}" type="button">
 <i class="bi bi-check2-circle text-success"></i>
-<span data-i18n="ui.plg.txt_cc2f1a66" id="plg-span-cc2f1a66">Установленные плагины</span>
+<span data-i18n="ui.plg.txt_cc2f1a66" id="plg-span-cc2f1a66">{{ui.plg.txt_cc2f1a66}}</span>
 </button>
 </li>
 <li class="nav-item" role="presentation">
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#tab-pane-marketplace" data-bs-toggle="pill" id="nav-marketplace-tab" role="tab" type="button" data-panel-id="panel-marketplace" title="Маркетплейс стандартных плагинов" data-i18n-title="plugins.subtabs.marketplaceTitle">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#tab-pane-marketplace" data-bs-toggle="pill" data-i18n-title="plugins.subtabs.marketplaceTitle" data-panel-id="panel-marketplace" id="nav-marketplace-tab" role="tab" title="{{plugins.subtabs.marketplaceTitle}}" type="button">
 <i class="bi bi-shop text-primary"></i>
-<span data-i18n="ui.plg.txt_c2db0209" id="plg-span-c2db0209">Маркетплейс стандартных плагинов</span>
+<span data-i18n="ui.plg.txt_c2db0209" id="plg-span-c2db0209">{{ui.plg.txt_c2db0209}}</span>
 <span class="badge bg-primary text-white rounded-pill px-2 py-0.5 font-size-75" id="marketplace-available-badge">10</span>
+</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#tab-pane-skills" data-bs-toggle="pill" data-i18n-title="plugins.subtabs.skillsTitle" data-panel-id="panel-skills" id="nav-skills-tab" role="tab" title="{{plugins.subtabs.skillsTitle}}" type="button">
+<i class="bi bi-lightning-charge text-warning"></i>
+<span data-i18n="ui.plg.txt_skills_tab" id="plg-span-skills-tab">{{ui.plg.txt_skills_tab}}</span>
 </button>
 </li>
 </ul>
@@ -60,16 +66,13 @@ Updated: 2026-10-26 00:05:00
 <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
 <!-- Фильтр по скоупам -->
 <div class="btn-group btn-group-sm" id="plugins-scope-filter-group" role="group">
-<button class="btn btn-primary active" data-filter-scope="all" data-i18n="ui.plg.txt_fc505dae" id="plg-button-fc505dae" type="button">Все плагины</button>
-<button class="btn btn-outline-secondary" data-filter-scope="system" data-i18n="ui.plg.txt_13155df4" id="plg-button-13155df4" type="button">
-<i class="bi bi-gear-fill me-1"></i>Системные
-            </button>
-<button class="btn btn-outline-secondary" data-filter-scope="developer" data-i18n="ui.plg.txt_da097394" id="plg-button-da097394" type="button">
-<i class="bi bi-code-slash me-1"></i>Для разработчиков
-            </button>
-<button class="btn btn-outline-secondary" data-filter-scope="user" data-i18n="ui.plg.txt_0f2f3df5" id="plg-button-0f2f3df5" type="button">
-<i class="bi bi-person-fill me-1"></i>Пользовательские
-            </button>
+<button class="btn btn-outline-secondary active" data-block-id="block-all" data-filter-scope="all" data-i18n="ui.plg.txt_fc505dae" data-i18n-title="plugins.blocks.allTitle" id="plg-button-fc505dae" title="{{plugins.blocks.allTitle}}" type="button">{{ui.plg.txt_fc505dae}}</button>
+<button class="btn btn-outline-secondary" data-block-id="block-system" data-filter-scope="system" data-i18n-title="plugins.blocks.systemTitle" id="plg-button-13155df4" title="{{plugins.blocks.systemTitle}}" type="button">
+<i class="bi bi-gear-fill me-1"></i><span data-i18n="ui.plg.txt_13155df4" id="spn-ui-plg-txt-13155df4-text">{{ui.plg.txt_13155df4}}</span></button>
+<button class="btn btn-outline-secondary" data-block-id="block-developer" data-filter-scope="developer" data-i18n-title="plugins.blocks.developerTitle" id="plg-button-da097394" title="{{plugins.blocks.developerTitle}}" type="button">
+<i class="bi bi-code-slash me-1"></i><span data-i18n="ui.plg.txt_da097394" id="spn-ui-plg-txt-da097394-text">{{ui.plg.txt_da097394}}</span></button>
+<button class="btn btn-outline-secondary" data-block-id="block-user" data-filter-scope="user" data-i18n-title="plugins.blocks.userTitle" id="plg-button-0f2f3df5" title="{{plugins.blocks.userTitle}}" type="button">
+<i class="bi bi-person-fill me-1"></i><span data-i18n="ui.plg.txt_0f2f3df5" id="spn-ui-plg-txt-0f2f3df5-text">{{ui.plg.txt_0f2f3df5}}</span></button>
 </div>
 <!-- Поиск по названию или описанию -->
 <div class="d-flex align-items-center gap-2" style="min-width: 260px; max-width: 400px; flex-grow: 1;">
@@ -77,7 +80,7 @@ Updated: 2026-10-26 00:05:00
 <span class="input-group-text bg-body-tertiary border-end-0">
 <i class="bi bi-search text-secondary"></i>
 </span>
-<input class="form-control border-start-0 ps-0" data-i18n-placeholder="placeholders.plg.ph_1dc959f6" id="plugins-search-input" placeholder="Поиск по установленным плагинам..." type="text"/>
+<input class="form-control border-start-0 ps-0" data-i18n-placeholder="placeholders.plg.ph_1dc959f6" id="plugins-search-input" placeholder="{{placeholders.plg.ph_1dc959f6}}" type="text"/>
 <button class="btn btn-outline-secondary d-none" id="btn-clear-plugin-search" type="button">
 <i class="bi bi-x-circle"></i>
 </button>
@@ -89,7 +92,7 @@ Updated: 2026-10-26 00:05:00
 <div class="row g-3" id="plugins-cards-grid">
 <div class="col-12 text-center py-5 text-secondary">
 <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-<div class="small" data-i18n="ui.plg.txt_c21691d4" id="plg-div-c21691d4">Загрузка каталога плагинов...</div>
+<div class="small" data-i18n="ui.plg.txt_c21691d4" id="plg-div-c21691d4">{{ui.plg.txt_c21691d4}}</div>
 </div>
 </div>
 </div>
@@ -98,17 +101,16 @@ Updated: 2026-10-26 00:05:00
 <div class="card shadow-sm border mb-3">
 <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
 <div class="d-flex align-items-center gap-2">
-<span class="badge bg-primary-subtle text-primary border px-2 py-1" data-i18n="ui.plg.txt_f1d276b0" id="plg-span-f1d276b0">
-<i class="bi bi-star-fill text-warning me-1"></i>Рекомендуемые расширения IDE
-            </span>
-<small class="text-secondary" data-i18n="ui.plg.txt_53ec8fe6" id="plg-small-53ec8fe6">Установка стандартных плагинов Visual Studio Code в один клик</small>
+<span class="badge bg-primary-subtle text-primary border px-2 py-1" id="plg-span-f1d276b0">
+<i class="bi bi-star-fill text-warning me-1"></i><span data-i18n="ui.plg.txt_f1d276b0" id="spn-ui-plg-txt-f1d276b0-text">{{ui.plg.txt_f1d276b0}}</span></span>
+<small class="text-secondary" data-i18n="ui.plg.txt_53ec8fe6" id="plg-small-53ec8fe6">{{ui.plg.txt_53ec8fe6}}</small>
 </div>
 <div class="d-flex align-items-center gap-2" style="min-width: 260px; max-width: 400px; flex-grow: 1;">
 <div class="input-group input-group-sm">
 <span class="input-group-text bg-body-tertiary border-end-0">
 <i class="bi bi-search text-secondary"></i>
 </span>
-<input class="form-control border-start-0 ps-0" data-i18n-placeholder="placeholders.plg.ph_b0265d96" id="marketplace-search-input" placeholder="Поиск в маркетплейсе..." type="text"/>
+<input class="form-control border-start-0 ps-0" data-i18n-placeholder="placeholders.plg.ph_b0265d96" id="marketplace-search-input" placeholder="{{placeholders.plg.ph_b0265d96}}" type="text"/>
 </div>
 </div>
 </div>
@@ -117,7 +119,73 @@ Updated: 2026-10-26 00:05:00
 <div class="row g-3" id="marketplace-cards-grid">
 <div class="col-12 text-center py-5 text-secondary">
 <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-<div class="small" data-i18n="ui.plg.txt_fea358e4" id="plg-div-fea358e4">Загрузка маркетплейса плагинов...</div>
+<div class="small" data-i18n="ui.plg.txt_fea358e4" id="plg-div-fea358e4">{{ui.plg.txt_fea358e4}}</div>
+</div>
+</div>
+</div>
+<!-- ПАНЕЛЬ 3: Автономные навыки (Skills & Secrets) -->
+<div class="tab-pane fade" id="tab-pane-skills" role="tabpanel">
+<div class="card shadow-sm border mb-3">
+<div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+<div class="d-flex align-items-center gap-2">
+<span class="badge bg-warning-subtle text-warning border px-2 py-1" id="skills-subtab-badge">
+<i class="bi bi-lightning-charge-fill text-warning me-1"></i><span data-i18n="ui.plg.txt_skills_title" id="spn-ui-plg-skills-title">{{ui.plg.txt_skills_title}}</span></span>
+<small class="text-secondary" data-i18n="ui.plg.txt_skills_subtitle" id="plg-small-skills-sub">{{ui.plg.txt_skills_subtitle}}</small>
+</div>
+<div class="d-flex align-items-center gap-2" style="min-width: 260px; max-width: 380px; flex-grow: 1;">
+<div class="input-group input-group-sm">
+<span class="input-group-text bg-body-tertiary border-end-0">
+<i class="bi bi-search text-secondary"></i>
+</span>
+<input class="form-control border-start-0 ps-0" data-i18n-placeholder="placeholders.plg.ph_search_skills" id="skills-search-input" placeholder="{{placeholders.plg.ph_search_skills}}" type="text"/>
+</div>
+<button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 shadow-sm" data-i18n-title="titles.plg.title_reload_skills" id="btn-reload-skills" title="{{titles.plg.title_reload_skills}}" type="button">
+<i class="bi bi-arrow-clockwise"></i>
+</button>
+</div>
+</div>
+</div>
+<!-- Сетка карточек навыков -->
+<div class="row g-3" id="skills-cards-grid">
+<div class="col-12 text-center py-5 text-secondary">
+<div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+<div class="small" data-i18n="ui.plg.txt_loading_skills" id="plg-div-loading-skills">{{ui.plg.txt_loading_skills}}</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Модальное окно конфигурации навыка -->
+<div aria-hidden="true" aria-labelledby="modalSkillConfigTitle" class="modal fade" id="modal-skill-config" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content shadow border">
+<div class="modal-header py-2 border-bottom">
+<h6 class="modal-title fw-bold d-flex align-items-center gap-2" id="modalSkillConfigTitle">
+<span>⚡</span>
+<span data-i18n="ui.plg.txt_modal_skill_title" id="plg-span-modal-skill-title">{{ui.plg.txt_modal_skill_title}}</span>
+<span class="text-primary font-monospace ms-1" id="modal-skill-name"></span>
+</h6>
+<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body p-3">
+<div id="modal-skill-alert-container"></div>
+<div class="d-flex flex-column gap-3" id="modal-skill-fields-container">
+<!-- Динамические поля формы -->
+</div>
+</div>
+<div class="modal-footer py-2 border-top d-flex justify-content-between">
+<div>
+<button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5 d-none" id="btn-test-skill-connection" type="button">
+<i class="bi bi-lightning-charge"></i>
+<span data-i18n="ui.plg.txt_test_skill" id="plg-span-test-skill">{{ui.plg.txt_test_skill}}</span>
+</button>
+</div>
+<div class="d-flex align-items-center gap-2">
+<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" data-i18n="ui.plg.txt_987b33c6" id="plg-button-cancel-skill" type="button">{{ui.plg.txt_987b33c6}}</button>
+<button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="btn-save-skill-config" type="button">
+<i class="bi bi-check-circle"></i>
+<span data-i18n="ui.plg.txt_save_skill" id="plg-span-save-skill">{{ui.plg.txt_save_skill}}</span>
+</button>
 </div>
 </div>
 </div>
@@ -130,7 +198,7 @@ Updated: 2026-10-26 00:05:00
 <div class="modal-header py-2 border-bottom">
 <h6 class="modal-title fw-bold d-flex align-items-center gap-2" id="modalPluginConfigTitle">
 <span id="modal-config-plugin-icon">⚙️</span>
-<span data-i18n="ui.plg.txt_2b8cb57e" id="plg-span-2b8cb57e">Настройки плагина: <span class="text-primary font-monospace" id="modal-config-plugin-name"></span></span>
+<span data-i18n="ui.plg.txt_2b8cb57e" id="plg-span-2b8cb57e">{{ui.plg.txt_2b8cb57e}}</span>
 </h6>
 <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
@@ -140,10 +208,10 @@ Updated: 2026-10-26 00:05:00
 </div>
 </div>
 <div class="modal-footer py-2 border-top">
-<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" data-i18n="ui.plg.txt_987b33c6" id="plg-button-987b33c6" type="button">Отмена</button>
+<button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" data-i18n="ui.plg.txt_987b33c6" id="plg-button-987b33c6" type="button">{{ui.plg.txt_987b33c6}}</button>
 <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="btn-save-plugin-config" type="button">
 <i class="bi bi-check-circle"></i>
-<span data-i18n="ui.plg.txt_f2e3f707" id="plg-span-f2e3f707">Сохранить настройки</span>
+<span data-i18n="ui.plg.txt_f2e3f707" id="plg-span-f2e3f707">{{ui.plg.txt_f2e3f707}}</span>
 </button>
 </div>
 </div>

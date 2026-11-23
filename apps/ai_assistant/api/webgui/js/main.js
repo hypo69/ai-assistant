@@ -11,16 +11,16 @@
  * File: main.js
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
- * Updated: 2026-11-11 23:50:00
+ * Updated: 2026-11-20 02:16:00
  * =============================================================================
  */
 
 import { initI18n, switchLang, applyTranslations } from './i18n.js';
 import { initTheme } from './theme.js';
-import { initUserSettings } from './userSettings.js?v=20261111_v1';
+import { initUserSettings } from './userSettings.js?v=20261120_v1';
 import { initCacheUI } from './cache-ui.js';
-import { switchTab, loadTab, setupTabClicks } from './tab-core.js';
-import { initTopWorkspaceDropdown, updateTopWorkspaceDropdown, areWorkspacesEqual } from './top_workspace_dropdown.js?v=20261110_v1';
+import { switchTab, loadTab, setupTabClicks } from './tab-core.js?v=20261120_v1';
+import { initTopWorkspaceDropdown, updateTopWorkspaceDropdown, areWorkspacesEqual } from './top_workspace_dropdown.js?v=20261116_v2';
 import { initCustomContextMenu } from './context-menu.js';
 import {
   initDrawerWorkspaces,
@@ -28,9 +28,9 @@ import {
   highlightActiveDrawerWorkspace,
   switchToWorkspace,
   findWorkspaceMatch,
-} from './drawer_workspaces.js';
-import { initIdeNavigation } from './ide_navigation.js?v=20261111_v1';
-import { initIdeFileExplorer } from './ide_file_explorer.js?v=20261111_v3';
+} from './drawer_workspaces.js?v=20261120_v1';
+import { initIdeNavigation } from './ide_navigation.js?v=20261120_v1';
+import { initIdeFileExplorer } from './ide_file_explorer.js?v=20261119_v3';
 import { initModelTester, sendModelPing } from './model-tester.js';
 import './api-cache.js';
 
@@ -44,30 +44,31 @@ window.sendModelPing = sendModelPing;
 
 // Карта соответствия вкладок: id -> [htmlUrl, jsUrl]
 const TABS = {
-  'workspace':        ['/html/tab_workspace/index.html?v=20261111_v1', '/html/tab_workspace/main.js?v=20261111_v1'],
-  'create-workspace': ['/html/tab_create_workspace/index.html?v=20261110_v2', '/html/tab_create_workspace/main.js?v=20261110_v2'],
+  'workspace':        ['/html/tab_workspace/index.html?v=20261119_v2', '/html/tab_workspace/main.js?v=20261119_v10'],
+  'create-workspace': ['/html/tab_create_workspace/index.html?v=20261120_v1', '/html/tab_create_workspace/main.js?v=20261120_v1'],
   'timeline':         ['/html/tab_timeline/index.html',         '/html/tab_timeline/main.js'],
-  'commits':          ['/html/tab_commits/index.html',          '/html/tab_commits/main.js'],
-  'diff':             ['/html/tab_diff/index.html',             '/html/tab_diff/main.js'],
+  'commits':          ['/html/tab_commits/index.html?v=20261119_v2', '/html/tab_commits/main.js?v=20261119_v3'],
+  'diff':             ['/html/tab_diff/index.html?v=20261119_v1',    '/html/tab_diff/main.js?v=20261119_v2'],
   'graph':            ['/html/tab_graph/index.html',            '/html/tab_graph/main.js'],
   'rag':              ['/html/tab_rag/index.html',              '/html/tab_rag/main.js'],
   'verification':     ['/html/tab_verification/index.html',     '/html/tab_verification/main.js'],
-  'status':           ['/html/tab_status/index.html',           '/html/tab_status/main.js'],
-  'theme-editor':     ['/html/tab_theme_editor/index.html',     '/html/tab_theme_editor/main.js'],
-  'models':           ['/html/tab_models/index.html',           '/html/tab_models/main.js'],
+  'theme-editor':     ['/html/tab_theme_editor/index.html?v=20261119_v1',     '/html/tab_theme_editor/main.js?v=20261119_v1'],
+  'models':           ['/html/tab_models/index.html?v=20261120_v1',           '/html/tab_models/main.js?v=20261120_v1'],
   'git-maintenance':  ['/html/tab_git_maintenance/index.html',  '/html/tab_git_maintenance/main.js'],
   'gmail':            ['/html/tab_gmail/index.html',            '/html/tab_gmail/main.js'],
-  'calendar':         ['/html/tab_calendar/index.html',         '/html/tab_calendar/main.js'],
+  'outlook':          ['/html/tab_outlook/index.html',          '/html/tab_outlook/main.js'],
+  'calendar':         ['/html/tab_calendar/index.html?v=20261119_v2', '/html/tab_calendar/main.js?v=20261119_v2'],
   'drive':            ['/html/tab_drive/index.html',            '/html/tab_drive/main.js'],
   'contacts':         ['/html/tab_contacts/index.html',         '/html/tab_contacts/main.js'],
   'plugins':          ['/html/tab_plugins/index.html',          '/html/tab_plugins/main.js'],
-  'file-editor':      ['/html/tab_file_editor/index.html',      '/html/tab_file_editor/main.js'],
+  'file-editor':      ['/html/tab_file_editor/index.html?v=20261119_v1',      '/html/tab_file_editor/main.js?v=20261119_v2'],
   'file-tree':        ['/html/tab_file_tree/index.html',        '/html/tab_file_tree/main.js'],
   'obsidian':         ['/html/tab_obsidian/index.html',         '/html/tab_obsidian/main.js'],
   'doc-categorizer':  ['/html/tab_doc_categorizer/index.html',  '/html/tab_doc_categorizer/main.js'],
-  'chat':             ['/html/tab_chat/index.html?v=20261111_v1', '/html/tab_chat/main.js?v=20261111_v1'],
+  'chat':             ['/html/tab_chat/index.html?v=20261119_v5', '/html/tab_chat/main.js?v=20261119_v5'],
   'tasks':            ['/html/tab_tasks/index.html',            '/html/tab_tasks/main.js'],
-  'instruments':      ['/html/tab_instruments/index.html',      '/html/tab_instruments/main.js'],
+  'instruments':      ['/html/tab_instruments/index.html?v=20261119_v1',      '/html/tab_instruments/main.js?v=20261119_v1'],
+  'commands':         ['/html/tab_commands/index.html',         '/html/tab_commands/main.js'],
   'wikillm':          ['/html/tab_wikillm/index.html',          '/html/tab_wikillm/main.js'],
   'tooltips':         ['/html/tab_tooltips/index.html',         '/html/tab_tooltips/main.js'],
 };
@@ -79,9 +80,56 @@ async function lazyLoad(tabName) {
   loaded.add(tabName);
   const v = Date.now();
   const [html, js] = TABS[tabName];
-  await loadTab(tabName, `${html}?v=${v}`, `${js}?v=${v}`);
-  applyTranslations();
+  const withBust = (url) => `${url}${url.includes('?') ? '&' : '?'}t=${v}`;
+  try {
+    await loadTab(tabName, withBust(html), withBust(js));
+    applyTranslations();
+  } catch (err) {
+    loaded.delete(tabName);
+    throw err;
+  }
 }
+
+let saveStateDebounceTimer = null;
+
+/**
+ * Сохраняет последнюю активную вкладку, URL и рабочее пространство в localStorage и config.json.
+ * @param {string} tabId 
+ * @param {string|null} [urlHash=null] 
+ * @param {string|null} [workspaceId=null] 
+ */
+export function saveActiveState(tabId, urlHash = null, workspaceId = null) {
+  if (!tabId) return;
+  const cleanTab = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
+  const effectiveHash = urlHash !== null ? urlHash : (typeof location !== 'undefined' ? location.hash : '');
+  const effectiveWs = workspaceId || (typeof window.getActiveWorkspaceId === 'function' ? window.getActiveWorkspaceId() : null);
+
+  try {
+    localStorage.setItem('ai_assistant_last_tab', cleanTab);
+    if (effectiveHash) {
+      localStorage.setItem('ai_assistant_last_hash', effectiveHash);
+    }
+    if (effectiveWs) {
+      localStorage.setItem('ai_assistant_active_workspace', effectiveWs);
+    }
+  } catch (_) {}
+
+  clearTimeout(saveStateDebounceTimer);
+  saveStateDebounceTimer = setTimeout(() => {
+    try {
+      fetch('/api/v1/workspaces/active-tab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tab_id: cleanTab,
+          url_hash: effectiveHash || `#${cleanTab}`,
+          workspace_id: effectiveWs,
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+  }, 300);
+}
+window.saveActiveState = saveActiveState;
 
 export async function switchMainTab(tabId) {
   if (!tabId) return;
@@ -96,9 +144,13 @@ export async function switchMainTab(tabId) {
   if (!loaded.has(rawName) && TABS[rawName]) {
     await lazyLoad(rawName).catch(err => console.warn(`[Main] Ошибка lazyLoad для ${rawName}:`, err));
   }
+
+  // Фиксируем последнюю открытую вкладку в конфигурации
+  saveActiveState(normId);
 }
 window.switchTab = switchMainTab;
 window.switchToTab = switchMainTab;
+window.switchMainTab = switchMainTab;
 
 // Обработка 2-Step аннотации факта
 function setupAnnotationModal() {
@@ -178,22 +230,69 @@ async function initTopGmailBadge() {
   } catch (_) {}
 }
 
+// Вспомогательный канонический парсер URL стандарта workspace-url-routing
+export function parseWorkspaceUrlComponents(rawHash) {
+  const clean = (rawHash || '').replace(/^#/, '');
+  const parts = clean.split('#').filter(Boolean);
+  const tabId = parts[0] || 'tab-workspace';
+  let panelId = null;
+  let blockId = null;
+  let wsId = null;
+
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i];
+    if (part.startsWith('workspace=')) {
+      try {
+        wsId = decodeURIComponent(part.slice(10));
+      } catch (_) {
+        wsId = part.slice(10);
+      }
+    } else if (part.startsWith('panel-') || part.startsWith('step')) {
+      panelId = part;
+    } else if (part.startsWith('block-')) {
+      blockId = part;
+    } else if (!wsId && !part.includes('=')) {
+      try {
+        wsId = decodeURIComponent(part);
+      } catch (_) {
+        wsId = part;
+      }
+    }
+  }
+
+  return {
+    tabId,
+    panelId: panelId || (tabId === 'tab-workspace' ? 'panel-files' : null),
+    blockId: blockId ? blockId.replace(/^block-/, '') : null,
+    workspaceId: wsId ? wsId.trim().normalize('NFC') : null,
+  };
+}
+
 async function init() {
-  // 1. Инициализация темы (light, dark, brick, terminal, system)
+  // Защита от повторного запуска оркестратора
+  if (window.__aiAssistantMainInitStarted) return;
+  window.__aiAssistantMainInitStarted = true;
+
+  // 1. Инициализация темы (light, dark, brick, terminal, system) и мгновенная привязка навигации
   initTheme();
+  setupTabClicks();
+  initCacheUI();
+  setupAnnotationModal();
+
+  // 1.1 Мгновенное переключение на активную вкладку из URL для устранения задержки рендера (Fast First Paint)
+  const initialHash = (typeof location !== 'undefined' ? location.hash : '') || '';
+  const preParsed = parseWorkspaceUrlComponents(initialHash);
+  if (preParsed.tabId && preParsed.tabId !== 'tab-chat') {
+    switchTab(preParsed.tabId);
+  }
 
   // 2. Инициализация i18n с авто-определением языка и URL параметров (?lang=ru, ?locale=ru-RU)
   await initI18n();
 
-  // 3. Настройки пользователя и кеш
-  await initUserSettings();
-  initCacheUI();
-
-  // 4. Привязка кликов по кнопкам меню/вкладок
-  setupTabClicks();
-
-  // 5. Настройка модального окна 2-Step аннотации
-  setupAnnotationModal();
+  // 3. Настройки пользователя (неблокирующий запуск, чтобы сетевые задержки /api/v1/auth/check не тормозили интерфейс)
+  initUserSettings().catch((err) => {
+    console.warn('[Main] Ошибка фоновой инициализации userSettings:', err);
+  });
 
   // 5.1 Инициализация выпадающего списка рабочих пространств на верхней панели
   await initTopWorkspaceDropdown();
@@ -213,47 +312,21 @@ async function init() {
   initIdeFileExplorer();
   initModelTester();
 
-  // Вспомогательный канонический парсер URL стандарта workspace-url-routing
-  const parseWorkspaceUrlComponents = (rawHash) => {
-    const clean = (rawHash || '').replace(/^#/, '');
-    const parts = clean.split('#');
-    const tabId = parts[0] || 'tab-workspace';
-    let panelId = null;
-    let wsId = null;
+  // 6. Определение активного пространства и вкладки из конфига и URL стандартов workspace-url-routing
+  const currentHash = typeof location !== 'undefined' ? location.hash : '';
+  const hasUserHash = Boolean(currentHash && currentHash !== '#' && currentHash.length > 1);
 
-    for (let i = 1; i < parts.length; i++) {
-      const part = parts[i];
-      if (part.startsWith('workspace=')) {
-        try {
-          wsId = decodeURIComponent(part.slice(10));
-        } catch (_) {
-          wsId = part.slice(10);
-        }
-      } else if (part.startsWith('panel-') || part.startsWith('step')) {
-        panelId = part;
-      } else if (!wsId && !part.includes('=')) {
-        try {
-          wsId = decodeURIComponent(part);
-        } catch (_) {
-          wsId = part;
-        }
-      }
-    }
+  // 6.1 Считываем сохраненное состояние из localStorage
+  let localLastTab = null;
+  let localLastHash = null;
+  let localLastWs = null;
+  try {
+    localLastTab = localStorage.getItem('ai_assistant_last_tab');
+    localLastHash = localStorage.getItem('ai_assistant_last_hash');
+    localLastWs = localStorage.getItem('ai_assistant_active_workspace');
+  } catch (_) {}
 
-    return {
-      tabId,
-      panelId: panelId || 'panel-chat',
-      workspaceId: wsId ? wsId.trim().normalize('NFC') : null,
-    };
-  };
-
-  // 6. Определение активного пространства из конфига и URL стандартов workspace-url-routing
-  const parsedUrl = parseWorkspaceUrlComponents(typeof location !== 'undefined' ? location.hash : '');
-  let initialTabId = parsedUrl.tabId;
-  let targetWsId = parsedUrl.workspaceId;
-  const targetPanelId = parsedUrl.panelId || 'panel-chat';
-
-  // 6.1 Проверяем фактический список доступных рабочих пространств на сервере
+  // 6.2 Проверяем фактический список доступных рабочих пространств на сервере
   let availableWorkspaces = [];
   try {
     const wsRes = await fetch('/api/v1/workspaces');
@@ -265,52 +338,94 @@ async function init() {
     console.warn('[Main] Ошибка получения списка рабочих пространств:', err);
   }
 
-  // 6.2 Если рабочие пространства отсутствуют вовсе — открываем панель создания НОВОГО рабочего пространства
+  // 6.3 Запрашиваем последнее активное пространство и вкладку из конфига на сервере
+  let serverActiveWs = null;
+  let serverLastTab = null;
+  let serverLastUrl = null;
+  try {
+    const activeRes = await fetch('/api/v1/workspaces/active');
+    if (activeRes.ok) {
+      const activeData = await activeRes.json();
+      if (activeData) {
+        serverActiveWs = activeData.workspace_id || null;
+        serverLastTab = activeData.last_active_tab || null;
+        serverLastUrl = activeData.last_active_url || null;
+      }
+    }
+  } catch (err) {
+    console.warn('[Main] Ошибка получения активного рабочего пространства из конфига:', err);
+  }
+
+  let effectiveHash = currentHash;
+  if (!hasUserHash) {
+    // Восстанавливаем последнюю открытую вкладку и пространство из конфига или localStorage
+    if (serverLastUrl) {
+      effectiveHash = serverLastUrl;
+    } else if (localLastHash) {
+      effectiveHash = localLastHash;
+    } else if (serverLastTab || localLastTab) {
+      const restoredTab = serverLastTab || localLastTab;
+      const restoredWs = serverActiveWs || localLastWs;
+      if ((restoredTab === 'tab-workspace' || restoredTab === 'workspace') && restoredWs) {
+        effectiveHash = `#tab-workspace#panel-files#workspace=${encodeURIComponent(restoredWs)}`;
+      } else {
+        effectiveHash = restoredTab.startsWith('#') ? restoredTab : `#${restoredTab}`;
+      }
+    } else if (serverActiveWs || localLastWs) {
+      const restoredWs = serverActiveWs || localLastWs;
+      effectiveHash = `#tab-workspace#panel-files#workspace=${encodeURIComponent(restoredWs)}`;
+    }
+  }
+
+  const parsedUrl = parseWorkspaceUrlComponents(effectiveHash || '#tab-workspace');
+  let initialTabId = parsedUrl.tabId || 'tab-workspace';
+  let targetWsId = parsedUrl.workspaceId || serverActiveWs || localLastWs;
+  const targetPanelId = parsedUrl.panelId || 'panel-files';
+
   if (availableWorkspaces.length === 0) {
     initialTabId = 'tab-create-workspace';
     targetWsId = null;
+    try {
+      localStorage.removeItem('ai_assistant_active_workspace');
+      localStorage.removeItem('ai_assistant_active_repo');
+      localStorage.removeItem('ai_assistant_last_hash');
+    } catch (_) {}
+    if (typeof window.setActiveWorkspaceId === 'function') {
+      window.setActiveWorkspaceId('');
+    }
+    if (typeof window.updateActiveWorkspaceHeaderTitle === 'function') {
+      window.updateActiveWorkspaceHeaderTitle('');
+    }
     if (typeof location !== 'undefined' && (location.hash.startsWith('#tab-workspace') || location.hash.includes('workspace='))) {
       location.hash = '#tab-create-workspace';
     }
-  } else {
-    // Если рабочие пространства есть, но в URL не указано — читаем последнее открытое из конфига на сервере
-    if (!targetWsId) {
-      try {
-        const activeRes = await fetch('/api/v1/workspaces/active');
-        if (activeRes.ok) {
-          const activeData = await activeRes.json();
-          if (activeData && activeData.workspace_id) {
-            targetWsId = activeData.workspace_id;
-          }
-        }
-      } catch (err) {
-        console.warn('[Main] Ошибка получения активного рабочего пространства из конфига:', err);
-      }
-    }
-    // Если активное не найдено — берём первое из существующих
-    if (!targetWsId && availableWorkspaces[0]) {
-      targetWsId = availableWorkspaces[0].workspace_id;
-    }
-    if (!initialTabId) {
-      initialTabId = 'tab-workspace';
-    }
+  } else if (!targetWsId && availableWorkspaces[0]) {
+    targetWsId = availableWorkspaces[0].workspace_id;
+  }
+
+  if (!hasUserHash && effectiveHash) {
+    try {
+      history.replaceState(null, '', `${location.pathname}${location.search || ''}${effectiveHash}`);
+    } catch (_) {}
   }
 
   const rawTabName = initialTabId.startsWith('tab-') ? initialTabId.slice(4) : initialTabId;
 
   // 7. Загрузка исключительно целевой активной вкладки
-  await lazyLoad(rawTabName);
-  applyTranslations();
   await switchMainTab(initialTabId);
+  applyTranslations();
 
   // 8. Если рабочие пространства есть, синхронизируем суб-панели и выпадающий список
   if (availableWorkspaces.length > 0) {
-    if (typeof window.switchWorkspaceSubTab === 'function') {
-      window.switchWorkspaceSubTab(targetPanelId, false);
-    }
     if (targetWsId) {
       await updateTopWorkspaceDropdown(targetWsId);
       highlightActiveDrawerWorkspace(targetWsId);
+      if (typeof window.refreshFileTree === 'function') {
+        window.refreshFileTree(targetWsId);
+      }
+    }
+    if ((initialTabId === 'tab-workspace' || initialTabId === 'workspace') && typeof window.switchWorkspaceSubTab === 'function') {
+      window.switchWorkspaceSubTab(targetPanelId, false, parsedUrl.blockId);
     }
   } else {
     await updateTopWorkspaceDropdown(null);
@@ -332,12 +447,16 @@ async function init() {
           }
           await updateTopWorkspaceDropdown(parsed.workspaceId);
           highlightActiveDrawerWorkspace(parsed.workspaceId);
+          if (typeof window.refreshFileTree === 'function') {
+            window.refreshFileTree(parsed.workspaceId);
+          }
         }
         if (typeof window.switchWorkspaceSubTab === 'function' && parsed.panelId) {
-          window.switchWorkspaceSubTab(parsed.panelId, false);
+          window.switchWorkspaceSubTab(parsed.panelId, false, parsed.blockId);
         }
       }
     }
+    saveActiveState(curTab, location.hash, parsed.workspaceId);
   });
   // 10. Навигация на главную страницу при клике по брендингу (#app-brand-link)
   const brandLink = document.getElementById('app-brand-link');

@@ -12,7 +12,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_workspace/panel_sources
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 20:52:00
+ * Updated: 2026-11-19 18:20:00
  * =============================================================================
  */
 
@@ -114,6 +114,7 @@ export async function loadSources(workspaceId = null, force = false) {
             method: 'DELETE',
           });
           await loadSources(currentWsId);
+          if (onSourcesSyncedCallback) await onSourcesSyncedCallback(currentWsId);
         } catch (err) {
           alert(`Ошибка удаления: ${err.message}`);
         }

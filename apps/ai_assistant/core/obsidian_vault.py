@@ -27,7 +27,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 21:21:00
+# Updated: 2026-11-20 00:21:00
 # =============================================================================
 
 from __future__ import annotations
@@ -37,13 +37,19 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import random
 import re
+import threading
+import time
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from urllib.parse import quote
+import uuid
 
 from logger import logger
+from apps.ai_assistant.core.git_i18n import get_git_commit_msg
 from apps.ai_assistant.core.obsidian_i18n import get_obsidian_locale
 from apps.ai_assistant.core.service_file_authenticator import ServiceFileAuthenticator
+from apps.ai_assistant.core.workspace_registry import resolve_workspace_language
 
 if TYPE_CHECKING:
     from apps.ai_assistant.core.workspace_manager import WorkspaceManager
@@ -108,7 +114,7 @@ def _format_fact_line(
 ) -> str:
     """Форматирует структурированный факт в строку списка с [[wikilinks]]."""
     f_type = fact.get("fact_type", "action")
-    lang = fact.get("language", "ru")
+    lang = resolve_workspace_language(fact.get("language") or ui_language)
     loc = get_obsidian_locale(ui_language or lang)
     is_neg = bool(fact.get("is_negated"))
     doc_id = fact.get("document_id") or fact.get("source", {}).get("document_id", "")
@@ -150,6 +156,7 @@ class ObsidianVaultBuilder:
     def __init__(self, workspace_manager: WorkspaceManager) -> None:
         """Инициализирует построитель хранилища Obsidian с внедрением WorkspaceManager."""
         self.wm = workspace_manager
+        self._write_lock = threading.RLock()
 
     @staticmethod
     def is_obsidian_generated_content(raw_text: str) -> bool:
@@ -191,12 +198,67 @@ class ObsidianVaultBuilder:
         return f"obsidian://open?path={encoded_path}"
 
     @staticmethod
-    def _atomic_write_text(target: Path, content: str) -> None:
-        """Атомарно записывает текстовый файл через временный .tmp и os.replace."""
+    def _atomic_write_text(
+        target: Path,
+        content: str,
+        max_retries: int = 6,
+        base_delay: float = 0.05,
+    ) -> None:
+        """Атомарно записывает текстовый файл через уникальный временный .tmp и os.replace.
+
+        Устойчиво обрабатывает временные блокировки файлов на Windows (WinError 32 / 5 / 33)
+        со стороны антивируса, Obsidian, индексатора или параллельных потоков с помощью
+        уникального имени временного файла, экспоненциального backoff + jitter и
+        резервной прямой перезаписи при устойчивой блокировке операции переименования.
+
+        Args:
+            target: Целевой путь файла.
+            content: Записываемое текстовое содержимое (UTF-8).
+            max_retries: Максимальное количество попыток `os.replace`.
+            base_delay: Базовая задержка в секундах перед повтором.
+        """
         target.parent.mkdir(parents=True, exist_ok=True)
-        tmp_path = target.with_name(f"{target.name}.tmp")
-        tmp_path.write_text(content, encoding="utf-8")
-        os.replace(tmp_path, target)
+        unique_suffix = f"{os.getpid()}.{threading.get_ident()}.{uuid.uuid4().hex[:8]}.tmp"
+        tmp_path = target.with_name(f"~{target.name}.{unique_suffix}")
+        try:
+            tmp_path.write_text(content, encoding="utf-8")
+            last_err: Optional[OSError] = None
+            for attempt in range(max(1, max_retries)):
+                try:
+                    os.replace(tmp_path, target)
+                    return
+                except OSError as exc:
+                    win_err = getattr(exc, "winerror", None)
+                    is_lock_err = isinstance(exc, PermissionError) or win_err in (5, 32, 33)
+                    if not is_lock_err:
+                        raise
+                    last_err = exc
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2 ** attempt) + random.uniform(0.0, 0.025)
+                        time.sleep(delay)
+
+            # Резервная прямая запись, если os.replace устойчиво заблокирован (например, открыт на чтение в Windows)
+            logger.warning(
+                f"[ObsidianVault] os.replace заблокирован для {target} ({last_err}); "
+                f"выполняется резервная прямая запись."
+            )
+            for fb_attempt in range(3):
+                try:
+                    target.write_text(content, encoding="utf-8")
+                    return
+                except OSError as fb_exc:
+                    last_err = fb_exc
+                    if fb_attempt < 2:
+                        time.sleep(0.1 * (fb_attempt + 1))
+
+            if last_err is not None:
+                raise last_err
+        finally:
+            try:
+                if tmp_path.exists():
+                    tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
     def _resolve_doc_md_path(self, ws_path: Path, doc_id: str) -> Path:
         """Определяет путь к компактному .md файлу документа внутри рабочей области.
@@ -246,7 +308,7 @@ class ObsidianVaultBuilder:
     ) -> str:
         """Формирует компактный .md документ с YAML frontmatter, исходным текстом и блоком фактов."""
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        eff_ui_lang = ui_language or language or "ru"
+        eff_ui_lang = resolve_workspace_language(ui_language or language, text_hints=(workspace_id, doc_id))
         loc = get_obsidian_locale(eff_ui_lang)
         entity_names = sorted({
             str(e.get("lemma") or e.get("normalized") or e.get("text") or "").strip()
@@ -334,10 +396,9 @@ class ObsidianVaultBuilder:
             self.rebuild_knowledge_base_index(workspace_id)
             return None
 
-        ws_lang = ws.get("language") or ""
+        ws_lang = resolve_workspace_language(ws.get("language"), text_hints=(ws.get("name", ""), workspace_id))
         raw_doc_lang = analysis.get("language") or ""
-        language = ws_lang if (not raw_doc_lang or raw_doc_lang == "unknown") else raw_doc_lang
-        language = language or "ru"
+        language = ws_lang if (not raw_doc_lang or raw_doc_lang == "unknown") else resolve_workspace_language(raw_doc_lang)
         ui_language = ws_lang or language
         facts = self.wm.store.get_facts(workspace_id=workspace_id, document_id=doc_id, include_stale=False)
         if not facts and analysis.get("facts"):
@@ -357,8 +418,9 @@ class ObsidianVaultBuilder:
             original_path=original_path,
             ui_language=ui_language,
         )
-        self._atomic_write_text(md_target, enriched_md)
-        self.rebuild_knowledge_base_index(workspace_id)
+        with self._write_lock:
+            self._atomic_write_text(md_target, enriched_md)
+            self.rebuild_knowledge_base_index(workspace_id)
         return md_target
 
     def rebuild_knowledge_base_index(self, workspace_id: str) -> Path:
@@ -374,7 +436,7 @@ class ObsidianVaultBuilder:
 
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         ws_name = ws.get("name") or workspace_id
-        ws_lang = ws.get("language") or "ru"
+        ws_lang = resolve_workspace_language(ws.get("language"), text_hints=(ws_name, workspace_id))
         loc = get_obsidian_locale(ws_lang)
         git_head = (ws.get("git_head") or "HEAD")[:8]
 
@@ -455,9 +517,9 @@ class ObsidianVaultBuilder:
                     src_txt = (f.get("subject") or {}).get("lemma") or (f.get("subject") or {}).get("text") or "Subject"
                     dst_txt = (f.get("object") or {}).get("lemma") or (f.get("object") or {}).get("text") or "Object"
                     rel_txt = (f.get("predicate") or {}).get("lemma") or (f.get("predicate") or {}).get("text") or loc["default_action_predicate"]
-                safe_src = re.sub(r'["\[\]\(\)]', "", str(src_txt))
-                safe_dst = re.sub(r'["\[\]\(\)]', "", str(dst_txt))
-                safe_rel = re.sub(r'["\[\]\(\)]', "", str(rel_txt))
+                safe_src = re.sub(r'["\[\]\(\)\|\r\n`<>]', " ", str(src_txt)).strip() or "Node"
+                safe_dst = re.sub(r'["\[\]\(\)\|\r\n`<>]', " ", str(dst_txt)).strip() or "Node"
+                safe_rel = re.sub(r'["\[\]\(\)\|\r\n`<>]', " ", str(rel_txt)).strip() or "->"
                 lines.append(f'    N{idx}_S["{safe_src}"] -->|"{safe_rel}"| N{idx}_O["{safe_dst}"]')
         else:
             lines.append(f'    Empty["{loc["mermaid_empty"]}"]')
@@ -508,7 +570,8 @@ class ObsidianVaultBuilder:
             lines.append(loc["kb_no_qa"] + "\n")
 
         kb_path = ws_path / KNOWLEDGE_BASE_FILENAME
-        self._atomic_write_text(kb_path, "\n".join(lines))
+        with self._write_lock:
+            self._atomic_write_text(kb_path, "\n".join(lines))
         return kb_path
 
     def build_workspace_vault(
@@ -519,7 +582,7 @@ class ObsidianVaultBuilder:
         """Целенаправленно пересобирает все компактные .md документы и `_Knowledge_Base.md` в рабочей области (без N+1 запросов)."""
         ws, ws_path = self.wm._get_or_create_workspace(workspace_id)
         self.ensure_vault_config(ws_path)
-        ws_lang = ws.get("language") or "ru"
+        ws_lang = resolve_workspace_language(ws.get("language"), text_hints=(ws.get("name", ""), workspace_id))
 
         docs = self.wm.store.list_documents(workspace_id)
         all_facts = self.wm.store.get_facts(workspace_id=workspace_id, include_stale=False)
@@ -538,45 +601,46 @@ class ObsidianVaultBuilder:
 
         enriched_files: List[str] = []
 
-        for d in docs:
-            doc_id = d["document_id"]
-            if self.is_reserved_obsidian_file(doc_id):
-                continue
-            raw_content = strip_obsidian_enrichment(d.get("content") or "")
-            if not raw_content.strip() and Path(doc_id).suffix.lower() not in (".md", ".txt"):
-                continue
-            commit_hash = d.get("commit_hash") or "HEAD"
-            lang = d.get("language")
-            if not lang or lang == "unknown":
-                lang = ws_lang
-            ver = int(d.get("current_version") or 1)
-            facts = facts_by_doc.get(doc_id, [])
-            doc_ents = ents_by_doc.get(doc_id, [])
+        with self._write_lock:
+            for d in docs:
+                doc_id = d["document_id"]
+                if self.is_reserved_obsidian_file(doc_id):
+                    continue
+                raw_content = strip_obsidian_enrichment(d.get("content") or "")
+                if not raw_content.strip() and Path(doc_id).suffix.lower() not in (".md", ".txt"):
+                    continue
+                commit_hash = d.get("commit_hash") or "HEAD"
+                lang = d.get("language")
+                if not lang or lang == "unknown":
+                    lang = ws_lang
+                ver = int(d.get("current_version") or 1)
+                facts = facts_by_doc.get(doc_id, [])
+                doc_ents = ents_by_doc.get(doc_id, [])
 
-            md_path = self._resolve_doc_md_path(ws_path, doc_id)
-            rendered = self.render_compact_document_markdown(
-                workspace_id=workspace_id,
-                doc_id=doc_id,
-                clean_content=raw_content,
-                commit_hash=commit_hash,
-                language=lang,
-                facts=facts,
-                entities=doc_ents,
-                version_num=ver,
-                original_path=d.get("file_path"),
-                ui_language=ws_lang,
-            )
-            self._atomic_write_text(md_path, rendered)
-            enriched_files.append(str(md_path.relative_to(ws_path.resolve())).replace("\\", "/"))
+                md_path = self._resolve_doc_md_path(ws_path, doc_id)
+                rendered = self.render_compact_document_markdown(
+                    workspace_id=workspace_id,
+                    doc_id=doc_id,
+                    clean_content=raw_content,
+                    commit_hash=commit_hash,
+                    language=lang,
+                    facts=facts,
+                    entities=doc_ents,
+                    version_num=ver,
+                    original_path=d.get("file_path"),
+                    ui_language=ws_lang,
+                )
+                self._atomic_write_text(md_path, rendered)
+                enriched_files.append(str(md_path.relative_to(ws_path.resolve())).replace("\\", "/"))
 
-        kb_path = self.rebuild_knowledge_base_index(workspace_id)
+            kb_path = self.rebuild_knowledge_base_index(workspace_id)
 
-        if commit_to_git:
-            self.wm._run_git(ws_path, ["add", "."])
-            if self.wm._run_git(ws_path, ["status", "--porcelain"]):
-                self.wm._run_git(ws_path, ["commit", "-m", "Obsidian Vault: синхронизация компактной базы знаний (.md)"])
+            if commit_to_git:
+                self.wm._run_git(ws_path, ["add", "."])
+                if self.wm._run_git(ws_path, ["status", "--porcelain"]):
+                    self.wm._run_git(ws_path, ["commit", "-m", get_git_commit_msg("obsidian_sync", lang=ws_lang)])
 
-        head = self.wm._run_git(ws_path, ["rev-parse", "HEAD"])
+            head = self.wm._run_git(ws_path, ["rev-parse", "HEAD"])
         return {
             "status": "ok",
             "workspace_id": workspace_id,
@@ -602,7 +666,7 @@ class ObsidianVaultBuilder:
         """
         ws, ws_path = self.wm._get_or_create_workspace(workspace_id)
         self.ensure_vault_config(ws_path)
-        ws_lang = ws.get("language") or "ru"
+        ws_lang = resolve_workspace_language(ws.get("language"), text_hints=(ws.get("name", ""), workspace_id))
         loc = get_obsidian_locale(ws_lang)
 
         clean_topic = topic.strip() or loc["topic_default_name"]
@@ -701,15 +765,16 @@ class ObsidianVaultBuilder:
                 lines.append(f"- [[{Path(rd).stem}|{rd}]]")
             lines.append("")
 
-        self._atomic_write_text(note_path, "\n".join(lines))
+        with self._write_lock:
+            self._atomic_write_text(note_path, "\n".join(lines))
 
-        # Обновляем сводный индекс, чтобы новая тема появилась в _Knowledge_Base.md
-        self.rebuild_knowledge_base_index(workspace_id)
+            # Обновляем сводный индекс, чтобы новая тема появилась в _Knowledge_Base.md
+            self.rebuild_knowledge_base_index(workspace_id)
 
-        if commit_to_git:
-            self.wm._run_git(ws_path, ["add", "."])
-            if self.wm._run_git(ws_path, ["status", "--porcelain"]):
-                self.wm._run_git(ws_path, ["commit", "-m", f"Obsidian Topic: собран конспект '{clean_topic}'"])
+            if commit_to_git:
+                self.wm._run_git(ws_path, ["add", "."])
+                if self.wm._run_git(ws_path, ["status", "--porcelain"]):
+                    self.wm._run_git(ws_path, ["commit", "-m", get_git_commit_msg("obsidian_topic", lang=ws_lang, topic=clean_topic)])
 
         return {
             "status": "ok",

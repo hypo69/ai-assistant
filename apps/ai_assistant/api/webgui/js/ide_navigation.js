@@ -17,13 +17,26 @@
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 21:02:00
+ * Updated: 2026-11-20 02:16:00
  * =============================================================================
  */
 
-import { switchMainTab } from './main.js';
 import { switchSidebarView, initExtensionsSidebar } from './ide_extensions_sidebar.js';
 import { toggleFileExplorerSidebar } from './ide_file_explorer.js';
+
+/**
+ * Безопасный вызов переключения главной вкладки без циклического импорта main.js.
+ * @param {string} tabId
+ * @returns {Promise<void>|void}
+ */
+function navigateToMainTab(tabId) {
+  if (typeof window.switchMainTab === 'function') {
+    return window.switchMainTab(tabId);
+  }
+  if (typeof window.switchTab === 'function') {
+    return window.switchTab(tabId);
+  }
+}
 
 /**
  * Проверяет, запущено ли приложение внутри десктопной оболочки Electron.
@@ -68,27 +81,61 @@ export function toggleSideBar() {
 }
 
 /**
- * Загружает и отображает паспорт статуса оболочки Electron и Obsidian Vault в модальном окне.
+ * Открывает общее модальное окно настроек пользователя и активирует вкладку статуса рантайма Electron Shell.
  */
 export async function showElectronStatusModal() {
-  const modalEl = document.getElementById('electronStatusModal');
-  if (!modalEl || !window.bootstrap) return;
+  const modalEl = document.getElementById('userSettingsModal');
+  if (modalEl && window.bootstrap) {
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    const tabBtn = document.getElementById('user-settings-tab-btn-electron');
+    if (tabBtn && window.bootstrap.Tab) {
+      bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+    }
+  }
+  await loadElectronStatus();
+}
 
-  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-  modal.show();
+/**
+ * Безопасная функция локализации строк через window.i18next с fallback-значением.
+ * @param {string} key
+ * @param {string} fallback
+ * @returns {string}
+ */
+function t(key, fallback) {
+  if (typeof window !== 'undefined' && window.i18next && typeof window.i18next.t === 'function') {
+    const val = window.i18next.t(key);
+    if (val && val !== key) return val;
+  }
+  return fallback;
+}
 
-  const container = document.getElementById('electron-status-content');
+/**
+ * Загружает и отображает паспорт статуса оболочки Electron и Obsidian Vault в контейнере общего модального окна настроек.
+ * @param {HTMLElement|null} container
+ */
+export async function loadElectronStatus(container = null) {
+  if (!container) {
+    container = document.getElementById('electron-status-content');
+  }
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="text-center py-4">
-      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-      <div class="small text-muted mt-2">Опрос состояния Electron Shell и Obsidian Vault...</div>
-    </div>
-  `;
+  const isElectron = isElectronRuntime();
+
+  // Обновляем бейдж статуса в шапке модального окна настроек
+  const badgeVal = document.getElementById('modal-header-electron-status-name');
+  if (badgeVal) {
+    badgeVal.textContent = isElectron ? t('userSettings.electronActive', 'Active') : t('userSettings.electronModeWeb', 'Web GUI');
+  }
+  const topBadge = document.getElementById('user-settings-electron-badge-top');
+  if (topBadge) {
+    topBadge.className = `badge ${isElectron ? 'bg-success-subtle text-success border-success-subtle' : 'bg-secondary-subtle text-body border-secondary-subtle'} border d-inline-flex align-items-center gap-1.5 ms-1 cursor-pointer user-settings-electron-badge`;
+    const titleText = isElectron
+      ? t('userSettings.electronBadgeActiveTitle', 'Electron Shell Active (Node.js + Chromium + Obsidian IPC)')
+      : t('userSettings.electronBadgeWebTitle', 'Web GUI Mode (Electron Shell Ready)');
+    topBadge.setAttribute('title', titleText);
+  }
 
   let info = null;
-  const isElectron = isElectronRuntime();
 
   // 1. Попытка получить информацию напрямую через Electron IPC
   if (isElectron && window.aiEngineBridge?.getInfo) {
@@ -110,87 +157,59 @@ export async function showElectronStatusModal() {
     console.warn('[IDE Nav] Server status error:', e);
   }
 
-  const activeEngine = isElectron ? 'Electron Desktop (Chromium + Node.js)' : 'Web Browser GUI';
-  const nodeVer = info?.versions?.node || processVerSafe('node') || 'Внешний Node.js';
+  const nodeVer = info?.versions?.node || processVerSafe('node') || t('userSettings.electronExternalNode', 'Внешний Node.js');
   const chromeVer = info?.versions?.chrome || processVerSafe('chrome') || 'Chromium';
-  const electronVer = info?.versions?.electron || processVerSafe('electron') || (isElectron ? 'Active' : 'Не активен');
+  const electronVer = info?.versions?.electron || processVerSafe('electron') || (isElectron ? t('userSettings.electronActive', 'Active') : t('userSettings.electronInactive', 'Не активен'));
 
-  container.innerHTML = `
-    <div class="d-flex align-items-center gap-3 p-3 mb-3 rounded border ${isElectron ? 'bg-success-subtle border-success-subtle' : 'bg-body-secondary border-secondary-subtle'}">
-      <div class="rounded-circle p-2 d-flex align-items-center justify-content-center ${isElectron ? 'bg-success text-white' : 'bg-primary text-white'}" style="width: 44px; height: 44px;">
-        <i class="bi ${isElectron ? 'bi-lightning-charge-fill' : 'bi-browser-edge'} fs-4"></i>
-      </div>
-      <div>
-        <div class="fw-bold fs-6">${activeEngine}</div>
-        <div class="small text-muted">
-          ${isElectron ? 'Полноценный нативный десктопный режим с поддержкой IPC и прямого доступа к Obsidian Vault' : 'Интерфейс запущен в веб-браузере. Доступен запуск в десктопной оболочке Electron'}
-        </div>
-      </div>
-    </div>
+  // Проверяем наличие декларативных элементов DOM
+  const banner = document.getElementById('electron-mode-banner');
+  const iconBox = document.getElementById('electron-mode-icon-box');
+  const icon = document.getElementById('electron-mode-icon');
+  const title = document.getElementById('electron-mode-title');
+  const desc = document.getElementById('electron-mode-desc');
+  const cliHint = document.getElementById('electron-cli-hint');
 
-    <div class="card border-secondary-subtle mb-3">
-      <div class="card-header py-1.5 px-3 small fw-bold bg-body-tertiary d-flex align-items-center gap-2">
-        <i class="bi bi-info-circle text-primary"></i>
-        <span>Параметры среды выполнения</span>
-      </div>
-      <div class="card-body p-3 font-size-85">
-        <div class="row g-2">
-          <div class="col-sm-6">
-            <span class="text-muted">Electron Engine:</span>
-            <strong class="ms-1 ${isElectron ? 'text-success' : 'text-secondary'}">${electronVer}</strong>
-          </div>
-          <div class="col-sm-6">
-            <span class="text-muted">Node.js Runtime:</span>
-            <strong class="ms-1">${nodeVer}</strong>
-          </div>
-          <div class="col-sm-6">
-            <span class="text-muted">Chromium:</span>
-            <strong class="ms-1">${chromeVer}</strong>
-          </div>
-          <div class="col-sm-6">
-            <span class="text-muted">Приоритет движка:</span>
-            <strong class="ms-1 text-primary">${serverStatus?.preferred_engine || 'electron'}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
+  if (banner) {
+    banner.className = `d-flex align-items-center gap-3 p-3 mb-3 rounded border ${isElectron ? 'bg-success-subtle border-success-subtle' : 'bg-body-secondary border-secondary-subtle'}`;
+  }
+  if (iconBox) {
+    iconBox.className = `rounded-circle p-2 d-flex align-items-center justify-content-center ${isElectron ? 'bg-success text-white' : 'bg-primary text-white'} icon-box-44`;
+  }
+  if (icon) {
+    icon.className = `bi ${isElectron ? 'bi-lightning-charge-fill' : 'bi-browser-edge'} fs-4`;
+  }
+  if (title) {
+    title.textContent = isElectron
+      ? t('userSettings.electronModeDesktop', 'Electron Desktop (Chromium + Node.js)')
+      : t('userSettings.electronModeWeb', 'Web Browser GUI');
+  }
+  if (desc) {
+    desc.textContent = isElectron
+      ? t('userSettings.electronModeDesktopDesc', 'Полноценный нативный десктопный режим с поддержкой IPC и прямого доступа к Obsidian Vault')
+      : t('userSettings.electronModeWebDesc', 'Интерфейс запущен в веб-браузере. Доступен запуск в десктопной оболочке Electron');
+  }
+  if (cliHint) {
+    cliHint.classList.toggle('d-none', isElectron);
+  }
 
-    <div class="card border-secondary-subtle mb-3">
-      <div class="card-header py-1.5 px-3 small fw-bold bg-body-tertiary d-flex align-items-center gap-2">
-        <i class="bi bi-journal-code text-success"></i>
-        <span>Интеграция с Obsidian Vault</span>
-      </div>
-      <div class="card-body p-3 font-size-85">
-        <p class="text-muted mb-2">
-          Каждое рабочее пространство автоматически хранит Markdown-документы в стандарте Obsidian Vault с YAML-метаданными и графом [[wikilinks]].
-        </p>
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1.5" id="btn-ide-open-obsidian" type="button">
-            <i class="bi bi-box-arrow-up-right"></i>
-            <span>Открыть в Obsidian</span>
-          </button>
-          <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5" id="btn-ide-open-folder" type="button">
-            <i class="bi bi-folder2-open"></i>
-            <span>Открыть папку в проводнике</span>
-          </button>
-        </div>
-      </div>
-    </div>
+  const elVer = document.getElementById('electron-val-ver');
+  if (elVer) {
+    elVer.textContent = electronVer;
+    elVer.className = `ms-1 ${isElectron ? 'text-success' : 'text-secondary'}`;
+  }
+  const elNode = document.getElementById('electron-node-ver');
+  if (elNode) elNode.textContent = nodeVer;
 
-    ${!isElectron ? `
-      <div class="alert alert-info py-2 px-3 small mb-0 d-flex align-items-center gap-2">
-        <i class="bi bi-terminal fs-5"></i>
-        <div>
-          <strong>Запуск приложения как Electron:</strong>
-          <code class="d-block mt-0.5 user-select-all">py -m apps.ai_assistant.main --engine electron</code>
-        </div>
-      </div>
-    ` : ''}
-  `;
+  const elChrome = document.getElementById('electron-chrome-ver');
+  if (elChrome) elChrome.textContent = chromeVer;
+
+  const elPriority = document.getElementById('electron-engine-priority-val');
+  if (elPriority) elPriority.textContent = serverStatus?.preferred_engine || 'electron';
 
   // Привязка обработчиков открытия Obsidian
   const openObsBtn = document.getElementById('btn-ide-open-obsidian');
-  if (openObsBtn) {
+  if (openObsBtn && !openObsBtn._bound) {
+    openObsBtn._bound = true;
     openObsBtn.addEventListener('click', async () => {
       const activeWs = (typeof window.getActiveWorkspaceId === 'function')
         ? window.getActiveWorkspaceId()
@@ -199,18 +218,19 @@ export async function showElectronStatusModal() {
         const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(activeWs)}/obsidian/open`, { method: 'POST' });
         const data = await res.json();
         if (data.status === 'ok') {
-          if (window.showToast) window.showToast('Запущен протокол Obsidian Vault', 'success');
+          if (window.showToast) window.showToast(t('userSettings.obsidianLaunched', 'Запущен протокол Obsidian Vault'), 'success');
         } else {
-          if (window.showToast) window.showToast(data.message || 'Ошибка запуска Obsidian', 'warning');
+          if (window.showToast) window.showToast(data.message || t('userSettings.obsidianLaunchError', 'Ошибка запуска Obsidian'), 'warning');
         }
       } catch (err) {
-        if (window.showToast) window.showToast('Не удалось вызвать запуск Obsidian: ' + err.message, 'danger');
+        if (window.showToast) window.showToast(t('userSettings.obsidianLaunchError', 'Ошибка запуска Obsidian') + ': ' + err.message, 'danger');
       }
     });
   }
 
   const openFolderBtn = document.getElementById('btn-ide-open-folder');
-  if (openFolderBtn) {
+  if (openFolderBtn && !openFolderBtn._bound) {
+    openFolderBtn._bound = true;
     openFolderBtn.addEventListener('click', async () => {
       const activeWs = (typeof window.getActiveWorkspaceId === 'function')
         ? window.getActiveWorkspaceId()
@@ -219,7 +239,7 @@ export async function showElectronStatusModal() {
         const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(activeWs)}/open-folder`, { credentials: 'same-origin' });
         const data = await res.json();
         if (data.status === 'success') {
-          if (window.showToast) window.showToast('Папка открыта в проводнике', 'info');
+          if (window.showToast) window.showToast(t('userSettings.obsidianFolderOpened', 'Папка открыта в проводнике'), 'info');
         }
       } catch (_) {}
     });
@@ -284,7 +304,7 @@ function setupIdeKeyboardShortcuts() {
       if (targetTab) {
         e.preventDefault();
         closeSideBar();
-        switchMainTab(targetTab);
+        navigateToMainTab(targetTab);
       }
     }
   });
@@ -303,7 +323,22 @@ export function initIdeNavigation() {
     document.body.classList.add('is-electron');
   }
 
-  // 1. Настройка индикатора Electron в Activity Bar
+  // 1. Инициализация статуса среды Electron и Obsidian Vault в общем модальном окне настроек
+  const electronTabBtn = document.getElementById('user-settings-tab-btn-electron');
+  if (electronTabBtn) {
+    electronTabBtn.addEventListener('shown.bs.tab', () => {
+      loadElectronStatus();
+    });
+  }
+  const userSettingsModalEl = document.getElementById('userSettingsModal');
+  if (userSettingsModalEl) {
+    userSettingsModalEl.addEventListener('show.bs.modal', () => {
+      loadElectronStatus();
+    });
+  }
+  loadElectronStatus();
+
+  // Резервная поддержка кнопки Activity Bar (если присутствует)
   const electronBtn = document.getElementById('ide-nav-electron-btn');
   if (electronBtn) {
     const dot = electronBtn.querySelector('.ide-status-dot');
@@ -373,7 +408,7 @@ export function initIdeNavigation() {
         }
       }
 
-      await switchMainTab(tabId);
+      await navigateToMainTab(tabId);
       if (item.dataset.panel && typeof window.switchWorkspaceSubTab === 'function') {
         window.switchWorkspaceSubTab(item.dataset.panel, true);
       }
@@ -389,30 +424,6 @@ export function initIdeNavigation() {
       const settingsModalEl = document.getElementById('userSettingsModal');
       if (settingsModalEl && window.bootstrap) {
         bootstrap.Modal.getOrCreateInstance(settingsModalEl).show();
-      }
-    });
-  }
-
-  const themeBtn = document.getElementById('ide-nav-theme-btn');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeSideBar();
-      const userSettingsModal = document.getElementById('userSettingsModal');
-      if (userSettingsModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        bootstrap.Modal.getOrCreateInstance(userSettingsModal).show();
-      }
-    });
-  }
-
-  const tourBtn = document.getElementById('ide-nav-tour-btn');
-  if (tourBtn) {
-    tourBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeSideBar();
-      const mainTourBtn = document.getElementById('btn-start-system-tour');
-      if (mainTourBtn) {
-        mainTourBtn.click();
       }
     });
   }

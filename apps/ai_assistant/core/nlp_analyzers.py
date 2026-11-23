@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:59:00
+# Updated: 2026-11-19 16:57:00
 # =============================================================================
 
 from __future__ import annotations
@@ -39,6 +39,7 @@ from apps.ai_assistant.core.nlp.russian import RussianAnalyzer, RussianMorpholog
 
 _RE_HEBREW_CHARS = re.compile(r"[\u0590-\u05FF]")
 _RE_RUSSIAN_CHARS = re.compile(r"[а-яА-ЯёЁ]")
+_RE_UKRAINIAN_CHARS = re.compile(r"[іїєґІЇЄҐ]")
 _RE_ENGLISH_CHARS = re.compile(r"[a-zA-Z]")
 _RE_SENTENCE_SPLIT = re.compile(r"[^.!?\n]+[.!?]*", re.UNICODE)
 
@@ -73,16 +74,17 @@ def detect_language(text: str) -> str:
 
     sample = text[:50_000]
     he_count = len(_RE_HEBREW_CHARS.findall(sample))
-    ru_count = len(_RE_RUSSIAN_CHARS.findall(sample))
+    uk_count = len(_RE_UKRAINIAN_CHARS.findall(sample))
+    ru_count = len(_RE_RUSSIAN_CHARS.findall(sample)) + uk_count
     en_count = len(_RE_ENGLISH_CHARS.findall(sample))
 
     if he_count > 0 and he_count >= ru_count and he_count >= en_count:
         return "he"
     if ru_count > 0 and ru_count >= he_count and ru_count >= en_count:
-        return "ru"
+        return "ua" if uk_count > 0 else "ru"
     if en_count > 0:
         return "en"
-    return "ru"
+    return "unknown"
 
 
 def split_sentences(text: str) -> List[Tuple[int, str, int, int]]:

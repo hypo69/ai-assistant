@@ -3,18 +3,18 @@
 # Process Name: AI-Windows-Admin Apps AI_Assistant Tests - Panel Router Tests
 # =============================================================================
 # Description:
-#   Тестирование универсального роутера панелей /v1/panel/{panel_id} и отдачи
+#   Тестирование универсального роутера панелей /api/v1/panel/{panel_id} и отдачи
 #   статических файлов WebGUI.
 #
 # File: test_panel_router.py
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-17 00:51:00
+# Updated: 2026-11-19 20:16:00
 # =============================================================================
 
 from __future__ import annotations
-"""Тесты для роутера панелей /v1/panel/{panel_id} и статики WebGUI."""
+"""Тесты для роутера панелей /api/v1/panel/{panel_id} и статики WebGUI."""
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -24,7 +24,7 @@ from apps.ai_assistant.main import app
 
 @pytest.mark.asyncio
 async def test_panel_endpoints() -> None:
-    """Проверяет эндпоинты панелей /v1/panel/{panel_id}."""
+    """Проверяет эндпоинты панелей /api/v1/panel/{panel_id}."""
     panels = [
         "panel-timeline",
         "panel-commits",
@@ -39,8 +39,8 @@ async def test_panel_endpoints() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         for p in panels:
-            # Проверка маршрута /v1/panel/{panel_id}
-            res = await client.get(f"/v1/panel/{p}?limit=10")
+            # Проверка маршрута /api/v1/panel/{panel_id}
+            res = await client.get(f"/api/v1/panel/{p}?limit=10")
             assert res.status_code == 200, f"Ошибка для {p}: {res.text}"
             data = res.json()
             assert data["status"] == "ok"
@@ -48,13 +48,8 @@ async def test_panel_endpoints() -> None:
             assert "data" in data
             assert isinstance(data["data"], list)
 
-            # Проверка схемы /api/v1/panel/{panel_id}
-            res_alt = await client.get(f"/api/v1/panel/{p}?limit=5")
-            assert res_alt.status_code == 200
-            assert res_alt.json()["status"] == "ok"
-
-            # Проверка метаданных SQL /v1/panel/{panel_id}/sql
-            res_sql = await client.get(f"/v1/panel/{p}/sql")
+            # Проверка метаданных SQL /api/v1/panel/{panel_id}/sql
+            res_sql = await client.get(f"/api/v1/panel/{p}/sql")
             assert res_sql.status_code == 200
             sql_data = res_sql.json()
             assert "sql" in sql_data
@@ -86,7 +81,7 @@ async def test_webgui_static_serving() -> None:
             "tab_graph",
             "tab_rag",
             "tab_verification",
-            "tab_status",
+            "tab_instruments",
         ]
         for t in all_tabs:
             res_tab = await client.get(f"/html/{t}/index.html")

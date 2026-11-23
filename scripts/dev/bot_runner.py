@@ -58,7 +58,7 @@ async def _run_bot() -> None:
         use_foundry = getattr(ai_cfg, 'use_foundry', False) if ai_cfg else False
         foundry_model_id = getattr(ai_cfg, 'foundry_model_id', 'qwen2.5-1.5b') if ai_cfg else 'qwen2.5-1.5b'
         if use_foundry:
-            from src.ai.chat.foundry import FoundryChatBase
+            from src.ai.providers.foundry import FoundryChatBase
             model = FoundryChatBase(model_id=foundry_model_id, system_prompt=_system_instruction)
         elif _api_key_names:
             model = GoogleGenerativeAI(api_key_names=_api_key_names, system_instruction=_system_instruction)

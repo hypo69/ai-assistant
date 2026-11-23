@@ -11,7 +11,7 @@
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
-# Updated: 2026-10-28 17:31:00
+# Updated: 2026-11-15 18:32:00
 # Copyright: © 2026 hypo69
 # =============================================================================
 
@@ -56,7 +56,7 @@ class TestPluginLoaderFiltering(unittest.TestCase):
         self.assertNotIn("facebook", loaded)
         self.assertNotIn("whatsapp", loaded)
         self.assertNotIn("invoice_processor", loaded)
-        self.assertNotIn("user_storage", loaded)
+        self.assertNotIn("news_feed", loaded)
 
 
 if __name__ == "__main__":

@@ -8,24 +8,24 @@
 #   из защищенного каталога src/secrets.
 #
 # Usage Examples:
-#   GET /api/keys/
-#   POST /api/keys/reset-all
-#   POST /api/keys/{name}/activate
-#   POST /api/keys/{name}/reset-quota
-#   PATCH /api/keys/{name}
-#   POST /api/keys/{name}/test
-#   GET /api/keys/agy
-#   POST /api/keys/agy/reset-all
-#   POST /api/keys/agy/{name}/activate
-#   POST /api/keys/agy/{name}/reset-quota
-#   PATCH /api/keys/agy/{name}
-#   POST /api/keys/agy/{name}/test
+#   GET /api/v1/keys/
+#   POST /api/v1/keys/reset-all
+#   POST /api/v1/keys/{name}/activate
+#   POST /api/v1/keys/{name}/reset-quota
+#   PATCH /api/v1/keys/{name}
+#   POST /api/v1/keys/{name}/test
+#   GET /api/v1/keys/agy
+#   POST /api/v1/keys/agy/reset-all
+#   POST /api/v1/keys/agy/{name}/activate
+#   POST /api/v1/keys/agy/{name}/reset-quota
+#   PATCH /api/v1/keys/agy/{name}
+#   POST /api/v1/keys/agy/{name}/test
 #
 # File: router_keys.py
 # Package: apps.ai_assistant.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-16 04:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ from pydantic import BaseModel, Field
 from header import __root__
 from logger import logger
 
-router = APIRouter(prefix="/api/keys", tags=["API Keys"])
+router = APIRouter(prefix="/api/v1/keys", tags=["API Keys"])
 
 SECRETS_DIR: Path = __root__ / "src" / "secrets"
 GEMINI_KEYS_FILE: Path = SECRETS_DIR / "gemini_keys.json"
@@ -189,8 +189,10 @@ async def add_gemini_key(payload: GeminiKeyPayload) -> Dict[str, Any]:
     return {"status": "success", "name": payload.name}
 
 
-@router.api_route("/reset-all", methods=["GET", "POST"], summary="Сброс квот всех ключей Gemini")
-@router.api_route("/reset", methods=["GET", "POST"], summary="Сброс квот всех ключей Gemini", include_in_schema=False)
+@router.post("/reset-all", summary="Сброс квот всех ключей Gemini")
+@router.post("/reset", summary="Сброс квот всех ключей Gemini", include_in_schema=False)
+@router.get("/reset-all", summary="Сброс квот всех ключей Gemini (GET-алиас)", include_in_schema=False)
+@router.get("/reset", summary="Сброс квот всех ключей Gemini (GET-алиас)", include_in_schema=False)
 async def reset_gemini_keys() -> Dict[str, Any]:
     """Сбрасывает статусы исчерпания и квоты всех ключей Gemini."""
     count = 0
@@ -292,8 +294,10 @@ async def add_agy_key(payload: AGYKeyPayload) -> Dict[str, Any]:
     return {"status": "success", "name": payload.name}
 
 
-@router.api_route("/agy/reset-all", methods=["GET", "POST"], summary="Сброс статусов исчерпания пула AGY")
-@router.api_route("/agy/reset", methods=["GET", "POST"], summary="Сброс статусов исчерпания пула AGY", include_in_schema=False)
+@router.post("/agy/reset-all", summary="Сброс статусов исчерпания пула AGY")
+@router.post("/agy/reset", summary="Сброс статусов исчерпания пула AGY", include_in_schema=False)
+@router.get("/agy/reset-all", summary="Сброс статусов исчерпания пула AGY (GET-алиас)", include_in_schema=False)
+@router.get("/agy/reset", summary="Сброс статусов исчерпания пула AGY (GET-алиас)", include_in_schema=False)
 async def reset_agy_keys() -> Dict[str, Any]:
     """Сбрасывает флаги исчерпания и возвращает ключи AGY в статус active."""
     async with _keys_lock:

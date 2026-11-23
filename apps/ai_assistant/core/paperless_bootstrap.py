@@ -17,7 +17,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 19:45:00
+# Updated: 2026-11-12 00:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -101,7 +101,7 @@ def compose(args: List[str], build: bool = False) -> int:
         logger.error("Docker не найден: установите Docker Desktop с WSL2 backend")
         return 1
     files = ["-f", "docker-compose.yml"] + (["-f", "docker-compose.build.yml"] if build else [])
-    runtime = Path(__root__) / load_paperless_config()["runtime_dir"]
+    runtime = Path(__root__) / load_paperless_config()["runtime_dir"]  # общий каталог docker/
     return subprocess.run([docker, "compose", *files, *args], cwd=runtime, check=False).returncode
 
 
@@ -139,7 +139,7 @@ def launch_in_new_terminal() -> bool:
     cfg = load_paperless_config()
     runtime = Path(__root__) / cfg["runtime_dir"]
     title = cfg["terminal_title"]
-    script = f"& '{docker}' compose up -d; & '{docker}' compose logs -f --tail 20"
+    script = f"& '{docker}' compose up -d webserver; & '{docker}' compose logs -f --tail 20 webserver"
     shell = ["powershell.exe", "-NoExit", "-NoProfile", "-Command", script]
     wt = shutil.which("wt.exe")
     if wt:

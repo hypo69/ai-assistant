@@ -12,7 +12,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 18:55:00
+# Updated: 2026-11-15 18:37:00
 # =============================================================================
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from apps.ai_assistant.core.workspace_manager import WorkspaceManager
-from plugins.telegram_bot import user_auth as user_manager
+from plugins.telegram_bot import user_auth
 from plugins.telegram_bot.workspace_handler import (
     get_effective_user_workspace,
     handle_incoming_media,
@@ -37,15 +37,15 @@ def test_user_auth_workspace_storage(tmp_path: Path) -> None:
     """Проверяет сохранение и получение выбранной рабочей области пользователя Telegram."""
     fake_auth = tmp_path / "telegram_auth.json"
     with patch("plugins.telegram_bot.user_auth._AUTH_FILE", fake_auth):
-        assert user_manager.get_user_workspace(12345) is None
+        assert user_auth.get_user_workspace(12345) is None
 
-        user_manager.set_user_workspace(12345, "דוד_משה")
-        assert user_manager.get_user_workspace(12345) == "דוד_משה"
+        user_auth.set_user_workspace(12345, "דוד_משה")
+        assert user_auth.get_user_workspace(12345) == "דוד_משה"
 
         # Проверка для другого пользователя
-        user_manager.set_user_workspace(67890, "workspace_b")
-        assert user_manager.get_user_workspace(67890) == "workspace_b"
-        assert user_manager.get_user_workspace(12345) == "דוד_משה"
+        user_auth.set_user_workspace(67890, "workspace_b")
+        assert user_auth.get_user_workspace(67890) == "workspace_b"
+        assert user_auth.get_user_workspace(12345) == "דוד_משה"
 
 
 def test_resolve_david_moshe_workspace(tmp_path: Path) -> None:
@@ -137,7 +137,7 @@ async def test_handle_workspace_command_switch(tmp_path: Path) -> None:
     with patch("plugins.telegram_bot.user_auth._AUTH_FILE", fake_auth):
         await handle_workspace_command(update, context, wm)
 
-        assert user_manager.get_user_workspace(99999) == "דוד_משה"
+        assert user_auth.get_user_workspace(99999) == "דוד_משה"
         assert update.message.reply_text.called
         reply_call = update.message.reply_text.call_args[0][0]
         assert "דוד משה" in reply_call
@@ -171,7 +171,7 @@ async def test_incoming_audio_pipeline(tmp_path: Path) -> None:
     attachment.file_id = "test_audio_file_123"
 
     with patch("plugins.telegram_bot.user_auth._AUTH_FILE", fake_auth):
-        user_manager.set_user_workspace(77777, "דוד_משה")
+        user_auth.set_user_workspace(77777, "דוד_משה")
 
         with patch("apps.ai_assistant.core.content_extractor.audio2text", new_callable=AsyncMock) as mock_a2t:
             mock_a2t.return_value = "Текст записи שיחה"
@@ -260,7 +260,7 @@ async def test_incoming_document_paperless_pipeline(tmp_path: Path) -> None:
     }
 
     with patch("plugins.telegram_bot.user_auth._AUTH_FILE", fake_auth):
-        user_manager.set_user_workspace(88888, ws_id)
+        user_auth.set_user_workspace(88888, ws_id)
 
         with patch.object(PaperlessConnector, "from_config", return_value=fake_conn):
             await handle_incoming_media(

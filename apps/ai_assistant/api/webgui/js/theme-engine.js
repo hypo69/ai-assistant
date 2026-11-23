@@ -13,11 +13,11 @@
  *   themeEngine.registerTheme({ id: 'custom', name: 'Custom Theme', category: 'dark' });
  *
  * File: theme-engine.js
- * Project: ai-assistant
+ * Project: ai-windows-admin
  * Package: apps.windows.api.webgui.js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-25 22:45:00
+ * Updated: 2026-11-19 18:43:00
  * =============================================================================
  */
 
@@ -141,6 +141,7 @@ export const BUILTIN_THEMES = [
       "--bs-dropdown-bg": "#151b23",
       "--bs-border-color": "#3b4758",
       "--table-bg": "#151b23",
+      "--table-row-bg": "#151b23",
       "--table-color": "#f3f6fa",
       "--table-border-color": "#3b4758",
       "--about-card-bg": "linear-gradient(135deg, #151b23 0%, #0b0f17 100%)",
@@ -239,6 +240,7 @@ export const BUILTIN_THEMES = [
       '--bs-dropdown-bg': '#eaedf2',
       '--bs-border-color': '#cbd5e1',
       '--table-bg': '#eaedf2',
+      '--table-row-bg': '#eaedf2',
       '--table-color': '#0f172a',
       '--table-border-color': '#cbd5e1',
       '--about-card-bg': 'linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%)',
@@ -271,6 +273,7 @@ export const BUILTIN_THEMES = [
       '--ui-text-primary': '#18181b',
       '--ui-text-secondary': '#3f3f46',
       '--ui-text-muted': '#52525b',
+      '--text-silver': '#e2e8f0',
       '--nav-text': '#27272a',
       '--nav-active': '#1d4ed8',
       '--ui-accent': '#1d4ed8',
@@ -326,10 +329,24 @@ export const BUILTIN_THEMES = [
       '--bs-dropdown-bg': '#f6f1e8',
       '--bs-border-color': '#cfc5b4',
       '--table-bg': '#f6f1e8',
+      '--table-row-bg': '#f6f1e8',
       '--table-color': '#18181b',
       '--table-border-color': '#cfc5b4',
       '--about-card-bg': 'linear-gradient(135deg, #f6f1e8 0%, #ede6d9 100%)',
       '--badge-font-size': 'calc(0.72rem + 1pt)',
+      '--bs-warning': '#b43418',
+      '--bs-warning-rgb': '180, 52, 24',
+      '--bs-info': '#184674',
+      '--bs-info-rgb': '24, 70, 116',
+      '--bs-primary': '#1d4ed8',
+      '--bs-primary-rgb': '29, 78, 216',
+      '--bs-danger': '#9e2b17',
+      '--bs-danger-rgb': '158, 43, 23',
+      '--bs-success': '#185223',
+      '--bs-success-rgb': '24, 82, 35',
+      '--bs-offcanvas-bg': '#f6f1e8',
+      '--panel-bg': '#f6f1e8',
+      '--panel-header-bg': '#e2dac9',
       'color-scheme': 'light',
     },
   },
@@ -340,86 +357,107 @@ export const BUILTIN_THEMES = [
     category: 'dark',
     icon: 'bi-moon-fill',
     iconColor: 'text-primary',
-    description: 'Глубокий сланец для комфортной работы в ночное время (UI Kit v2.0)',
+    description: 'Глубокий благородный сланцевый стиль для комфортной работы в ночное время (Slate-900 / Sky-400)',
     baseType: 'dark',
     tokens: {
-      "--bg-color": "#0b0f19",
-      "--surface-1": "#111827",
-      "--surface-2": "#1f2937",
-      "--card-bg": "#111827",
-      "--card-text": "#f9fafb",
-      "--nav-bg": "#0b0f19",
-      "--modal-bg": "#111827",
-      "--modal-text": "#f9fafb",
-      "--ui-bg-base": "#0b0f19",
-      "--ui-bg-surface": "#111827",
-      "--ui-bg-surface-elevated": "#1f2937",
-      "--text-color": "#f9fafb",
-      "--text-muted": "#9ca3af",
-      "--ui-text-primary": "#f9fafb",
-      "--ui-text-secondary": "#9ca3af",
-      "--ui-text-muted": "#6b7280",
-      "--nav-text": "#b0bdcc",
+      "--bg-color": "#0f172a",
+      "--surface-1": "#1e293b",
+      "--surface-2": "#334155",
+      "--card-bg": "#1e293b",
+      "--card-text": "#f8fafc",
+      "--nav-bg": "#1e293b",
+      "--modal-bg": "#1e293b",
+      "--modal-text": "#f8fafc",
+      "--modal-border": "#334155",
+      "--ui-bg-base": "#0f172a",
+      "--ui-bg-surface": "#1e293b",
+      "--ui-bg-surface-elevated": "#334155",
+      "--text-color": "#f8fafc",
+      "--text-muted": "#94a3b8",
+      "--ui-text-primary": "#f8fafc",
+      "--ui-text-secondary": "#cbd5e1",
+      "--ui-text-muted": "#94a3b8",
+      "--nav-text": "#cbd5e1",
       "--nav-active": "#38bdf8",
+      "--nav-hover-bg": "#334155",
       "--ui-accent": "#38bdf8",
       "--ui-accent-hover": "#0ea5e9",
-      "--border-color": "#374151",
-      "--border-strong": "#4b5563",
-      "--border-subtle": "rgba(75, 85, 99, 0.4)",
-      "--divider-color": "#374151",
-      "--modal-border": "#374151",
-      "--ui-border-color": "#374151",
-      "--ui-border-color-subtle": "rgba(75, 85, 99, 0.4)",
-      "--card-border": "#374151",
-      "--ui-success": "#10b981",
-      "--ui-warning": "#f59e0b",
-      "--ui-danger": "#ef4444",
+      "--border-color": "#334155",
+      "--border-strong": "#475569",
+      "--border-subtle": "rgba(100, 116, 139, 0.25)",
+      "--border-contrast": "#64748b",
+      "--divider-color": "#334155",
+      "--ui-border-color": "#334155",
+      "--ui-border-color-subtle": "rgba(100, 116, 139, 0.25)",
+      "--card-border": "#334155",
+      "--ui-success": "#34d399",
+      "--ui-warning": "#fbbf24",
+      "--ui-danger": "#f87171",
       "--ui-info": "#38bdf8",
-      "--badge-success-bg": "rgba(16, 185, 129, 0.15)",
-      "--badge-success-text": "#10b981",
-      "--badge-success-border": "rgba(16, 185, 129, 0.3)",
-      "--badge-warning-bg": "rgba(245, 158, 11, 0.15)",
-      "--badge-warning-text": "#f59e0b",
-      "--badge-warning-border": "rgba(245, 158, 11, 0.3)",
-      "--badge-danger-bg": "rgba(239, 68, 68, 0.15)",
-      "--badge-danger-text": "#ef4444",
-      "--badge-danger-border": "rgba(239, 68, 68, 0.3)",
+      "--badge-success-bg": "rgba(52, 211, 153, 0.15)",
+      "--badge-success-text": "#34d399",
+      "--badge-success-border": "rgba(52, 211, 153, 0.3)",
+      "--badge-warning-bg": "rgba(251, 191, 36, 0.15)",
+      "--badge-warning-text": "#fbbf24",
+      "--badge-warning-border": "rgba(251, 191, 36, 0.3)",
+      "--badge-danger-bg": "rgba(248, 113, 113, 0.15)",
+      "--badge-danger-text": "#f87171",
+      "--badge-danger-border": "rgba(248, 113, 113, 0.3)",
       "--badge-info-bg": "rgba(56, 189, 248, 0.15)",
       "--badge-info-text": "#38bdf8",
       "--badge-info-border": "rgba(56, 189, 248, 0.3)",
-      "--badge-neutral-bg": "#1f2937",
-      "--badge-neutral-text": "#9ca3af",
-      "--badge-neutral-border": "#374151",
-      "--status-success-bg": "rgba(16, 185, 129, 0.15)",
-      "--status-success-text": "#10b981",
-      "--status-success-border": "rgba(16, 185, 129, 0.3)",
-      "--status-warning-bg": "rgba(245, 158, 11, 0.15)",
-      "--status-warning-text": "#f59e0b",
-      "--status-warning-border": "rgba(245, 158, 11, 0.3)",
-      "--status-danger-bg": "rgba(239, 68, 68, 0.15)",
-      "--status-danger-text": "#ef4444",
-      "--status-danger-border": "rgba(239, 68, 68, 0.3)",
+      "--badge-neutral-bg": "#334155",
+      "--badge-neutral-text": "#cbd5e1",
+      "--badge-neutral-border": "#475569",
+      "--status-success-bg": "rgba(52, 211, 153, 0.15)",
+      "--status-success-text": "#34d399",
+      "--status-success-border": "rgba(52, 211, 153, 0.3)",
+      "--status-warning-bg": "rgba(251, 191, 36, 0.15)",
+      "--status-warning-text": "#fbbf24",
+      "--status-warning-border": "rgba(251, 191, 36, 0.3)",
+      "--status-danger-bg": "rgba(248, 113, 113, 0.15)",
+      "--status-danger-text": "#f87171",
+      "--status-danger-border": "rgba(248, 113, 113, 0.3)",
       "--status-info-bg": "rgba(56, 189, 248, 0.15)",
       "--status-info-text": "#38bdf8",
       "--status-info-border": "rgba(56, 189, 248, 0.3)",
-      "--bs-body-bg": "#0b0f19",
-      "--bs-body-color": "#f9fafb",
-      "--bs-card-bg": "#111827",
-      "--bs-card-color": "#f9fafb",
-      "--bs-modal-bg": "#111827",
-      "--bs-modal-color": "#f9fafb",
-      "--bs-tertiary-bg": "#1f2937",
-      "--bs-secondary-bg": "#1f2937",
-      "--bs-list-group-bg": "#111827",
-      "--bs-dropdown-bg": "#111827",
-      "--bs-border-color": "#374151",
-      "--table-bg": "#111827",
-      "--table-color": "#f9fafb",
-      "--table-border-color": "#374151",
-      "--about-card-bg": "linear-gradient(135deg, #111827 0%, #0b0f19 100%)",
+      "--bs-body-bg": "#0f172a",
+      "--bs-body-bg-rgb": "15, 23, 42",
+      "--bs-body-color": "#f8fafc",
+      "--bs-card-bg": "#1e293b",
+      "--bs-card-color": "#f8fafc",
+      "--bs-modal-bg": "#1e293b",
+      "--bs-modal-color": "#f8fafc",
+      "--bs-offcanvas-bg": "#1e293b",
+      "--bs-tertiary-bg": "#334155",
+      "--bs-tertiary-bg-rgb": "51, 65, 85",
+      "--bs-secondary-bg": "#334155",
+      "--bs-secondary-bg-rgb": "51, 65, 85",
+      "--bs-list-group-bg": "#1e293b",
+      "--bs-dropdown-bg": "#1e293b",
+      "--bs-dropdown-color": "#f8fafc",
+      "--bs-dropdown-border-color": "#334155",
+      "--bs-border-color": "#334155",
+      "--table-bg": "#1e293b",
+      "--table-color": "#f8fafc",
+      "--table-border-color": "#334155",
+      "--table-header-bg": "#334155",
+      "--table-row-bg": "#1e293b",
+      "--table-hover-bg": "#283548",
+      "--about-card-bg": "linear-gradient(135deg, #1e293b 0%, #162032 100%)",
       "--badge-font-size": "calc(0.72rem + 1pt)",
-      "color-scheme": "dark"
-    },
+      "color-scheme": "dark",
+      "--bs-primary": "#38bdf8",
+      "--bs-primary-rgb": "56, 189, 248",
+      "--bs-info": "#38bdf8",
+      "--bs-info-rgb": "56, 189, 248",
+      "--panel-bg": "#1e293b",
+      "--panel-header-bg": "#334155",
+      "--panel-header-color": "#f8fafc",
+      "--panel-header-font-size": "1.75rem",
+      "--tab-header-title-color": "#f8fafc",
+      "--tab-header-subtitle-color": "#94a3b8"
+},
   },
   {
     id: 'theme-light-enterprise',
@@ -571,12 +609,12 @@ export class ThemeEngine {
   }
 
   /**
-   * Асинхронно запрашивает актуальный каталог тем с бэкенда (/api/themes) или статического JSON.
+   * Асинхронно запрашивает актуальный каталог тем с бэкенда (/api/v1/themes) или статического JSON.
    */
   async fetchThemesCatalog() {
     if (typeof window === 'undefined' || typeof fetch !== 'function') return;
     try {
-      let res = await fetch('/api/themes').catch(() => null);
+      let res = await fetch('/api/v1/themes').catch(() => null);
       if (!res || !res.ok) {
         res = await fetch('/html/themes/themes_catalog.json').catch(() => null);
       }
@@ -667,7 +705,23 @@ export class ThemeEngine {
   }
 
   /**
-   * Создает новую дочернюю тему на базе указанной родительской стандартной темы.
+   * Определяет, является ли цвет в формате HEX светлым.
+   * @private
+   * @param {string} hex
+   * @returns {boolean|null}
+   */
+  _isLightHex(hex) {
+    if (!hex || typeof hex !== 'string') return null;
+    const clean = hex.replace('#', '').trim();
+    if (clean.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 >= 128;
+  }
+
+  /**
+   * Создает новую дочернюю тему на базе указанной существующей темы (стандартной или пользовательской).
    * @param {Object} params
    * @param {string} params.name - Название дочерней темы
    * @param {string} params.parentId - Идентификатор родительской темы
@@ -686,10 +740,17 @@ export class ThemeEngine {
     }
 
     const cleanSlug = name.toLowerCase().replace(/[^a-z0-9а-яё]/gi, '-').replace(/-+/g, '-').slice(0, 24);
-    const id = `child-${parentId.replace(/^theme-/, '')}-${cleanSlug || 'theme'}-${Date.now().toString(36)}`;
+    const id = `child-${parentId.replace(/^theme-/, '').replace(/^child-/, '')}-${cleanSlug || 'theme'}-${Date.now().toString(36)}`;
 
-    const baseType = parent.baseType || (parent.category === 'light' ? 'light' : 'dark');
-    const category = parent.category || baseType;
+    const mergedTokens = {
+      ...(parent.tokens || {}),
+      ...tokens,
+    };
+    const detectedLight = this._isLightHex(mergedTokens['--bg-color'] || mergedTokens['--ui-bg-base']);
+    const baseType = detectedLight !== null
+      ? (detectedLight ? 'light' : 'dark')
+      : (parent.baseType || (parent.category === 'light' ? 'light' : 'dark'));
+    const category = baseType;
     const now = new Date().toISOString();
 
     const childDef = {
@@ -703,14 +764,11 @@ export class ThemeEngine {
       baseType,
       icon: 'bi-palette2',
       iconColor: parent.iconColor || 'text-info',
-      description: description || `Дочерняя тема на базе "${parent.name}"`,
+      description: description || `Пользовательская тема на базе "${parent.name}"`,
       createdAt: now,
       updatedAt: now,
       settings: { ...settings },
-      tokens: {
-        ...(parent.tokens || {}),
-        ...tokens,
-      },
+      tokens: mergedTokens,
     };
 
     this.registry.set(id, childDef);
@@ -751,6 +809,11 @@ export class ThemeEngine {
         ...(existing.tokens || {}),
         ...tokens,
       };
+      const detectedLight = this._isLightHex(existing.tokens['--bg-color'] || existing.tokens['--ui-bg-base']);
+      if (detectedLight !== null) {
+        existing.baseType = detectedLight ? 'light' : 'dark';
+        existing.category = existing.baseType;
+      }
     }
     existing.updatedAt = new Date().toISOString();
 
@@ -986,7 +1049,7 @@ export class ThemeEngine {
     if (theme) {
       return theme.baseType || (theme.category === 'dark' ? 'dark' : 'light');
     }
-    return resolvedThemeId === 'light' || resolvedThemeId === 'brick' || resolvedThemeId === 'nightview' || resolvedThemeId === 'theme-light-enterprise' ? 'light' : 'dark';
+    return resolvedThemeId === 'light' || resolvedThemeId === 'brick' ? 'light' : 'dark';
   }
 
   /**
@@ -1041,19 +1104,6 @@ export class ThemeEngine {
         document.body.className = document.body.className.replace(/\bchild-theme\S*/g, '').trim();
       }
 
-      let baseClass = parentTheme ? parentTheme.id : resolved;
-      if (baseClass === 'dark') baseClass = 'theme-dark-slate';
-      if (baseClass === 'light') baseClass = 'theme-light-enterprise';
-      if (baseClass === 'nightview') baseClass = 'theme-nightview';
-
-      if (themeClasses.includes(baseClass)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
-        if (document.body?.classList?.add) document.body.classList.add(baseClass);
-      } else if (themeClasses.includes(mode)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
-        if (document.body?.classList?.add) document.body.classList.add(mode);
-      }
-
       if (themeDef?.isChild) {
         if (document.documentElement?.classList?.add) {
           document.documentElement.classList.add('child-theme');
@@ -1062,6 +1112,19 @@ export class ThemeEngine {
         if (document.body?.classList?.add) {
           document.body.classList.add('child-theme');
           document.body.classList.add(`child-theme-${themeDef.id}`);
+        }
+      } else {
+        let baseClass = resolved;
+        if (baseClass === 'dark') baseClass = 'theme-dark-slate';
+        if (baseClass === 'light') baseClass = 'theme-light-enterprise';
+        if (baseClass === 'nightview') baseClass = 'theme-nightview';
+
+        if (themeClasses.includes(baseClass)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
+          if (document.body?.classList?.add) document.body.classList.add(baseClass);
+        } else if (themeClasses.includes(mode)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
+          if (document.body?.classList?.add) document.body.classList.add(mode);
         }
       }
 
@@ -1133,19 +1196,6 @@ export class ThemeEngine {
         document.body.className = document.body.className.replace(/\bchild-theme\S*/g, '').trim();
       }
 
-      let baseClass = parentTheme ? parentTheme.id : resolved;
-      if (baseClass === 'dark') baseClass = 'theme-dark-slate';
-      if (baseClass === 'light') baseClass = 'theme-light-enterprise';
-      if (baseClass === 'nightview') baseClass = 'theme-nightview';
-
-      if (themeClasses.includes(baseClass)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
-        if (document.body?.classList?.add) document.body.classList.add(baseClass);
-      } else if (themeClasses.includes(mode)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
-        if (document.body?.classList?.add) document.body.classList.add(mode);
-      }
-
       if (themeDef?.isChild) {
         if (document.documentElement?.classList?.add) {
           document.documentElement.classList.add('child-theme');
@@ -1154,6 +1204,19 @@ export class ThemeEngine {
         if (document.body?.classList?.add) {
           document.body.classList.add('child-theme');
           document.body.classList.add(`child-theme-${themeDef.id}`);
+        }
+      } else {
+        let baseClass = resolved;
+        if (baseClass === 'dark') baseClass = 'theme-dark-slate';
+        if (baseClass === 'light') baseClass = 'theme-light-enterprise';
+        if (baseClass === 'nightview') baseClass = 'theme-nightview';
+
+        if (themeClasses.includes(baseClass)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
+          if (document.body?.classList?.add) document.body.classList.add(baseClass);
+        } else if (themeClasses.includes(mode)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
+          if (document.body?.classList?.add) document.body.classList.add(mode);
         }
       }
     }
@@ -1185,49 +1248,6 @@ export class ThemeEngine {
   }
 
   /**
-   * Возвращает ключ интернационализации (i18n) для темы по её ID.
-   * @param {string} id - Идентификатор темы
-   * @returns {string|null}
-   */
-  _getThemeI18nKey(id) {
-    const map = {
-      'system': 'userSettings.themeSystem',
-      'dark': 'userSettings.themeDark',
-      'light': 'userSettings.themeLight',
-      'brick': 'userSettings.themeBrick',
-      'terminal': 'userSettings.themeTerminal',
-      'theme-dark-slate': 'userSettings.themeDarkSlate',
-      'theme-cyberpunk': 'userSettings.themeCyberpunk',
-      'nordic-frost': 'userSettings.themeNordicFrost',
-      'theme-high-contrast': 'userSettings.themeHighContrast',
-      'theme-light-enterprise': 'userSettings.themeLightEnterprise',
-      'solarized-dark': 'userSettings.themeSolarizedDark',
-      'nightview': 'userSettings.themeNightview',
-    };
-    return map[id] || null;
-  }
-
-  /**
-   * Получает локализованную строку перевода из глобального контекста i18n.
-   * @param {string} key - Ключ перевода
-   * @param {string} fallback - Резервный текст по умолчанию
-   * @returns {string}
-   */
-  _translate(key, fallback) {
-    if (typeof window !== 'undefined') {
-      if (window.i18next && typeof window.i18next.t === 'function') {
-        const val = window.i18next.t(key);
-        if (val && val !== key) return val;
-      }
-      if (window.I18nManager && typeof window.I18nManager.t === 'function') {
-        const val = window.I18nManager.t(key);
-        if (val && val !== key) return val;
-      }
-    }
-    return fallback;
-  }
-
-  /**
    * Генерирует HTML-разметку опций для тега <select> с группировкой по категориям.
    * @param {string} [currentMode]
    * @returns {string}
@@ -1255,60 +1275,40 @@ export class ThemeEngine {
       return t.category === 'light' ? '☀️' : '🌙';
     };
 
-    const getThemeLabel = (t) => {
-      const i18nKey = this._getThemeI18nKey(t.id);
-      if (i18nKey) {
-        const tr = this._translate(i18nKey, null);
-        if (tr) {
-          return tr;
-        }
-      }
-      return `${getIcon(t)} ${t.name}`;
-    };
-
     let html = '';
 
     if (systemThemes.length > 0) {
       for (const t of systemThemes) {
         const isSelected = t.id === currentMode ? ' selected' : '';
-        const i18nKey = this._getThemeI18nKey(t.id);
-        const i18nAttr = i18nKey ? ` data-i18n="${i18nKey}"` : '';
-        html += `<!-- ${t.name} -->\n<option id="theme-opt-${t.id}" value="${t.id}"${isSelected}${i18nAttr}>${getThemeLabel(t)}</option>\n`;
+        html += `<option value="${t.id}"${isSelected}>${getIcon(t)} ${t.name}</option>\n`;
       }
     }
 
-    if (darkThemes.length > 0) {
-      const darkGroupLabel = this._translate('userSettings.themeGroupDark', '🌙 Тёмные темы');
-      html += `<!-- Группа тёмных тем -->\n<optgroup id="theme-optgroup-dark" data-i18n-label="userSettings.themeGroupDark" label="${darkGroupLabel}">\n`;
-      for (const t of darkThemes) {
+    if (customThemes.length > 0) {
+      html += '<optgroup label="✨ Пользовательские (дочерние) темы">\n';
+      for (const t of customThemes) {
         const isSelected = t.id === currentMode ? ' selected' : '';
-        const i18nKey = this._getThemeI18nKey(t.id);
-        const i18nAttr = i18nKey ? ` data-i18n="${i18nKey}"` : '';
-        html += `  <!-- ${t.name} -->\n  <option id="theme-opt-${t.id}" value="${t.id}"${isSelected}${i18nAttr}>${getThemeLabel(t)}</option>\n`;
+        const parent = this.getTheme(t.parentId);
+        const parentName = parent ? parent.name : t.parentId;
+        html += `  <option value="${t.id}"${isSelected}>${getIcon(t)} ${t.name} (на базе: ${parentName})</option>\n`;
       }
       html += '</optgroup>\n';
     }
 
     if (lightThemes.length > 0) {
-      const lightGroupLabel = this._translate('userSettings.themeGroupLight', '☀️ Светлые темы');
-      html += `<!-- Группа светлых тем -->\n<optgroup id="theme-optgroup-light" data-i18n-label="userSettings.themeGroupLight" label="${lightGroupLabel}">\n`;
+      html += '<optgroup label="☀️ Светлые темы">\n';
       for (const t of lightThemes) {
         const isSelected = t.id === currentMode ? ' selected' : '';
-        const i18nKey = this._getThemeI18nKey(t.id);
-        const i18nAttr = i18nKey ? ` data-i18n="${i18nKey}"` : '';
-        html += `  <!-- ${t.name} -->\n  <option id="theme-opt-${t.id}" value="${t.id}"${isSelected}${i18nAttr}>${getThemeLabel(t)}</option>\n`;
+        html += `  <option value="${t.id}"${isSelected}>${getIcon(t)} ${t.name}</option>\n`;
       }
       html += '</optgroup>\n';
     }
 
-    if (customThemes.length > 0) {
-      const customGroupLabel = this._translate('userSettings.themeGroupCustom', '🎨 Пользовательские темы');
-      html += `<!-- Группа пользовательских тем -->\n<optgroup id="theme-optgroup-custom" data-i18n-label="userSettings.themeGroupCustom" label="${customGroupLabel}">\n`;
-      for (const t of customThemes) {
+    if (darkThemes.length > 0) {
+      html += '<optgroup label="🌙 Тёмные темы">\n';
+      for (const t of darkThemes) {
         const isSelected = t.id === currentMode ? ' selected' : '';
-        const parent = this.getTheme(t.parentId);
-        const parentName = parent ? parent.name : t.parentId;
-        html += `  <!-- Пользовательская тема: ${t.name} -->\n  <option id="theme-opt-${t.id}" value="${t.id}"${isSelected}>${getIcon(t)} ${t.name} (${parentName})</option>\n`;
+        html += `  <option value="${t.id}"${isSelected}>${getIcon(t)} ${t.name}</option>\n`;
       }
       html += '</optgroup>\n';
     }
@@ -1339,6 +1339,7 @@ export class ThemeEngine {
    * Инициализирует менеджер тем, регистрирует обработчики событий и применяет начальную тему.
    */
   init() {
+    this._applyDynamicTokens();
     const currentMode = this.getSavedMode();
     this.applyTheme(currentMode);
     this._applyStoredOverrides();
@@ -1368,16 +1369,6 @@ export class ThemeEngine {
 
     // Наполнение всех селекторов опциями
     this.syncSelectInputs(currentMode);
-
-    // Подписка на изменение языка интерфейса для динамической перегенерации списков тем
-    if (typeof window !== 'undefined') {
-      const onLangUpdate = () => {
-        this.syncSelectInputs();
-      };
-      window.addEventListener('languageChanged', onLangUpdate);
-      window.addEventListener('localeChanged', onLangUpdate);
-      window.addEventListener('i18n:languageChanged', onLangUpdate);
-    }
 
     // Привязка слушателей изменений к селекторам тем
     document.querySelectorAll(
@@ -1479,20 +1470,41 @@ export class ThemeEngine {
     for (const [id, def] of this.registry.entries()) {
       if (def.tokens && typeof def.tokens === 'object') {
         const tokens = def.tokens;
-        css += `:root[data-theme="${id}"], [data-theme="${id}"] {\n`;
+        const imp = def.isChild ? ' !important' : '';
+        css += `:root[data-theme="${id}"], html[data-theme="${id}"], html[data-theme="${id}"] body {\n`;
         for (const [prop, val] of Object.entries(tokens)) {
           if (val !== undefined && val !== null && String(val).trim() !== '') {
-            css += `  ${prop}: ${val};\n`;
+            css += `  ${prop}: ${val}${imp};\n`;
           }
         }
-        if (tokens['--text-muted']) {
-          css += `  --bs-secondary-color: ${tokens['--text-muted']};\n`;
-        }
         css += '}\n';
-        css += `[data-theme="${id}"] .text-muted, [data-theme="${id}"] .text-body-secondary { color: var(--text-muted) !important; }\n`;
 
         // Индивидуальные стили компонентов для дочерних тем
         if (def.isChild) {
+          if (tokens['--bg-color']) {
+            css += `html[data-theme="${id}"], html[data-theme="${id}"] body { background-color: ${tokens['--bg-color']} !important; color: ${tokens['--text-color'] || 'inherit'} !important; }\n`;
+          }
+          if (tokens['--surface-1']) {
+            css += `[data-theme="${id}"] .card, [data-theme="${id}"] .modal-content, [data-theme="${id}"] .bg-body { background-color: ${tokens['--surface-1']} !important; }\n`;
+          }
+          if (tokens['--surface-2']) {
+            css += `[data-theme="${id}"] .bg-body-tertiary, [data-theme="${id}"] .bg-body-secondary { background-color: ${tokens['--surface-2']} !important; }\n`;
+          }
+          if (tokens['--alert-light-bg'] || tokens['--alert-light-border'] || tokens['--alert-light-text']) {
+            css += `[data-theme="${id}"] .alert-light { background-color: ${tokens['--alert-light-bg'] || tokens['--surface-1']} !important; border-color: ${tokens['--alert-light-border'] || tokens['--border-color']} !important; color: ${tokens['--alert-light-text'] || tokens['--text-color']} !important; }\n`;
+          }
+          if (tokens['--input-bg'] || tokens['--input-text'] || tokens['--input-border']) {
+            css += `[data-theme="${id}"] .form-control:not(.bg-dark):not(.uai-cmd-input), [data-theme="${id}"] .form-select:not(.bg-dark) { background-color: ${tokens['--input-bg'] || tokens['--surface-1']} !important; color: ${tokens['--input-text'] || tokens['--text-color']} !important; border-color: ${tokens['--input-border'] || tokens['--border-color']} !important; }\n`;
+          }
+          if (tokens['--ui-accent']) {
+            css += `[data-theme="${id}"] .btn-primary { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+            css += `[data-theme="${id}"] .btn-outline-primary { color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+            css += `[data-theme="${id}"] .btn-outline-primary:hover, [data-theme="${id}"] .btn-outline-primary.active { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
+          }
+          if (tokens['--ui-success']) {
+            css += `[data-theme="${id}"] .btn-outline-success { color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; }\n`;
+            css += `[data-theme="${id}"] .btn-outline-success:hover, [data-theme="${id}"] .btn-outline-success.active { background-color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
+          }
           if (tokens['--radius-md']) {
             css += `[data-theme="${id}"] .card, [data-theme="${id}"] .modal-content, [data-theme="${id}"] .ui-card { border-radius: ${tokens['--radius-md']} !important; }\n`;
           }
@@ -1630,10 +1642,26 @@ export class ThemeEngine {
     if (tokens['--bg-color']) {
       css += `body { background-color: ${tokens['--bg-color']} !important; color: ${tokens['--text-color'] || 'inherit'} !important; }\n`;
     }
-
-    if (tokens['--text-muted']) {
-      css += `  --bs-secondary-color: ${tokens['--text-muted']} !important;\n`;
-      css += `.text-muted, .text-body-secondary { color: ${tokens['--text-muted']} !important; }\n`;
+    if (tokens['--surface-1']) {
+      css += `.card, .modal-content, .bg-body { background-color: ${tokens['--surface-1']} !important; }\n`;
+    }
+    if (tokens['--surface-2']) {
+      css += `.bg-body-tertiary, .bg-body-secondary { background-color: ${tokens['--surface-2']} !important; }\n`;
+    }
+    if (tokens['--alert-light-bg'] || tokens['--alert-light-border'] || tokens['--alert-light-text']) {
+      css += `.alert-light { background-color: ${tokens['--alert-light-bg'] || tokens['--surface-1']} !important; border-color: ${tokens['--alert-light-border'] || tokens['--border-color']} !important; color: ${tokens['--alert-light-text'] || tokens['--text-color']} !important; }\n`;
+    }
+    if (tokens['--input-bg'] || tokens['--input-text'] || tokens['--input-border']) {
+      css += `.form-control:not(.bg-dark):not(.uai-cmd-input), .form-select:not(.bg-dark) { background-color: ${tokens['--input-bg'] || tokens['--surface-1']} !important; color: ${tokens['--input-text'] || tokens['--text-color']} !important; border-color: ${tokens['--input-border'] || tokens['--border-color']} !important; }\n`;
+    }
+    if (tokens['--ui-accent']) {
+      css += `.btn-primary { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+      css += `.btn-outline-primary { color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+      css += `.btn-outline-primary:hover, .btn-outline-primary.active { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
+    }
+    if (tokens['--ui-success']) {
+      css += `.btn-outline-success { color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; }\n`;
+      css += `.btn-outline-success:hover, .btn-outline-success.active { background-color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
     }
 
     if (tokens['--radius-md']) {

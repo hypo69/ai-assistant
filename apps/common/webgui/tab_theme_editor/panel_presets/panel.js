@@ -11,11 +11,12 @@
  * Package: apps/ai_assistant/api/webgui/tab_theme_editor/panel_presets
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 14:14:00
+ * Updated: 2026-11-19 17:58:00
  * =============================================================================
  */
 
 import {
+  t,
   setInputValue,
   setTextContent,
   setSelectValue,
@@ -358,16 +359,17 @@ export const PRESETS = {
  * @param {string} presetKey - Ключ темы/пресета.
  * @returns {Object} Объект конфигурации пресета.
  */
-export function getPreset(presetKey) {
+export function getPreset(presetKey, _visited = new Set()) {
   if (presetKey in PRESETS) {
     return PRESETS[presetKey];
   }
 
-  // Поиск среди дочерних тем в ThemeEngine
-  if (typeof window !== 'undefined' && window.themeEngine) {
+  // Поиск среди дочерних тем в ThemeEngine (с защитой от циклов наследования)
+  if (typeof window !== 'undefined' && window.themeEngine && !_visited.has(presetKey)) {
+    _visited.add(presetKey);
     const child = window.themeEngine.getChildTheme(presetKey);
     if (child) {
-      const parentPreset = PRESETS[child.parentId] || PRESETS['theme-dark-slate'];
+      const parentPreset = getPreset(child.parentId, _visited) || PRESETS['theme-dark-slate'];
       const savedSettings = child.settings || {};
       const savedColors = child.settings?.colors || {};
 
@@ -428,32 +430,28 @@ export function updateThemeStatusUI(presetKey) {
     }
   }
 
-  // Видимость кнопок управления дочерней темой
+  // Видимость кнопок управления дочерней темой (снятие/установка Bootstrap .d-none)
   const btnDeleteChild = document.getElementById('theme-btn-delete-child');
   const btnResetToParent = document.getElementById('theme-btn-reset-to-parent');
   const btnRenameChild = document.getElementById('theme-btn-rename-child');
 
-  if (btnDeleteChild) {
-    btnDeleteChild.style.display = isChild ? 'inline-flex' : 'none';
-  }
-  if (btnResetToParent) {
-    btnResetToParent.style.display = isChild ? 'inline-flex' : 'none';
-  }
-  if (btnRenameChild) {
-    btnRenameChild.style.display = isChild ? 'inline-flex' : 'none';
-  }
+  [btnDeleteChild, btnResetToParent, btnRenameChild].forEach((btn) => {
+    if (!btn) return;
+    btn.classList.toggle('d-none', !isChild);
+    btn.classList.toggle('d-inline-flex', isChild);
+  });
 
   // Кнопка сохранения в главном тулбаре
   const btnSave = document.getElementById('theme-btn-save');
   if (btnSave) {
     if (isChild) {
       btnSave.className = 'btn btn-sm btn-primary d-flex align-items-center gap-2 shadow-sm';
-      btnSave.innerHTML = '<i class="bi bi-check-circle-fill"></i><span>Сохранить тему</span>';
-      btnSave.setAttribute('title', `Сохранить изменения в дочернюю тему «${childTheme?.name || presetKey}»`);
+      btnSave.innerHTML = `<i class="bi bi-check-circle-fill"></i><span>${t('ui.thm.txt_cfab6643', 'Сохранить тему')}</span>`;
+      btnSave.setAttribute('title', t('titles.thm.title_c22e1edd', `Сохранить изменения в дочернюю тему «${childTheme?.name || presetKey}»`));
     } else {
-      btnSave.className = 'btn btn-sm btn-outline-primary d-flex align-items-center gap-2 shadow-sm';
-      btnSave.innerHTML = '<i class="bi bi-diagram-3"></i><span>Создать дочернюю</span>';
-      btnSave.setAttribute('title', 'Стандартная тема защищена. Нажмите для создания дочерней темы на её основе');
+      btnSave.className = 'btn btn-sm btn-success d-flex align-items-center gap-2 shadow-sm';
+      btnSave.innerHTML = `<i class="bi bi-palette-fill"></i><span>${t('ui.thm.buildCustomBtn', 'Собрать свою тему')}</span>`;
+      btnSave.setAttribute('title', t('titles.thm.buildCustomTitle', 'Собрать собственную тему на основе текущей с вашими цветами'));
     }
   }
 }
@@ -568,6 +566,13 @@ export function loadPreset(presetKey, onApplied = null) {
     setColorPair('panel-header-bg', preset.colors.panelHeaderBg || preset.colors.bgElevated || '#1f2937');
     setColorPair('tab-header-text', preset.colors.tabHeaderText || preset.colors.textPrimary || '#f9fafb');
     setColorPair('tab-header-sub', preset.colors.tabHeaderSub || preset.colors.textMuted || '#9ca3af');
+
+    setColorPair('alert-light-bg', preset.colors.alertLightBg || preset.colors.bgSurface || '#111827');
+    setColorPair('alert-light-border', preset.colors.alertLightBorder || preset.colors.border || '#374151');
+    setColorPair('alert-light-text', preset.colors.alertLightText || preset.colors.textPrimary || '#f9fafb');
+    setColorPair('input-bg', preset.colors.inputBg || preset.colors.bgSurface || '#111827');
+    setColorPair('input-text', preset.colors.inputText || preset.colors.textPrimary || '#f9fafb');
+    setColorPair('input-border', preset.colors.inputBorder || preset.colors.border || '#374151');
   }
 
   const presetSelect = document.getElementById('theme-preset-select');

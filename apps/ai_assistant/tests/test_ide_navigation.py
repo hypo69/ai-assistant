@@ -26,7 +26,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 21:03:00
+# Updated: 2026-11-16 03:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -81,11 +81,17 @@ async def test_ide_activity_bar_and_file_explorer_in_index() -> None:
         assert 'id="ide-workspace-search-input"' not in html
         assert 'id="ideWorkspacePickerModal"' not in html
 
-        # 5. Проверяем служебные кнопки нижней группы IDE
-        assert 'id="ide-nav-electron-btn"' in html
-        assert 'id="ide-nav-settings"' in html
-        assert 'id="ide-nav-theme-btn"' in html
-        assert 'id="electronStatusModal"' in html
+        # 5. Проверяем удаление настроек, статуса Electron, тура, кнопки темы и каталога моделей из Activity Bar
+        assert 'id="ide-nav-electron-btn"' not in html
+        assert 'id="ide-nav-settings"' not in html
+        assert 'id="ide-nav-tour-btn"' not in html
+        assert 'id="ide-nav-theme-btn"' not in html
+        assert 'id="ide-nav-models"' not in html
+        # Статус рантайма Electron и интерактивный тур перенесены в общее модальное окно настроек (#userSettingsModal)
+        assert 'id="user-settings-pane-electron"' in html
+        assert 'id="electron-status-content"' in html
+        assert 'id="user-settings-electron-badge-top"' in html
+        assert 'id="modal-btn-start-system-tour"' in html
 
         # 6. Проверяем модальные окна ПКМ контекстного меню проводника (Добавить, Редактировать, Версии, Удалить)
         assert 'id="modal-ide-create-item"' in html

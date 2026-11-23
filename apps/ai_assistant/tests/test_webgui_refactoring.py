@@ -13,7 +13,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 21:03:00
+# Updated: 2026-11-16 03:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -57,11 +57,10 @@ async def test_brand_link_and_title_attributes() -> None:
         brand_icon = brand_link.find(id="app-brand-icon")
         assert brand_icon is not None, "Иконка брендинга #app-brand-icon отсутствует"
 
-        # 3. Текст заголовка
-        title_span = brand_link.find(id="app-title")
-        assert title_span is not None, "Текстовый заголовок приложения #app-title отсутствует"
-        assert title_span.get("data-i18n") == "app.title", "Отсутствует data-i18n='app.title'"
-        assert "AI Assistant — Умное Версионирование" in title_span.text, "Некорректный текст заголовка по умолчанию"
+        # 3. Текст заголовка / активная рабочая область
+        title_span = soup.find(id="app-title")
+        assert title_span is not None, "Элемент заголовка/рабочей области #app-title отсутствует"
+        assert title_span.get("data-i18n") in ("app.title", "workspace.activeWorkspaceLabel"), "Отсутствует корректный атрибут data-i18n"
 
 
 @pytest.mark.asyncio
@@ -154,13 +153,16 @@ def test_duplicate_elements_removed_from_drawer_menu() -> None:
     assert activity_bar.find(id="ide-nav-diff") is not None
     assert activity_bar.find(id="ide-nav-timeline") is not None
     assert activity_bar.find(id="ide-nav-graph") is not None
-    assert activity_bar.find(id="ide-nav-models") is not None
+    # Кнопка каталога моделей убрана из бокового меню (доступна из окна настроек пользователя)
+    assert activity_bar.find(id="ide-nav-models") is None
     assert activity_bar.find(id="ide-nav-rag") is not None
     assert activity_bar.find(id="ide-nav-verification") is not None
     assert activity_bar.find(id="ide-nav-plugins") is not None
     assert activity_bar.find(id="ide-nav-gmail") is not None
-    assert activity_bar.find(id="ide-nav-theme-btn") is not None
-    assert activity_bar.find(id="ide-nav-tour-btn") is not None
+    # Кнопки темы и тура убраны из Activity Bar
+    assert activity_bar.find(id="ide-nav-theme-btn") is None
+    assert activity_bar.find(id="ide-nav-tour-btn") is None
+    assert soup.find(id="modal-btn-start-system-tour") is not None
 
 
 def test_no_duplicate_ids_in_index_html() -> None:

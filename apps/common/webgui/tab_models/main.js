@@ -6,10 +6,10 @@
  *   Модуль инициализации интерфейса управления моделями, провайдерами,
  *   ключами Google Gemini/AGY и аккаунтами Google.
  *
- * Файл: apps/ai_assistant/api/webgui/tab_models/main.js
- * Пакет: apps/ai_assistant/api/webgui/tab_models
+ * Файл: apps/common/webgui/tab_models/main.js
+ * Пакет: apps/common/webgui/tab_models
  * Автор: hypo69
- * Updated: 2026-11-03 11:46:00
+ * Updated: 2026-11-20 00:13:00
  * =============================================================================
  */
 
@@ -53,6 +53,17 @@ import {
   loadSystemInstruction,
   saveSystemInstruction
 } from './panel_providers_config/panel.js';
+import {
+  loadLocalBertConfig,
+  saveLocalBertConfig,
+  bindLocalBertEvents
+} from './panel_local_bert/panel.js';
+import {
+  loadEmbeddingModels,
+  saveEmbeddingModel,
+  executeEmbeddingTest,
+  bindEmbeddingEvents
+} from './panel_embedding_models/panel.js';
 
 // Экспорт глобальных функций для вызовов из встроенного HTML / хоста
 window.initModelsTab = initModelsTab;
@@ -81,6 +92,11 @@ window.testGoogleAccount = testGoogleAccount;
 window.deleteGoogleAccount = deleteGoogleAccount;
 window.loadSystemInstruction = loadSystemInstruction;
 window.saveSystemInstruction = saveSystemInstruction;
+window.loadLocalBertConfig = loadLocalBertConfig;
+window.saveLocalBertConfig = saveLocalBertConfig;
+window.loadEmbeddingModels = loadEmbeddingModels;
+window.saveEmbeddingModel = saveEmbeddingModel;
+window.executeEmbeddingTest = executeEmbeddingTest;
 
 /**
  * Инициализирует вкладку управления моделями и привязывает обработчики событий.
@@ -181,12 +197,12 @@ export async function initModelsTab() {
       try {
         const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[curModel]);
         if (isFav) {
-          await window.api.fetch(`/auth/favorites/${encodeURIComponent(curModel)}`, { method: 'DELETE' });
+          await window.api.fetch(`/api/v1/auth/favorites/${encodeURIComponent(curModel)}`, { method: 'DELETE' });
           if (window.userFavoriteModels) delete window.userFavoriteModels[curModel];
           showModelsNotification(`Модель "${curModel}" удалена из избранного`, 'info');
         } else {
           const noteText = modelNoteInput ? modelNoteInput.value.trim() : '';
-          const res = await window.api.fetch('/auth/favorites', {
+          const res = await window.api.fetch('/api/v1/auth/favorites', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ model: curModel, note: noteText })
@@ -217,7 +233,7 @@ export async function initModelsTab() {
       saveNoteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Сохранение...';
       try {
         const noteText = modelNoteInput.value.trim();
-        const res = await window.api.fetch('/auth/favorites', {
+        const res = await window.api.fetch('/api/v1/auth/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: curModel, note: noteText })
@@ -292,7 +308,7 @@ export async function initModelsTab() {
       const originalText = refreshKeysBtn.textContent;
       refreshKeysBtn.textContent = '⏳ Сброс...';
       try {
-        const res = await window.api.fetch('/api/keys/reset-all', { method: 'POST' });
+        const res = await window.api.fetch('/api/v1/keys/reset-all', { method: 'POST' });
         showModelsNotification(res.message || 'Квоты всех ключей успешно сброшены', 'success');
       } catch (err) {
         console.error('Ошибка сброса квот:', err);
@@ -321,7 +337,7 @@ export async function initModelsTab() {
 
       addKeyBtn.disabled = true;
       try {
-        await window.api.fetch('/api/keys', {
+        await window.api.fetch('/api/v1/keys', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, api_key: apiKey, status: 'active' })
@@ -369,7 +385,7 @@ export async function initModelsTab() {
       refreshAgyKeysBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Сброс...';
       try {
         const fetchFn = (window.api && window.api.fetch) || fetch;
-        await fetchFn('/api/keys/agy/reset-all', { method: 'POST' });
+        await fetchFn('/api/v1/keys/agy/reset-all', { method: 'POST' });
         showModelsNotification('Все квоты ключей AGY успешно сброшены!', 'success');
       } catch (err) {
         console.error('Ошибка сброса квот AGY:', err);
@@ -399,7 +415,7 @@ export async function initModelsTab() {
       addAgyKeyBtn.disabled = true;
       try {
         const fetchFn = (window.api && window.api.fetch) || fetch;
-        await fetchFn('/api/keys/agy', {
+        await fetchFn('/api/v1/keys/agy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, api_key: apiKey, status: 'active' })
@@ -417,13 +433,18 @@ export async function initModelsTab() {
     };
   }
 
+  bindLocalBertEvents();
+  bindEmbeddingEvents();
+
   // Асинхронная параллельная загрузка всех компонентов
   await Promise.allSettled([
     modelSelect && saveBtn ? loadTabModels(modelSelect, saveBtn) : Promise.resolve(),
     keysListBody ? refreshKeysList(keysListBody) : Promise.resolve(),
     agyKeysListBody ? refreshAgyKeysList(agyKeysListBody) : Promise.resolve(),
     gaccountsListBody ? refreshGoogleAccountsList(gaccountsListBody) : Promise.resolve(),
-    loadSystemInstruction()
+    loadSystemInstruction(),
+    loadLocalBertConfig(),
+    loadEmbeddingModels()
   ]);
 }
 
@@ -434,7 +455,7 @@ if (document.readyState === 'loading') {
 }
 
 /**
- * Автоматическая синхронизация активной панели вкладки с URL-хэшем.
+ * Автоматическая синхронизация активной панели и блока вкладки с URL-хэшем.
  */
 export function initTabUrlHashRouting() {
   const canonicalTabId = 'tab-models';
@@ -442,26 +463,65 @@ export function initTabUrlHashRouting() {
     const raw = window.location.hash || '';
     if (!raw.includes(canonicalTabId)) return;
     const parts = raw.replace(/^#/, '').split('#');
-    const panelPart = parts.find((p) => p.startsWith('panel-'));
+    let panelPart = parts.find((p) => p.startsWith('panel-'));
+    if (!panelPart) {
+      const fallback = parts.find((p) => ['gemini', 'agy', 'google-accounts', 'foundry', 'ollama', 'onnx', 'local-bert'].includes(p.toLowerCase()));
+      if (fallback) panelPart = `panel-${fallback.toLowerCase()}`;
+    }
+    const blockPart = parts.find((p) => p.startsWith('block-'));
+
     if (panelPart) {
-      const btn = document.querySelector(`button[data-panel-id="${panelPart}"]`) ||
-                  document.querySelector(`button[data-bs-target="#${panelPart}"]`);
+      const btn = document.querySelector(`#provider-pills-tab button[data-panel-id="${panelPart}"]`) ||
+                  document.querySelector(`#provider-pills-tab button[data-bs-target="#${panelPart}"]`) ||
+                  document.querySelector(`button[data-panel-id="${panelPart}"]`);
       if (btn && window.bootstrap && window.bootstrap.Tab) {
         (window.bootstrap.Tab.getInstance?.(btn) || window.bootstrap.Tab.getOrCreateInstance?.(btn) || new window.bootstrap.Tab(btn)).show();
+      }
+    }
+
+    if (blockPart) {
+      const cleanBlock = blockPart.replace(/^block-/, '');
+      const blockBtn = document.querySelector(`button[data-block-id="${blockPart}"]`) ||
+                       document.querySelector(`button[data-block-id="block-${cleanBlock}"]`) ||
+                       document.querySelector(`button[data-block-id="${cleanBlock}"]`);
+      if (blockBtn && window.bootstrap && window.bootstrap.Tab) {
+        (window.bootstrap.Tab.getInstance?.(blockBtn) || window.bootstrap.Tab.getOrCreateInstance?.(blockBtn) || new window.bootstrap.Tab(blockBtn)).show();
       }
     }
   };
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-panel-id], button[data-bs-toggle="pill"]');
-    if (btn) {
-      const panelId = btn.getAttribute('data-panel-id') || btn.getAttribute('data-bs-target')?.replace('#', '');
-      const blockId = btn.getAttribute('data-block-id');
-      if (panelId) {
-        let hash = `#${canonicalTabId}#${panelId}`;
-        if (blockId) hash += `#${blockId}`;
-        history.replaceState(null, null, hash);
+    // 1. Клик по основной субпанели провайдера
+    const panelBtn = e.target.closest('#provider-pills-tab button[data-panel-id], #provider-pills-tab button[data-bs-toggle="pill"]');
+    if (panelBtn) {
+      let rawPanel = panelBtn.getAttribute('data-panel-id') || panelBtn.getAttribute('data-bs-target')?.replace('#pill-', '')?.replace('#', '');
+      const canonicalPanel = rawPanel.startsWith('panel-') ? rawPanel : `panel-${rawPanel}`;
+      let hash = `#${canonicalTabId}#${canonicalPanel}`;
+
+      // Проверяем наличие активного блока внутри выбранной панели (например, Google Accounts file/json)
+      const targetPane = document.querySelector(panelBtn.getAttribute('data-bs-target') || `#${canonicalPanel}`);
+      if (targetPane) {
+        const activeBlockBtn = targetPane.querySelector('button[data-block-id].active');
+        if (activeBlockBtn) {
+          const bId = activeBlockBtn.getAttribute('data-block-id');
+          const normBlock = bId.startsWith('block-') ? bId : `block-${bId}`;
+          hash += `#${normBlock}`;
+        }
       }
+      history.replaceState(null, null, hash);
+      return;
+    }
+
+    // 2. Клик по вложенному блоку (например, режимы добавления Google аккаунта: файл / json)
+    const blockBtn = e.target.closest('button[data-block-id]');
+    if (blockBtn) {
+      const activeProviderBtn = document.querySelector('#provider-pills-tab button.active');
+      let rawPanel = activeProviderBtn?.getAttribute('data-panel-id') || 'panel-google-accounts';
+      const canonicalPanel = rawPanel.startsWith('panel-') ? rawPanel : `panel-${rawPanel}`;
+      const bId = blockBtn.getAttribute('data-block-id');
+      const normBlock = bId.startsWith('block-') ? bId : `block-${bId}`;
+      const hash = `#${canonicalTabId}#${canonicalPanel}#${normBlock}`;
+      history.replaceState(null, null, hash);
     }
   });
 

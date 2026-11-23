@@ -12,7 +12,7 @@ File: test_tab_chat.py
 Package: apps/ai_assistant/tests
 Author: hypo69
 Copyright: © 2026 hypo69
-# Updated: 2026-11-03 13:20:00
+# Updated: 2026-11-19 21:03:00
 =============================================================================
 """
 
@@ -88,6 +88,26 @@ def test_tab_chat_main_js_logic_and_exports() -> None:
     assert "export async function loadDynamicQuickPrompts(" in js_content
     assert "window.loadDynamicQuickPrompts = loadDynamicQuickPrompts;" in js_content
     assert "/suggested-questions" in js_content
+
+    # 7. Использование унифицированных стилей пузырей чата без жесткого bg-primary
+    assert "chat-msg-user" in js_content
+    assert "chat-msg-bot" in js_content
+    assert "bg-primary text-white" not in js_content
+
+
+def test_chat_user_bubble_color_hsl_216_100_91() -> None:
+    """Проверяет, что фон пузыря сообщения в чате задан в формате hsl(216, 100%, 91%) и оба блока выравниваются по правому краю в RTL."""
+    common_WEBGUI = Path(__file__).resolve().parent.parent.parent / "common" / "webgui"
+
+    for css_dir in [_WEBGUI_DIR / "css", common_WEBGUI / "css"]:
+        vars_css = (css_dir / "variables.css").read_text(encoding="utf-8")
+        chat_css = (css_dir / "chat.css").read_text(encoding="utf-8")
+        assert "hsl(216, 100%, 91%)" in vars_css, f"hsl(216, 100%, 91%) не найден в {css_dir / 'variables.css'}"
+        assert "hsl(216, 100%, 91%)" in chat_css, f"hsl(216, 100%, 91%) не найден в {css_dir / 'chat.css'}"
+        assert ".chat-msg-user" in chat_css
+        assert ".chat-msg-bot" in chat_css
+        assert "margin-left: auto !important" in chat_css
+        assert "text-align: right !important" in chat_css
 
 
 def test_index_html_registers_tab_chat() -> None:
@@ -172,5 +192,74 @@ async def test_workspace_suggested_questions_endpoint() -> None:
         assert "prompts" in data
         assert isinstance(data["prompts"], list)
         assert len(data["prompts"]) > 0
+
+
+def test_chat_task_button_layout_below_larger_input_and_rtl_i18n() -> None:
+    """Проверяет наличие кнопки משימה (Задача), увеличенное поле ввода, расположение кнопок СНИЗУ поля ввода и выравнивание вправо в RTL."""
+    common_webgui = Path(__file__).resolve().parent.parent.parent / "common" / "webgui"
+
+    for rel_html, task_btn_id in [("tab_chat/index.html", "chat-add-task-btn"), ("tab_workspace/index.html", "ws-chat-add-task-btn")]:
+        html = (_WEBGUI_DIR / rel_html).read_text(encoding="utf-8")
+        assert f'id="{task_btn_id}"' in html, f"Кнопка задачи #{task_btn_id} не найдена в {rel_html}"
+        assert 'data-i18n="workspace.chatAddTaskBtn"' in html
+        assert 'data-i18n-title="workspace.chatAddTaskTitle"' in html
+        assert 'rows="4"' in html, f"Поле ввода чата в {rel_html} должно иметь rows='4'"
+
+        # Кнопки должны располагаться строго ПОСЛЕ (снизу) поля ввода #ws-chat-input
+        idx_input = html.index('id="ws-chat-input"')
+        idx_actions = html.index('id="ws-chat-actions-row"')
+        idx_task_btn = html.index(f'id="{task_btn_id}"')
+        assert idx_input < idx_actions < idx_task_btn, f"Кнопки в {rel_html} должны находиться снизу (после) поля ввода"
+
+    # Проверяем локализацию бейджей и кнопки משימה во всех 4 языках обоих слоёв WebGUI
+    for locales_dir in [_WEBGUI_DIR / "locales", common_webgui / "locales"]:
+        he_data = json.loads((locales_dir / "he.json").read_text(encoding="utf-8"))
+        assert he_data["workspace"]["chatAddTaskBtn"] == "משימה"
+        for lang in ("ru", "en", "he", "uk"):
+            loc = json.loads((locales_dir / f"{lang}.json").read_text(encoding="utf-8"))
+            ws = loc["workspace"]
+            for key in ("chatAddTaskBtn", "chatAddTaskTitle", "chatSendTitle", "chatRagBadge", "chatSourcesBadge"):
+                assert key in ws and ws[key].strip(), f"Ключ workspace.{key} отсутствует или пуст в {locales_dir / f'{lang}.json'}"
+
+    # Проверяем CSS для увеличенного поля ввода и выравнивания кнопок вправо в RTL
+    for css_dir in [_WEBGUI_DIR / "css", common_webgui / "css"]:
+        chat_css = (css_dir / "chat.css").read_text(encoding="utf-8")
+        assert "flex-direction: column" in chat_css
+        assert "min-height: 104px" in chat_css
+        assert '[dir="rtl"] .chat-input-actions' in chat_css
+
+
+@pytest.mark.asyncio
+async def test_add_task_from_chat_veterinarian_and_insurer_remembers_time(tmp_path: Path) -> None:
+    """Проверяет постановку задачи из чата: связь с ветеринаром и страховщиком с учётом времени осмотра 20.11 в 06:00."""
+    from unittest.mock import patch
+    from apps.ai_assistant.core.workspace_manager import WorkspaceManager
+
+    wm = WorkspaceManager(
+        base_dir=tmp_path / "base_data",
+        workspaces_dir=tmp_path / "workspaces",
+    )
+    wm.create_or_select_workspace("דוד_משה", name="דוד משה", language="he")
+
+    with patch("apps.ai_assistant.api.routers.router_knowledge._workspace_manager", wm):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            res = await client.post(
+                "/api/v1/workspaces/דוד_משה/tasks",
+                json={
+                    "task_text": "Связаться с ветеринаром и страховым агентом, согласовать с ними дату",
+                    "language": "ru",
+                },
+            )
+            assert res.status_code == 200
+            body = res.json()
+            assert body["status"] == "ok"
+            assert body["is_inspection_coordination"] is True
+            assert body["scheduled_time"] == "2026-11-20T06:00:00+02:00"
+            assert "06:00" in body["summary_markdown"]
+            assert "20.11.2026" in body["summary_markdown"]
+            assert "veterinarian@davidka.net" in body["summary_markdown"]
+            assert "attorney@davidka.net" in body["summary_markdown"]
+
 
 

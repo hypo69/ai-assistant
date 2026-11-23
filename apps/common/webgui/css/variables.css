@@ -15,7 +15,7 @@
  * Package: apps/common/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 14:11:00
+ * Updated: 2026-11-20 02:32:00
  * =============================================================================
  */
 
@@ -85,8 +85,13 @@ body.theme-dark-slate {
   --badge-info-solid-bg:    #1f6feb;
   --badge-info-solid-text:  var(--text-silver);
   --nav-text:               #b0bdcc;
-  --nav-active:             #58a6ff;
+  --nav-active:             #6ca0dc;
   --nav-hover-bg:           #222d3d;
+  --active-item-bg:         rgba(108, 160, 220, 0.14);
+  --active-item-hover-bg:   rgba(108, 160, 220, 0.22);
+  --active-item-border:     rgba(108, 160, 220, 0.35);
+  --active-item-color:      var(--text-color);
+  --active-item-muted:      var(--text-muted);
 
   /* Линии и границы */
   --border-color:           #374151;
@@ -104,10 +109,12 @@ body.theme-dark-slate {
   --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.65);
 
   /* Чат */
-  --chat-user-bg:    #1f6feb;
-  --chat-user-text:  #ffffff;
-  --chat-bot-bg:     #1e293b;
-  --chat-bot-text:   #f9fafb;
+  --chat-user-bg:     hsl(216, 100%, 91%);
+  --chat-user-text:   #0f172a;
+  --chat-user-border: hsl(216, 75%, 80%);
+  --chat-bot-bg:      #1e293b;
+  --chat-bot-text:    #f9fafb;
+  --chat-bot-border:  #374151;
 
   /* Скроллбар */
   --scrollbar-track: #0b0f19;
@@ -233,6 +240,11 @@ body.theme-light-enterprise {
   --nav-text:        #1e293b;   /* контрастный текст навигации */
   --nav-active:      #0284c7;   /* четкий сапфирово-синий акцент */
   --nav-hover-bg:    #cbd5e1;
+  --active-item-bg:       rgba(2, 132, 199, 0.12);
+  --active-item-hover-bg: rgba(2, 132, 199, 0.18);
+  --active-item-border:   rgba(2, 132, 199, 0.35);
+  --active-item-color:    var(--text-color);
+  --active-item-muted:    var(--text-muted);
 
   /* Линии и границы */
   --border-color:    #cbd5e1;   /* четкий контур */
@@ -249,10 +261,12 @@ body.theme-light-enterprise {
   --shadow-lg:  0 8px 24px rgba(15, 23, 42, 0.13);
 
   /* Чат */
-  --chat-user-bg:    #0284c7;
-  --chat-user-text:  #f8fafc;
-  --chat-bot-bg:     #eaedf2;
-  --chat-bot-text:   #0f172a;
+  --chat-user-bg:     hsl(216, 100%, 91%);
+  --chat-user-text:   #0f172a;
+  --chat-user-border: hsl(216, 75%, 80%);
+  --chat-bot-bg:      #f8fafc;
+  --chat-bot-text:    #0f172a;
+  --chat-bot-border:  #cbd5e1;
 
   /* Скроллбар */
   --scrollbar-track: #e2e8f0;
@@ -374,7 +388,7 @@ body.theme-light-enterprise {
   --ui-text-primary: #18181b;
   --ui-text-secondary: #3f3f46;
   --ui-text-muted:   #52525b;
-  --text-silver:           #27272a;
+  --text-silver:           #e2e8f0; /* светло-серебряный для контрастного текста на зелёных и тёмных бейджах */
   --badge-info-solid-bg:   #1d4ed8;
   --badge-info-solid-text: #f6f1e8;
   --nav-text:        #27272a;   /* контрастный текст навигации */
@@ -382,6 +396,11 @@ body.theme-light-enterprise {
   --ui-accent:       #1d4ed8;
   --ui-accent-hover: #1e40af;
   --nav-hover-bg:    #eae4d8;
+  --active-item-bg:       rgba(29, 78, 216, 0.10);
+  --active-item-hover-bg: rgba(29, 78, 216, 0.16);
+  --active-item-border:   rgba(29, 78, 216, 0.32);
+  --active-item-color:    var(--text-color);
+  --active-item-muted:    var(--text-muted);
 
   /* Линии и границы */
   --border-color:    #cfc5b4;   /* четкий теплый контур */
@@ -399,10 +418,12 @@ body.theme-light-enterprise {
   --shadow-lg:  0 8px 24px rgba(50, 40, 30, 0.13);
 
   /* Чат */
-  --chat-user-bg:    #2a6194;
-  --chat-user-text:  #fbf9f4;
-  --chat-bot-bg:     #eae4d8;
-  --chat-bot-text:   #2b2723;
+  --chat-user-bg:     hsl(216, 100%, 91%);
+  --chat-user-text:   #18181b;
+  --chat-user-border: hsl(216, 65%, 80%);
+  --chat-bot-bg:      #f6f1e8;
+  --chat-bot-text:    #18181b;
+  --chat-bot-border:  #cfc5b4;
 
   /* Скроллбар */
   --scrollbar-track: #ebe7df;
@@ -468,6 +489,11 @@ body.theme-light-enterprise {
   --nav-text:        #59473f;
   --nav-active:      #b84228;   /* благородный терракотово-кирпичный */
   --nav-hover-bg:    #f7e6dc;
+  --active-item-bg:       rgba(184, 66, 40, 0.13);
+  --active-item-hover-bg: rgba(184, 66, 40, 0.20);
+  --active-item-border:   rgba(184, 66, 40, 0.38);
+  --active-item-color:    var(--text-color);
+  --active-item-muted:    var(--text-muted);
 
   /* Линии и границы */
   --border-color:    #dfcebf;   /* кирпично-песочный контур */
@@ -484,10 +510,12 @@ body.theme-light-enterprise {
   --shadow-lg:  0 8px 24px rgba(130, 70, 50, 0.14);
 
   /* Чат */
-  --chat-user-bg:    #b84228;   /* кирпичный акцент сообщений */
-  --chat-user-text:  #ffffff;
-  --chat-bot-bg:     #f4ece6;
-  --chat-bot-text:   #2c221e;
+  --chat-user-bg:     hsl(216, 100%, 91%);
+  --chat-user-text:   #2c221e;
+  --chat-user-border: hsl(216, 65%, 80%);
+  --chat-bot-bg:      #fcfaf6;
+  --chat-bot-text:    #2c221e;
+  --chat-bot-border:  #dfcebf;
 
   /* Скроллбар */
   --scrollbar-track: #f7f3ee;
@@ -605,8 +633,8 @@ body.theme-light-enterprise {
   --ui-text-primary: #f3f6fa;
   --ui-text-secondary: #a3b1c2;
   --ui-text-muted:   #64748b;
-  --ui-accent:       #58a6ff;
-  --ui-accent-hover: #1f6feb;   /* глубокий темный фон страницы */
+  --ui-accent:       #6ca0dc;
+  --ui-accent-hover: #4c83c4;
   --surface-1:       #151b23;   /* контрастные карточки */
   --surface-2:       #1e2633;   /* четкие хедеры карточек и тулбары */
   --card-bg:         #151b23;
@@ -617,8 +645,13 @@ body.theme-light-enterprise {
   --text-color:      #f3f6fa;   /* яркий текст высокой контрастности */
   --text-muted:      #a3b1c2;   /* легко различимый вторичный текст */
   --nav-text:        #b0bdcc;
-  --nav-active:      #58a6ff;   /* яркий синий активный акцент */
+  --nav-active:      #6ca0dc;   /* мягкий приглушенный синий активный акцент */
   --nav-hover-bg:    #222d3d;
+  --active-item-bg:       rgba(108, 160, 220, 0.15);
+  --active-item-hover-bg: rgba(108, 160, 220, 0.22);
+  --active-item-border:   rgba(108, 160, 220, 0.38);
+  --active-item-color:    var(--text-color);
+  --active-item-muted:    var(--text-muted);
 
   /* Линии и границы (высокая четкость) */
   --border-color:    #3b4758;   /* четко очерченные границы */
@@ -635,10 +668,12 @@ body.theme-light-enterprise {
   --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.65);
 
   /* Чат */
-  --chat-user-bg:    #1f6feb;
-  --chat-user-text:  #ffffff;
-  --chat-bot-bg:     #212836;
-  --chat-bot-text:   #f3f6fa;
+  --chat-user-bg:     hsl(216, 100%, 91%);
+  --chat-user-text:   #0f172a;
+  --chat-user-border: hsl(216, 75%, 80%);
+  --chat-bot-bg:      #212836;
+  --chat-bot-text:    #f3f6fa;
+  --chat-bot-border:  #3b4758;
 
   /* Скроллбар */
   --scrollbar-track: #0b0f17;
@@ -770,6 +805,11 @@ body.theme-light-enterprise {
   --nav-text:        #6cb878;
   --nav-active:      #00ff66;   /* электрический неоново-зеленый */
   --nav-hover-bg:    #152618;
+  --active-item-bg:       #0c3316;
+  --active-item-hover-bg: #154c22;
+  --active-item-border:   #00ff66;
+  --active-item-color:    #00ff66;
+  --active-item-muted:    rgba(0, 255, 102, 0.75);
 
   /* Линии и границы (терминальный контур со свечением) */
   --border-color:    #1a4223;   /* глубокий зеленый контур */
@@ -786,10 +826,12 @@ body.theme-light-enterprise {
   --shadow-lg:  0 0 28px rgba(0, 255, 102, 0.35);
 
   /* Чат */
-  --chat-user-bg:    #008033;   /* зеленый фосфорный пузырь */
-  --chat-user-text:  #ffffff;
-  --chat-bot-bg:     #101c12;
-  --chat-bot-text:   #d8ffd8;
+  --chat-user-bg:     hsl(216, 100%, 91%);
+  --chat-user-text:   #060a06;
+  --chat-user-border: hsl(216, 75%, 80%);
+  --chat-bot-bg:      #101c12;
+  --chat-bot-text:    #d8ffd8;
+  --chat-bot-border:  #1a4223;
 
   /* Скроллбар */
   --scrollbar-track: #060a06;

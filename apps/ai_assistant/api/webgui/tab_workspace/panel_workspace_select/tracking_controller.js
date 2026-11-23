@@ -12,7 +12,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_workspace/panel_workspace_select
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-07 00:22:00
+ * Updated: 2026-11-20 01:48:00
  * =============================================================================
  */
 
@@ -206,7 +206,7 @@ export function renderStagedItems() {
         </div>
         <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
           <span class="badge ${badgeClass} border">${typeLabel}</span>
-          <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1.5 rounded btn-remove-staged" data-staged-index="${index}" title="Исключить из списка">
+          <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1.5 rounded btn-remove-staged" data-staged-index="${index}" title="${t('workspace.removeFromListTitle', 'Исключить из списка')}">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -269,8 +269,8 @@ export async function loadTrackedItemsList(wsId = null) {
       const typeLabel = isSheet ? 'Google Sheets' : (isDir ? t('workspace.badgeTypeFolder', 'Папка') : t('workspace.badgeTypeFile', 'Файл'));
       const modeBadge = `<span class="badge bg-info-subtle text-info-emphasis border"><i class="bi bi-pin-angle me-1"></i>${t('workspace.badgeModeLinked', 'На диске (без копирования)')}</span>`;
       const statusBadge = s.status === 'error'
-        ? `<span class="badge bg-danger-subtle text-danger border">Ошибка</span>`
-        : `<span class="badge bg-success-subtle text-success border">Активен (${s.item_count || 0})</span>`;
+        ? `<span class="badge bg-danger-subtle text-danger border">${t('workspace.statusError', 'Ошибка')}</span>`
+        : `<span class="badge bg-success-subtle text-success border">${t('workspace.statusActive', 'Активен')} (${s.item_count || 0})</span>`;
       const fullPath = s.qualified_path || s.source_path;
       const escapedPath = fullPath.replace(/"/g, '&quot;');
       const escapedName = (s.name || s.source_path).replace(/"/g, '&quot;');
@@ -308,11 +308,11 @@ export async function loadTrackedItemsList(wsId = null) {
         ? `<span class="badge bg-info-subtle text-info-emphasis border"><i class="bi bi-pin-angle me-1"></i>${t('workspace.badgeModeLinked', 'На диске (без копирования)')}</span>`
         : `<span class="badge bg-primary-subtle text-primary border"><i class="bi bi-git me-1"></i>${t('workspace.badgeModeRepo', 'В репозитории (Git)')}</span>`;
 
-      let statusBadge = `<span class="badge bg-success-subtle text-success border"><i class="bi bi-check2 me-1"></i>Отслеживается</span>`;
+      let statusBadge = `<span class="badge bg-success-subtle text-success border"><i class="bi bi-check2 me-1"></i>${t('workspace.badgeGitTracked', 'Отслеживается')}</span>`;
       if (item.git_status === 'Изменён' || item.git_status === 'Изменён (на диске)') {
-        statusBadge = `<span class="badge bg-warning-subtle text-warning-emphasis border"><i class="bi bi-pencil me-1"></i>Изменён</span>`;
+        statusBadge = `<span class="badge bg-warning-subtle text-warning-emphasis border"><i class="bi bi-pencil me-1"></i>${t('workspace.badgeGitModified', 'Изменён')}</span>`;
       } else if (item.git_status === 'Добавлен') {
-        statusBadge = `<span class="badge bg-info-subtle text-info border"><i class="bi bi-plus me-1"></i>Добавлен</span>`;
+        statusBadge = `<span class="badge bg-info-subtle text-info border"><i class="bi bi-plus me-1"></i>${t('workspace.badgeGitAdded', 'Добавлен')}</span>`;
       } else if (String(item.git_status || '').startsWith('На другом ПК')) {
         statusBadge = `<span class="badge bg-primary-subtle text-primary border"><i class="bi bi-pc-display me-1"></i>${item.git_status}</span>`;
       }
@@ -367,6 +367,12 @@ export async function loadTrackedItemsList(wsId = null) {
             method: 'DELETE',
           });
           await loadTrackedItemsList(targetId);
+          if (typeof window.invalidateExplorerFileTreeCache === 'function') {
+            window.invalidateExplorerFileTreeCache(targetId);
+          }
+          document.dispatchEvent(new CustomEvent('workspace:items-changed', {
+            detail: { workspaceId: targetId },
+          }));
           if (onItemsCommittedFn) await onItemsCommittedFn(targetId);
           if (typeof window.showToast === 'function') {
             window.showToast(t('workspace.sourceUnlinkedSuccess', 'Источник отвязан от слежения'), 'info');
@@ -382,7 +388,7 @@ export async function loadTrackedItemsList(wsId = null) {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center py-3 text-danger font-sans-serif">
-          <i class="bi bi-exclamation-triangle me-1"></i>Ошибка загрузки: ${err.message}
+          <i class="bi bi-exclamation-triangle me-1"></i>${t('workspace.loadErrorPrefix', 'Ошибка загрузки:')} ${err.message}
         </td>
       </tr>
     `;
@@ -518,6 +524,12 @@ export function initTrackingController(getWsId, onCommitted) {
       }
 
       await loadTrackedItemsList(currentWsId);
+      if (typeof window.invalidateExplorerFileTreeCache === 'function') {
+        window.invalidateExplorerFileTreeCache(currentWsId);
+      }
+      document.dispatchEvent(new CustomEvent('workspace:items-changed', {
+        detail: { workspaceId: currentWsId },
+      }));
       if (onItemsCommittedFn) {
         await onItemsCommittedFn(currentWsId);
       }

@@ -13,7 +13,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_workspace/panel_tree
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-28 18:49:00
+ * Updated: 2026-11-19 20:22:00
  * =============================================================================
  */
 
@@ -348,21 +348,40 @@ async function renderSelectedNodeInspector(relPath) {
   }
 
   if (previewEl) {
+    const applyPreviewDir = (txt, explicitDir = null) => {
+      let dir = explicitDir === 'rtl' ? 'rtl' : 'ltr';
+      if (!explicitDir) {
+        if (typeof window !== 'undefined' && typeof window.detectDocumentDirection === 'function') {
+          dir = window.detectDocumentDirection(txt, found.rel_path || relPath);
+        } else if (/[\u0590-\u05FF]/.test(String(txt || ''))) {
+          dir = 'rtl';
+        }
+      }
+      previewEl.setAttribute('dir', dir);
+      previewEl.style.direction = dir;
+      previewEl.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+    };
+
     if (found.is_dir) {
       previewEl.textContent = t('workspace.treeSelectedDirectory', 'Выбрана директория.');
+      applyPreviewDir('');
     } else if (found.source_mode === 'local') {
       previewEl.textContent = t('workspace.treeLoadingPreview', 'Загрузка предпросмотра файла...');
       try {
         const wsId = getCurrentWorkspaceId() || 'default';
         const res = await fetchJson(`/api/v1/workspaces/${encodeURIComponent(wsId)}/file-content?rel_path=${encodeURIComponent(found.rel_path)}`);
         previewEl.textContent = res.content || t('workspace.treeEmptyFile', '(Файл пуст)');
+        applyPreviewDir(res.content || '', res.direction || null);
       } catch (err) {
         previewEl.textContent = found.semantic_summary || `(${t('workspace.treePreviewUnavailable', 'Предпросмотр недоступен')}: ${err.message})`;
+        applyPreviewDir(found.semantic_summary || '');
       }
     } else {
       const extNote = t('workspace.treeExternalTrackedNote', '[Внешний файл отслеживается Git без копирования в рабочую директорию: {path}]')
         .replace('{path}', found.qualified_path || found.rel_path);
-      previewEl.textContent = `${found.semantic_summary || ''}\n\n${extNote}`;
+      const previewTxt = `${found.semantic_summary || ''}\n\n${extNote}`;
+      previewEl.textContent = previewTxt;
+      applyPreviewDir(previewTxt);
     }
   }
 }

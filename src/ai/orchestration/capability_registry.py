@@ -16,7 +16,7 @@
 # Package: src.ai.orchestration
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-10 17:35:00
+# Updated: 2026-11-20 00:08:00
 # =============================================================================
 
 """Standard capability identifiers for AI workloads."""
@@ -71,6 +71,13 @@ class CapabilityRegistry:
         self.register_model(ModelDescriptor(id='ollama:llama3.1', provider='ollama', capabilities={AICapability.CHAT, AICapability.CODE}, locality=Locality.LOCAL, latency_tier='normal', hardware_target='gpu'))
         self.register_model(ModelDescriptor(id='gemini:gemini-3.7-flash', provider='gemini', capabilities={AICapability.CHAT, AICapability.VISION, AICapability.CODE}, locality=Locality.CLOUD, latency_tier='low', requires_api_key=True))
         self.register_model(ModelDescriptor(id='gemini:gemini-2.5-pro', provider='gemini', capabilities={AICapability.CHAT, AICapability.VISION, AICapability.CODE}, locality=Locality.CLOUD, latency_tier='normal', requires_api_key=True))
+        # Модели эмбеддингов (облачные, локальный сервер и браузерный WebAssembly/WebGPU BERT)
+        self.register_model(ModelDescriptor(id='local_bert:Xenova/multilingual-e5-small', provider='local_bert', capabilities={AICapability.EMBEDDING}, locality=Locality.LOCAL, latency_tier='low', context_window=512, hardware_target='wasm'))
+        self.register_model(ModelDescriptor(id='local_bert:TrendHD/rubert-tiny2-int8', provider='local_bert', capabilities={AICapability.EMBEDDING}, locality=Locality.LOCAL, latency_tier='low', context_window=2048, hardware_target='wasm'))
+        self.register_model(ModelDescriptor(id='local_bert:Xenova/all-MiniLM-L6-v2', provider='local_bert', capabilities={AICapability.EMBEDDING}, locality=Locality.LOCAL, latency_tier='low', context_window=256, hardware_target='wasm'))
+        self.register_model(ModelDescriptor(id='gemini:gemini-embedding-001', provider='gemini', capabilities={AICapability.EMBEDDING}, locality=Locality.CLOUD, latency_tier='low', requires_api_key=True, context_window=2048))
+        self.register_model(ModelDescriptor(id='gemini:text-embedding-004', provider='gemini', capabilities={AICapability.EMBEDDING}, locality=Locality.CLOUD, latency_tier='low', requires_api_key=True, context_window=2048))
+        self.register_model(ModelDescriptor(id='ollama:nomic-embed-text', provider='ollama', capabilities={AICapability.EMBEDDING}, locality=Locality.LOCAL, latency_tier='low', context_window=8192, hardware_target='gpu'))
 
     def register_model(self, descriptor: ModelDescriptor) -> None:
         """Register a model descriptor into the capability registry."""

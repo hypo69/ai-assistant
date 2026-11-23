@@ -7,11 +7,11 @@
  *   сериализации состояния в JSON и генерации валидного CSS-кода.
  *
  * File: panel_tokens/panel.js
- * Project: ai-assistant
+ * Project: ai-windows-admin
  * Package: apps/windows/api/webgui/tab_theme_editor/panel_tokens
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-20 11:46:00
+ * Updated: 2026-11-19 17:56:00
  * =============================================================================
  */
 
@@ -25,11 +25,27 @@ import {
 } from '../common/ui_utils.js';
 
 /**
+ * Преобразует HEX-цвет в RGB-кортеж формата "r, g, b" для переменных Bootstrap 5.3 (--bs-*-rgb).
+ * @param {string} hex
+ * @param {string} [fallback='0, 0, 0']
+ * @returns {string}
+ */
+export function hexToRgbTuple(hex, fallback = '0, 0, 0') {
+  if (!hex || typeof hex !== 'string') return fallback;
+  const clean = hex.replace('#', '').trim();
+  if (clean.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(clean)) return fallback;
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
+/**
  * Определяет, является ли шестнадцатеричный цвет светлым.
  * @param {string} hex
  * @returns {boolean}
  */
-function isColorLight(hex) {
+export function isColorLight(hex) {
   if (!hex || typeof hex !== 'string') return false;
   const clean = hex.replace('#', '').trim();
   if (clean.length < 6) return false;
@@ -75,6 +91,13 @@ export function collectTokensFromUI() {
   const warning = getColorValue('status-warning', '#f59e0b');
   const danger = getColorValue('status-danger', '#ef4444');
   const info = getColorValue('status-info', '#38bdf8');
+
+  const alertLightBg = getColorValue('alert-light-bg', bgSurface);
+  const alertLightBorder = getColorValue('alert-light-border', border);
+  const alertLightText = getColorValue('alert-light-text', textPrimary);
+  const inputBg = getColorValue('input-bg', bgSurface);
+  const inputText = getColorValue('input-text', textPrimary);
+  const inputBorder = getColorValue('input-border', border);
 
   // Расчет радиусов
   const radiusXs = `${Math.max(0, radius - 4)}px`;
@@ -218,16 +241,45 @@ export function collectTokensFromUI() {
     '--badge-neutral-border': badgeNeutralBorder,
 
     '--bs-body-bg': bgBase,
+    '--bs-body-bg-rgb': hexToRgbTuple(bgBase, '11, 15, 25'),
     '--bs-body-color': textPrimary,
+    '--bs-body-color-rgb': hexToRgbTuple(textPrimary, '249, 250, 251'),
+    '--bs-secondary-color': textMuted,
+    '--bs-secondary-color-rgb': hexToRgbTuple(textMuted, '156, 163, 175'),
     '--bs-card-bg': bgSurface,
     '--bs-card-color': textPrimary,
     '--bs-modal-bg': bgSurface,
     '--bs-modal-color': textPrimary,
+    '--bs-offcanvas-bg': bgSurface,
     '--bs-tertiary-bg': bgElevated,
+    '--bs-tertiary-bg-rgb': hexToRgbTuple(bgElevated, '31, 41, 55'),
     '--bs-secondary-bg': bgElevated,
+    '--bs-secondary-bg-rgb': hexToRgbTuple(bgElevated, '31, 41, 55'),
     '--bs-list-group-bg': bgSurface,
     '--bs-dropdown-bg': bgSurface,
     '--bs-border-color': border,
+
+    '--bs-primary': accent,
+    '--bs-primary-rgb': hexToRgbTuple(accent, '56, 189, 248'),
+    '--bs-success': success,
+    '--bs-success-rgb': hexToRgbTuple(success, '16, 185, 129'),
+    '--bs-warning': warning,
+    '--bs-warning-rgb': hexToRgbTuple(warning, '245, 158, 11'),
+    '--bs-danger': danger,
+    '--bs-danger-rgb': hexToRgbTuple(danger, '239, 68, 68'),
+    '--bs-info': info,
+    '--bs-info-rgb': hexToRgbTuple(info, '56, 189, 248'),
+
+    '--alert-light-bg': alertLightBg,
+    '--alert-light-border': alertLightBorder,
+    '--alert-light-text': alertLightText,
+    '--bs-light-bg-subtle': alertLightBg,
+    '--bs-light-border-subtle': alertLightBorder,
+    '--bs-light-text-emphasis': alertLightText,
+
+    '--input-bg': inputBg,
+    '--input-text': inputText,
+    '--input-border': inputBorder,
 
     '--card-border': border,
     '--ui-border-color-subtle': `${border}66`,
@@ -282,6 +334,12 @@ export function collectFullStateFromUI() {
       panelHeaderBg: getColorValue('panel-header-bg'),
       tabHeaderText: getColorValue('tab-header-text'),
       tabHeaderSub: getColorValue('tab-header-sub'),
+      alertLightBg: getColorValue('alert-light-bg'),
+      alertLightBorder: getColorValue('alert-light-border'),
+      alertLightText: getColorValue('alert-light-text'),
+      inputBg: getColorValue('input-bg'),
+      inputText: getColorValue('input-text'),
+      inputBorder: getColorValue('input-border'),
     }
   };
 }
@@ -346,6 +404,12 @@ export function applyStateToUI(state) {
     if (c.panelHeaderBg) setColorPair('panel-header-bg', c.panelHeaderBg);
     if (c.tabHeaderText) setColorPair('tab-header-text', c.tabHeaderText);
     if (c.tabHeaderSub) setColorPair('tab-header-sub', c.tabHeaderSub);
+    if (c.alertLightBg) setColorPair('alert-light-bg', c.alertLightBg);
+    if (c.alertLightBorder) setColorPair('alert-light-border', c.alertLightBorder);
+    if (c.alertLightText) setColorPair('alert-light-text', c.alertLightText);
+    if (c.inputBg) setColorPair('input-bg', c.inputBg);
+    if (c.inputText) setColorPair('input-text', c.inputText);
+    if (c.inputBorder) setColorPair('input-border', c.inputBorder);
   }
 }
 
@@ -416,6 +480,12 @@ export function mapTokensToUI(tokens) {
   if (tokens['--panel-header-bg']) setColorPair('panel-header-bg', tokens['--panel-header-bg']);
   if (tokens['--tab-header-title-color']) setColorPair('tab-header-text', tokens['--tab-header-title-color']);
   if (tokens['--tab-header-subtitle-color']) setColorPair('tab-header-sub', tokens['--tab-header-subtitle-color']);
+  if (tokens['--alert-light-bg']) setColorPair('alert-light-bg', tokens['--alert-light-bg']);
+  if (tokens['--alert-light-border']) setColorPair('alert-light-border', tokens['--alert-light-border']);
+  if (tokens['--alert-light-text']) setColorPair('alert-light-text', tokens['--alert-light-text']);
+  if (tokens['--input-bg']) setColorPair('input-bg', tokens['--input-bg']);
+  if (tokens['--input-text']) setColorPair('input-text', tokens['--input-text']);
+  if (tokens['--input-border']) setColorPair('input-border', tokens['--input-border']);
 }
 
 /**

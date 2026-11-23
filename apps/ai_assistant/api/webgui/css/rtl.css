@@ -18,7 +18,7 @@
  * Package: apps.ai_assistant.api.webgui.css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-25 23:10:00
+ * Updated: 2026-11-19 20:59:00
  * =============================================================================
  */
 
@@ -231,6 +231,18 @@ body[dir="rtl"] .offcanvas-header .btn-close {
 
 [dir="rtl"] .dropdown-menu {
   text-align: right;
+}
+
+/* 8.2 Кнопки управления под полем ввода чата в RTL (выравнивание строго вправо) */
+[dir="rtl"] .chat-input-actions,
+html[dir="rtl"] .chat-input-actions,
+body[dir="rtl"] .chat-input-actions,
+[dir="rtl"] #ws-chat-actions-row,
+html[dir="rtl"] #ws-chat-actions-row,
+body[dir="rtl"] #ws-chat-actions-row {
+  direction: rtl !important;
+  justify-content: flex-start !important;
+  text-align: right !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

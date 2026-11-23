@@ -18,7 +18,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 16:46:00
+# Updated: 2026-11-19 20:45:00
 # =============================================================================
 
 """Модуль реализации компонента `GoogleGenerativeAICore` системы AI-Windows-Admin."""
@@ -221,14 +221,16 @@ class GoogleGenerativeAICore:
         self._key_errors[key_name] = ex_str
 
     def _invalidate_api_key(self, key: str) -> None:
-        """Exception невалидного ключа из активного пула.
+        """Исключение невалидного или заблокированного (401/403) ключа из активного пула с сохранением состояния.
 
         Args:
             key (str): Значение недействительного API-ключа.
         """
         idx: int = self.api_keys.index(key) if key in self.api_keys else -1
         key_name: str = self._key_names_active[idx] if 0 <= idx < len(self._key_names_active) else '?'
-        logger.warning(f'GoogleGenerativeAI: Недействительный ключ удален: {key_name}')
+        if key_name and key_name != '?':
+            mark_exhausted(key_name)
+        logger.warning(f'GoogleGenerativeAI: Недействительный ключ удален и деактивирован: {key_name}')
         self.api_keys = [k for k in self.api_keys if k != key]
         if idx >= 0:
             self._key_names_active = [n for i, n in enumerate(self._key_names_active) if i != idx]

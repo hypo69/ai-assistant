@@ -1,7 +1,11 @@
 {
   "scenario_id": "david_moshe_cow_deal",
+  "deal_dir": "עסקת קניית פרה",
+  "deal_package_dir": "C:\\Users\\onela\\Desktop\\דוד מושה — רשימת מסמכים\\master_complete_cow_deal_package_zina-v5 (1)",
+  "create_extra_notes": false,
+  "open_chat_on_complete": true,
   "transcript": {
-    "dest_dir": "transcripts",
+    "dest_dir": "עסקת קניית פרה",
     "obsidian": {
       "tags": ["תמליל", "שיחת-טלפון", "עסקת-מקנה", "זינה"],
       "wikilinks": {
@@ -11,22 +15,197 @@
         "זינה": "זינה",
         "מושב נהלל, משק מס' 42": "משק 42 נהלל"
       },
-      "related": ["עסקת רכישת זינה", "זינה", "דוד משה", "שמוליק", "משק 42 נהלל"]
+      "related": ["עסקת קניית פרה", "זינה", "דוד משה", "שמוליק", "משק 42 נהלל"]
     }
   },
   "paperless": {
-    "enabled": true,
+    "enabled": false,
     "title": "תמליל שיחת טלפון: דוד משה ושמוליק — רכישת הפרה זינה",
     "file_name": "david_moshe_shmulik_phone_call_zina.txt",
     "correspondent": "שמוליק",
     "document_type": "תמליל שיחה",
     "extra_tags": ["זינה", "עסקת מקנה", "תמליל"]
   },
-  "notes": [
-    {"src": "deal_zina.md", "dest": "deals/עסקת רכישת זינה.md"},
-    {"src": "zina.md", "dest": "entities/זינה.md"},
-    {"src": "david_moshe.md", "dest": "entities/דוד משה.md"},
-    {"src": "shmulik.md", "dest": "entities/שמוליק.md"},
-    {"src": "farm_nahalal.md", "dest": "entities/משק 42 נהלל.md"}
-  ]
+  "notes": [],
+  "purchase_scenario": {
+    "title": "עסקת קניית פרה — זינה (דוד משה ↔ שמוליק)",
+    "title_i18n": {
+      "he": "עסקת קניית פרה — זינה (דוד משה ↔ שמוליק)",
+      "ru": "Сделка покупки коровы — Зина (דוד משה ↔ שמוליק)",
+      "en": "Cow Purchase Deal — Zina (דוד משה ↔ שמוליק)",
+      "uk": "Угода купівлі корови — Зіна (דוד משה ↔ שמוליק)"
+    },
+    "summary": "השיחה בין דוד משה לשמוליק עובדה. נבחרה הפרה זינה (גיל שנתיים, 515 ק\"ג, 8.3 ל'/יום, 8,800 ₪ + מע\"מ = 10,296 ₪). כתובת המשק של שמוליק: מושב נהלל, משק מס' 42, חליבת בוקר ב-06:00. עוברים לתיאום ביקור הווטרינר וסוכן הביטוח.",
+    "summary_i18n": {
+      "he": "השיחה בין דוד משה לשמוליק עובדה. נבחרה הפרה זינה (גיל שנתיים, 515 ק\"ג, 8.3 ל'/יום, 8,800 ₪ + מע\"מ = 10,296 ₪). כתובת המשק של שמוליק: מושב נהלל, משק מס' 42, חליבת בוקר ב-06:00. עוברים לתיאום ביקור הווטרינר וסוכן הביטוח.",
+      "ru": "Звонок между Дядей Моше и Шмуликом обработан. Выбрана корова Зина (2 года, 515 кг, 8.3 л/день, 8 800 ₪ + НДС = 10 296 ₪). Адрес хозяйства Шмулика: מושב נהלל, משק מס' 42, утренняя дойка в 06:00. Переходим к согласованию визита ветеринара и страхового агента.",
+      "en": "The call between Uncle Moshe and Shmulik has been processed. Selected cow Zina (2 years old, 515 kg, 8.3 L/day, 8,800 ₪ + VAT = 10,296 ₪). Shmulik's farm address: מושב נהלל, משק מס' 42, morning milking at 06:00. Proceeding to coordinate the veterinarian and insurance agent visit.",
+      "uk": "Дзвінок між Дядьком Моше та Шмуліком оброблено. Обрано корову Зіну (2 роки, 515 кг, 8.3 л/день, 8 800 ₪ + ПДВ = 10 296 ₪). Адреса господарства Шмуліка: מושב נהלל, משק מס' 42, ранкове доїння о 06:00. Переходимо до узгодження візиту ветеринара та страхового агента."
+    },
+    "conditions": [
+      {
+        "id": "audio_saved",
+        "status": "completed",
+        "title": "הקלטת השיחה נשמרה בתיקיית assets/",
+        "title_i18n": {
+          "he": "הקלטת השיחה נשמרה בתיקיית assets/",
+          "ru": "Аудиозапись звонка сохранена в assets/",
+          "en": "Call audio recording saved to assets/",
+          "uk": "Аудіозапис дзвінка збережено в assets/"
+        },
+        "details": "assets/דוד משה - שמוליק שיחת טלפון.mp3"
+      },
+      {
+        "id": "deal_dir_created",
+        "status": "completed",
+        "title": "נוצרה תיקיית העסקה «עסקת קניית פרה»",
+        "title_i18n": {
+          "he": "נוצרה תיקיית העסקה «עסקת קניית פרה»",
+          "ru": "Создана директория сделки «עסקת קניית פרה»",
+          "en": "Deal directory «עסקת קניית פרה» created",
+          "uk": "Створено директорію угоди «עסקת קניית פרה»"
+        },
+        "details": "data/workspaces/דוד_משה/עסקת קניית פרה"
+      },
+      {
+        "id": "transcript_copied_git",
+        "status": "completed",
+        "title": "תמליל השיחה הועתק ל-«עסקת קניית פרה» וחובר למעקב Git",
+        "title_i18n": {
+          "he": "תמליל השיחה הועתק ל-«עסקת קניית פרה» וחובר למעקב Git",
+          "ru": "Транскрипт скопирован в «עסקת קניית פרה» и подключён к Git-слежению",
+          "en": "Transcript copied to «עסקת קניית פרה» and linked to Git tracking",
+          "uk": "Транскрипт скопійовано до «עסקת קניית פרה» та підключено до Git-стеження"
+        },
+        "details": "02_transcript_david_moshe_shmulik_v3.md + .tracked_sources.json + Git",
+        "details_i18n": {
+          "he": "02_transcript_david_moshe_shmulik_v3.md + קובצי מקור ב-.tracked_sources.json וב-Git",
+          "ru": "02_transcript_david_moshe_shmulik_v3.md + оригиналы в .tracked_sources.json и Git",
+          "en": "02_transcript_david_moshe_shmulik_v3.md + originals in .tracked_sources.json and Git",
+          "uk": "02_transcript_david_moshe_shmulik_v3.md + оригінали в .tracked_sources.json та Git"
+        }
+      },
+      {
+        "id": "deal_package_imported",
+        "status": "completed",
+        "title": "חבילת מסמכי העסקה (PDF → MD) הוטמעה ב-«עסקת קניית פרה»",
+        "title_i18n": {
+          "he": "חבילת מסמכי העסקה (PDF → MD) הוטמעה ב-«עסקת קניית פרה»",
+          "ru": "Пакет документов сделки (PDF → MD) разложен в «עסקת קניית פרה»",
+          "en": "Deal document package (PDF → MD) imported into «עסקת קניית פרה»",
+          "uk": "Пакет документів угоди (PDF → MD) розкладено в «עסקת קניית פרה»"
+        },
+        "details": "PDF ב-עסקת קניית פרה/assets/ + MD באותה היררכיה ב-עסקת קניית פרה/",
+        "details_i18n": {
+          "he": "PDF ב-עסקת קניית פרה/assets/ + MD באותה היררכיה ב-עסקת קניית פרה/",
+          "ru": "PDF в עסקת קניית פרה/assets/ + MD в той же иерархии в корне עסקת קניית פרה/",
+          "en": "PDF in עסקת קניית פרה/assets/ + MD in the same hierarchy under עסקת קניית פרה/",
+          "uk": "PDF в עסקת קניית פרה/assets/ + MD в тій самій ієрархії в корені עסקת קניית פרה/"
+        }
+      },
+      {
+        "id": "email_vet",
+        "status": "planned",
+        "title": "לכתוב מכתב לווטרינר (veterinarian@davidka.net)",
+        "title_i18n": {
+          "he": "לכתוב מכתב לווטרינר (veterinarian@davidka.net)",
+          "ru": "Написать письмо ветеринару (veterinarian@davidka.net)",
+          "en": "Write an email to the veterinarian (veterinarian@davidka.net)",
+          "uk": "Написати листа ветеринару (veterinarian@davidka.net)"
+        },
+        "details": "לבקש בדיקה של הפרה זינה והעטין (דלקת עטין בגיל שנה), בדיקת כרטיס וטרינרי ורישומי תנובת חלב (8.3 ל'/יום) ב-20.11 בשעה 06:00 במושב נהלל, משק מס' 42",
+        "details_i18n": {
+          "he": "לבקש בדיקה של הפרה זינה והעטין (דלקת עטין בגיל שנה), בדיקת כרטיס וטרינרי ורישומי תנובת חלב (8.3 ל'/יום) ב-20.11 בשעה 06:00 במושב נהלל, משק מס' 42",
+          "ru": "Запросить осмотр коровы Зины и вымени (мастит в возрасте 1 года), проверку веткарты и записей надоя (8.3 л/день) 20.11 в 06:00 в מושב נהלל, משק מס' 42",
+          "en": "Request an inspection of cow Zina and her udder (mastitis at age 1), vet card and milk yield records (8.3 L/day) on 20.11 at 06:00 at מושב נהלל, משק מס' 42",
+          "uk": "Запросити огляд корови Зіни та вимені (мастит у віці 1 року), перевірку веткартки та записів надою (8.3 л/день) 20.11 о 06:00 в מושב נהלל, משק מס' 42"
+        },
+        "action_prompt": "כתוב מכתב רשמי לווטרינר (veterinarian@davidka.net) בשם דוד משה עם הזמנה להגיע למשק של שמוליק במושב נהלל, משק מס' 42 מחר, 20.11 בשעה 06:00 לחליבת הבוקר לצורך בדיקת הפרה זינה (גיל שנתיים, משקל 515 ק\"ג, תנובה 8.3 ל'/יום, עברה דלקת עטין ראשונית בגיל שנה), בדיקת העטין, הכרטיס הווטרינרי ורישומי החליבה.",
+        "action_prompt_i18n": {
+          "he": "כתוב מכתב רשמי לווטרינר (veterinarian@davidka.net) בשם דוד משה עם הזמנה להגיע למשק של שמוליק במושב נהלל, משק מס' 42 מחר, 20.11 בשעה 06:00 לחליבת הבוקר לצורך בדיקת הפרה זינה (גיל שנתיים, משקל 515 ק\"ג, תנובה 8.3 ל'/יום, עברה דלקת עטין ראשונית בגיל שנה), בדיקת העטין, הכרטיס הווטרינרי ורישומי החליבה.",
+          "ru": "Напиши официальное письмо ветеринару (veterinarian@davidka.net) от имени Дяди Моше (דוד משה) с приглашением приехать к Шмулику по адресу מושב נהלל, משק מס' 42 завтра, 20.11 в 06:00 на утреннюю дойку для осмотра коровы Зины (возраст 2 года, вес 515 кг, надой 8.3 л/день, перенесла первичный мастит в 1 год), проверки вымени, ветеринарной карты и записей надоя.",
+          "en": "Write an official email to the veterinarian (veterinarian@davidka.net) on behalf of Uncle Moshe (דוד משה) inviting them to Shmulik's farm at מושב נהלל, משק מס' 42 tomorrow, 20.11 at 06:00 during morning milking to inspect cow Zina (2 years old, 515 kg, 8.3 L/day yield, had primary mastitis at age 1), check the udder, veterinary card, and milking records.",
+          "uk": "Напиши офіційного листа ветеринару (veterinarian@davidka.net) від імені Дядька Моше (דוד משה) із запрошенням приїхати до Шмуліка за адресою מושב נהלל, משק מס' 42 завтра, 20.11 о 06:00 на ранкове доїння для огляду корови Зіни (вік 2 роки, вага 515 кг, надій 8.3 л/день, перенесла первинний мастит у 1 рік), перевірки вимені, ветеринарної картки та записів надою."
+        }
+      },
+      {
+        "id": "email_insurer",
+        "status": "planned",
+        "title": "לכתוב מכתב לסוכן הביטוח / עו\"ד (attorney@davidka.net)",
+        "title_i18n": {
+          "he": "לכתוב מכתב לסוכן הביטוח / עו\"ד (attorney@davidka.net)",
+          "ru": "Написать письмо страховому агенту / юристу (attorney@davidka.net)",
+          "en": "Write an email to the insurance agent / attorney (attorney@davidka.net)",
+          "uk": "Написати листа страховому агенту / юристу (attorney@davidka.net)"
+        },
+        "details": "לבקש בדיקה משותפת ואישור ביטוח/עסקה עבור הפרה זינה («קנט» ~800 ₪/שנה) ב-20.11 בשעה 06:00",
+        "details_i18n": {
+          "he": "לבקש בדיקה משותפת ואישור ביטוח/עסקה עבור הפרה זינה («קנט» ~800 ₪/שנה) ב-20.11 בשעה 06:00",
+          "ru": "Запросить совместный осмотр и подтверждение страхования/сделки по корове Зине («קנט» ~800 ₪/год) 20.11 в 06:00",
+          "en": "Request a joint inspection and insurance/deal confirmation for cow Zina («קנט» ~800 ₪/year) on 20.11 at 06:00",
+          "uk": "Запросити спільний огляд та підтвердження страхування/угоди щодо корови Зіни («קנט» ~800 ₪/рік) 20.11 о 06:00"
+        },
+        "action_prompt": "כתוב מכתב לסוכן הביטוח / היועץ המשפטי (attorney@davidka.net) בשם דוד משה בנוגע לביטוח וליווי רכישת הפרה זינה (מחיר 8,800 ₪ + מע\"מ = 10,296 ₪, ביטוח «קנט» קיים ~800 ₪/שנה) והזמנה לבדיקה משותפת עם הווטרינר אצל המוכר שמוליק במושב נהלל, משק מס' 42 מחר, 20.11 בשעה 06:00.",
+        "action_prompt_i18n": {
+          "he": "כתוב מכתב לסוכן הביטוח / היועץ המשפטי (attorney@davidka.net) בשם דוד משה בנוגע לביטוח וליווי רכישת הפרה זינה (מחיר 8,800 ₪ + מע\"מ = 10,296 ₪, ביטוח «קנט» קיים ~800 ₪/שנה) והזמנה לבדיקה משותפת עם הווטרינר אצל המוכר שמוליק במושב נהלל, משק מס' 42 מחר, 20.11 בשעה 06:00.",
+          "ru": "Напиши письмо страховому агенту / представителю (attorney@davidka.net) от имени Дяди Моше (דוד משה) по поводу страхования и сопровождения покупки коровы Зины (цена 8 800 ₪ + НДС = 10 296 ₪, текущая страховка «קנט» ~800 ₪/год) и приглашения на совместный осмотр с ветеринаром у продавца Шмулика по адресу מושב נהלל, משק מס' 42 завтра, 20.11 в 06:00.",
+          "en": "Write an email to the insurance agent / attorney (attorney@davidka.net) on behalf of Uncle Moshe (דוד משה) regarding insurance and legal support for purchasing cow Zina (price 8,800 ₪ + VAT = 10,296 ₪, current «קנט» insurance ~800 ₪/year) and inviting them to a joint inspection with the veterinarian at seller Shmulik's farm at מושב נהלל, משק מס' 42 tomorrow, 20.11 at 06:00.",
+          "uk": "Напиши листа страховому агенту / представнику (attorney@davidka.net) від імені Дядька Моше (דוד משה) щодо страхування та супроводу купівлі корови Зіни (ціна 8 800 ₪ + ПДВ = 10 296 ₪, поточна страховка «קנט» ~800 ₪/рік) та запрошення на спільний огляд із ветеринаром у продавця Шмуліка за адресою מושב נהלל, משק מס' 42 завтра, 20.11 о 06:00."
+        }
+      },
+      {
+        "id": "schedule_inspection",
+        "status": "planned",
+        "title": "לשבץ את בדיקת הפרה ביומן (20.11 בשעה 06:00) עם תזכורת",
+        "title_i18n": {
+          "he": "לשבץ את בדיקת הפרה ביומן (20.11 בשעה 06:00) עם תזכורת",
+          "ru": "Занести осмотр коровы в календарь (20.11 в 06:00) с напоминанием",
+          "en": "Schedule cow inspection in calendar (20.11 at 06:00) with reminder",
+          "uk": "Занести огляд корови в календар (20.11 о 06:00) із нагадуванням"
+        },
+        "details": "משתתפים: veterinarian@davidka.net, attorney@davidka.net — מושב נהלל, משק מס' 42 (תזכורות 12 שעות ושעה לפני + .ics)",
+        "details_i18n": {
+          "he": "משתתפים: veterinarian@davidka.net, attorney@davidka.net — מושב נהלל, משק מס' 42 (תזכורות 12 שעות ושעה לפני + .ics)",
+          "ru": "Участники: veterinarian@davidka.net, attorney@davidka.net — מושב נהלל, משק מס' 42 (напоминания за 12 ч и за 1 ч + .ics)",
+          "en": "Attendees: veterinarian@davidka.net, attorney@davidka.net — מושב נהלל, משק מס' 42 (reminders 12h and 1h before + .ics)",
+          "uk": "Учасники: veterinarian@davidka.net, attorney@davidka.net — מושב נהלל, משק מס' 42 (нагадування за 12 год і за 1 год + .ics)"
+        },
+        "action_type": "schedule_inspection",
+        "action_prompt": "שבץ את בדיקת הפרה זינה ביומן ל-20.11 בשעה 06:00 עבור veterinarian@davidka.net ו-attorney@davidka.net עם תזכורת.",
+        "action_prompt_i18n": {
+          "he": "שבץ את בדיקת הפרה זינה ביומן ל-20.11 בשעה 06:00 עבור veterinarian@davidka.net ו-attorney@davidka.net עם תזכורת.",
+          "ru": "Занеси осмотр коровы Зины в календарь на 20.11 в 06:00 для veterinarian@davidka.net и attorney@davidka.net с напоминанием.",
+          "en": "Schedule the inspection of cow Zina in the calendar for 20.11 at 06:00 for veterinarian@davidka.net and attorney@davidka.net with a reminder.",
+          "uk": "Занеси огляд корови Зіни в календар на 20.11 о 06:00 для veterinarian@davidka.net та attorney@davidka.net із нагадуванням."
+        }
+      }
+    ],
+    "calendar_event": {
+      "summary": "בדיקת הפרה זינה במשק שמוליק — דוד משה",
+      "summary_i18n": {
+        "he": "בדיקת הפרה זינה במשק שמוליק — דוד משה",
+        "ru": "Осмотр коровы Зины в хозяйстве Шмулика — Давид Моше",
+        "en": "Cow Zina Inspection at Shmulik's Farm — David Moshe",
+        "uk": "Огляд корови Зіни в господарстві Шмуліка — Давид Моше"
+      },
+      "start_time": "2026-11-20T06:00:00+02:00",
+      "end_time": "2026-11-20T07:00:00+02:00",
+      "location": "מושב נהלל, משק מס' 42",
+      "attendees": [
+        "veterinarian@davidka.net",
+        "attorney@davidka.net"
+      ],
+      "description": "בדיקה משותפת של הפרה זינה בזמן חליבת הבוקר (06:00) אצל המוכר שמוליק (מושב נהלל, משק מס' 42). בדיקת עטין, כרטיס וטרינרי, רישומי תנובת חלב (8.3 ל'/יום) ותנאי ביטוח «קנט» לפני חתימה על הסכם המכר.",
+      "description_i18n": {
+        "he": "בדיקה משותפת של הפרה זינה בזמן חליבת הבוקר (06:00) אצל המוכר שמוליק (מושב נהלל, משק מס' 42). בדיקת עטין, כרטיס וטרינרי, רישומי תנובת חלב (8.3 ל'/יום) ותנאי ביטוח «קנט» לפני חתימה על הסכם המכר.",
+        "ru": "Совместный осмотр коровы Зины во время утренней дойки (06:00) у продавца Шмулика (מושב נהלל, משק מס' 42). Проверка вымени, ветеринарной карты, записей надоя (8.3 л/день) и условий страхования «קנט» перед подписанием договора купли-продажи.",
+        "en": "Joint inspection of cow Zina during morning milking (06:00) at seller Shmulik's farm (מושב נהלל, משק מס' 42). Inspection of udder, veterinary card, milk yield records (8.3 L/day), and «קנט» insurance terms prior to signing the purchase agreement.",
+        "uk": "Спільний огляд корови Зіни під час ранкового доїння (06:00) у продавця Шмуліка (מושב נהלל, משק מס' 42). Перевірка вимені, ветеринарної картки, записів надою (8.3 л/день) та умов страхування «קנט» перед підписанням договору купівлі-продажу."
+      },
+      "reminders": [
+        {"method": "email", "minutes": 720},
+        {"method": "popup", "minutes": 60}
+      ]
+    }
+  }
 }

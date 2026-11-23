@@ -14,7 +14,7 @@ File: index.html
 Package: apps/ai_assistant/api/webgui/tab_workspace
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-07 00:36:00
+Updated: 2026-11-19 20:59:00
 =============================================================================
 -->
 <div class="container-fluid p-3" id="tab-workspace-container">
@@ -24,100 +24,100 @@ Updated: 2026-11-07 00:36:00
 <span class="fs-4 text-warning" id="ws-header-icon">📂</span>
 <div id="ws-header-text-block">
 <div class="d-flex align-items-center gap-2 flex-wrap" id="ws-header-heading-wrapper">
-<h5 class="mb-0 fw-bold" data-i18n="workspace.headerTitle" id="ws-header-title">Рабочая область, Документы (Git) и Умный Поиск Знаний</h5>
+<h5 class="mb-0 fw-bold" data-i18n="workspace.headerTitle" id="ws-header-title">{{workspace.headerTitle}}</h5>
 </div>
-<small class="text-secondary" data-i18n="workspace.headerSubtitle" id="ws-header-subtitle">Шаг 1: Выберите рабочую область → Шаг 2: Добавьте или измените файл (отслеживается своим Git) → Шаг 3: Задайте вопрос на русском или иврите</small>
+<small class="text-secondary" data-i18n="workspace.headerSubtitle" id="ws-header-subtitle">{{workspace.headerSubtitle}}</small>
 </div>
 </div>
 <div class="d-flex align-items-center gap-2" id="ws-header-actions-container">
-<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" data-ai-tooltip="true" data-i18n-title="workspace.seedDemoBtn" data-term="seed_demo" id="ws-seed-demo-btn" type="button">
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" data-ai-tooltip="true" data-i18n-title="workspace.seedDemoBtn" data-term="seed_demo" id="ws-seed-demo-btn" title="{{workspace.seedDemoBtn}}" type="button">
 <i class="bi bi-magic"></i>
-<span data-i18n="workspace.seedDemoBtn" id="ws-seed-demo-btn-text">Демо данные</span>
+<span data-i18n="workspace.seedDemoBtn" id="ws-seed-demo-btn-text">{{workspace.seedDemoBtn}}</span>
 </button>
-<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" data-ai-tooltip="true" data-i18n-title="workspace.rebuildFaissBtn" data-term="rebuild_faiss" id="ws-rebuild-faiss-btn" type="button">
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" data-ai-tooltip="true" data-i18n-title="workspace.rebuildFaissBtn" data-term="rebuild_faiss" id="ws-rebuild-faiss-btn" title="{{workspace.rebuildFaissBtn}}" type="button">
 <i class="bi bi-cpu"></i>
-<span data-i18n="workspace.rebuildFaissBtn" id="ws-rebuild-faiss-btn-text">Перестроить FAISS</span>
+<span data-i18n="workspace.rebuildFaissBtn" id="ws-rebuild-faiss-btn-text">{{workspace.rebuildFaissBtn}}</span>
 </button>
 </div>
 </div>
 <!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->
 <div class="d-flex align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap gap-2" id="ws-subtabs-nav-wrapper">
 <div class="d-flex align-items-center gap-1 flex-wrap" id="workspace-subtabs-nav" role="tablist">
-<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-file-editor" data-bs-toggle="pill" data-panel-id="panel-file-editor" data-term="ws-subtab-file-editor" data-i18n-title="workspace.subtabs.editorTitle" id="subtab-ws-file-editor-btn" role="tab" type="button" title="Универсальный редактор файлов рабочей области (Studio Code)">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-file-editor" data-bs-toggle="pill" data-i18n-title="workspace.subtabs.editorTitle" data-panel-id="panel-file-editor" data-term="ws-subtab-file-editor" id="subtab-ws-file-editor-btn" role="tab" title="{{workspace.subtabs.editorTitle}}" type="button">
 <i class="bi bi-code-square text-primary"></i>
-<span data-i18n="workspace.subtabs.editor" id="subtab-ws-file-editor-text">Редактор файлов</span>
+<span data-i18n="workspace.subtabs.editor" id="subtab-ws-file-editor-text">{{workspace.subtabs.editor}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-files" data-bs-toggle="pill" data-panel-id="panel-files" data-term="ws-subtab-step1" data-i18n-title="workspace.subtabs.panel-filesTitle" id="subtab-ws-files-btn" role="tab" type="button" title="Раздел: Файлы">
+<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-files" data-bs-toggle="pill" data-i18n-title="workspace.subtabs.panel-filesTitle" data-panel-id="panel-files" data-term="ws-subtab-step1" id="subtab-ws-files-btn" role="tab" title="{{workspace.subtabs.panel-filesTitle}}" type="button">
 <i class="bi bi-folder2-open text-primary"></i>
-<span data-i18n="workspace.subtabs.files" id="subtab-ws-files-text">Файлы</span>
+<span data-i18n="workspace.subtabs.files" id="subtab-ws-files-text">{{workspace.subtabs.files}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-documents" data-bs-toggle="pill" data-panel-id="panel-documents" data-term="ws-subtab-step2" data-i18n-title="workspace.subtabs.panel-documentsTitle" id="subtab-ws-documents-btn" role="tab" type="button" title="Раздел: Документы и факты (Git)">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-documents" data-bs-toggle="pill" data-i18n-title="workspace.subtabs.panel-documentsTitle" data-panel-id="panel-documents" data-term="ws-subtab-step2" id="subtab-ws-documents-btn" role="tab" title="{{workspace.subtabs.panel-documentsTitle}}" type="button">
 <i class="bi bi-file-earmark-code text-info"></i>
-<span data-i18n="workspace.subtabs.documents" id="subtab-ws-documents-text">Шаг 2: Документы и факты (Git)</span>
+<span data-i18n="workspace.subtabs.documents" id="subtab-ws-documents-text">{{workspace.subtabs.documents}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-qa" data-bs-toggle="pill" data-panel-id="panel-qa" data-term="ws-subtab-step3" data-i18n-title="workspace.subtabs.panel-qaTitle" id="subtab-ws-qa-btn" role="tab" type="button" title="Раздел: Вопрос-Ответ (QA)">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-qa" data-bs-toggle="pill" data-i18n-title="workspace.subtabs.panel-qaTitle" data-panel-id="panel-qa" data-term="ws-subtab-step3" id="subtab-ws-qa-btn" role="tab" title="{{workspace.subtabs.panel-qaTitle}}" type="button">
 <i class="bi bi-chat-dots text-success"></i>
-<span data-i18n="workspace.subtabs.qa" id="subtab-ws-qa-text">Шаг 3: Вопрос-Ответ (QA)</span>
+<span data-i18n="workspace.subtabs.qa" id="subtab-ws-qa-text">{{workspace.subtabs.qa}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" onclick="window.switchTab('tab-chat')" data-panel-id="panel-chat" data-term="ws-subtab-chat" data-i18n-title="workspace.subtabs.chatTitle" id="subtab-ws-chat-btn" role="tab" type="button" title="Раздел: Чат">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-i18n-title="workspace.subtabs.chatTitle" data-panel-id="panel-chat" data-term="ws-subtab-chat" id="subtab-ws-chat-btn" onclick="window.switchTab('tab-chat')" role="tab" title="{{workspace.subtabs.chatTitle}}" type="button">
 <i class="bi bi-chat-square-text text-primary"></i>
-<span data-i18n="workspace.subtabs.chat" id="subtab-ws-chat-text">Чат</span>
+<span data-i18n="workspace.subtabs.chat" id="subtab-ws-chat-text">{{workspace.subtabs.chat}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-commits" data-bs-toggle="pill" data-panel-id="panel-commits" data-term="ws-subtab-commits" data-i18n-title="workspace.subtabs.panel-commitsTitle" id="subtab-ws-commits-btn" role="tab" type="button" title="Раздел: Коммиты">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-commits" data-bs-toggle="pill" data-i18n-title="workspace.subtabs.panel-commitsTitle" data-panel-id="panel-commits" data-term="ws-subtab-commits" id="subtab-ws-commits-btn" role="tab" title="{{workspace.subtabs.panel-commitsTitle}}" type="button">
 <i class="bi bi-git text-danger"></i>
-<span data-i18n="workspace.subtabs.commits" id="subtab-ws-commits-text">Коммиты</span>
+<span data-i18n="workspace.subtabs.commits" id="subtab-ws-commits-text">{{workspace.subtabs.commits}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-tree" data-bs-toggle="pill" data-panel-id="panel-tree" data-term="ws-subtab-tree" data-i18n-title="workspace.subtabs.panel-treeTitle" id="subtab-ws-tree-btn" role="tab" type="button" title="Раздел: Дерево файлов">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-ai-tooltip="true" data-bs-target="#subpane-ws-tree" data-bs-toggle="pill" data-i18n-title="workspace.subtabs.panel-treeTitle" data-panel-id="panel-tree" data-term="ws-subtab-tree" id="subtab-ws-tree-btn" role="tab" title="{{workspace.subtabs.panel-treeTitle}}" type="button">
 <i class="bi bi-diagram-3 text-warning"></i>
-<span data-i18n="workspace.subtabs.tree" id="subtab-ws-tree-text">Дерево файлов</span>
+<span data-i18n="workspace.subtabs.tree" id="subtab-ws-tree-text">{{workspace.subtabs.tree}}</span>
 </button>
 </div>
 </div>
 <!-- Subtabs Content Panes -->
 <div class="tab-content" id="workspace-subtabs-content">
 <!-- Subpane 0: Редактор файлов рабочей области (Studio Code Rust+Wasm) -->
-<div class="tab-pane fade show active" data-panel-id="panel-file-editor" id="subpane-ws-file-editor" role="tabpanel">
-  <div id="ws-embedded-editor-container"></div>
+<div class="tab-pane fade" data-panel-id="panel-file-editor" id="subpane-ws-file-editor" role="tabpanel">
+<div id="ws-embedded-editor-container"></div>
 </div>
 <!-- Subpane 1: Файлы (Git, файлы, конвертация и источники) -->
-<div class="tab-pane fade" data-panel-id="panel-files" id="subpane-ws-files" role="tabpanel">
+<div class="tab-pane fade show active" data-panel-id="panel-files" id="subpane-ws-files" role="tabpanel">
 <!-- ПАНЕЛЬ: ФАЙЛЫ -->
 <div class="card bg-body border-secondary-subtle shadow-sm mb-3" data-panel-id="panel-files" id="panel-files">
 <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="panel-files-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="panel-files-title-box">
-<span class="badge bg-primary rounded-pill" data-i18n="workspace.filesBadge" id="ws-badge-files-label">Файлы</span>
-<span data-i18n="workspace.filesRepoLabel" id="ws-files-repo-label">Репозиторий Git: <code class="small text-body-secondary">\apps\ai_assistant\data\workspaces\&lt;name&gt;</code></span>
+<span class="badge bg-primary rounded-pill" data-i18n="workspace.filesBadge" id="ws-badge-files-label">{{workspace.filesBadge}}</span>
+<span data-i18n="workspace.filesRepoLabel" id="ws-files-repo-label">{{workspace.filesRepoLabel}}</span>
 </div>
 <div class="d-flex align-items-center gap-2 small" id="panel-files-badges-box">
-<span class="badge bg-secondary-subtle text-secondary border font-monospace" data-i18n="ui.ws.txt_7ffba818" id="ws-current-git-badge">Git HEAD: ---</span>
-<span class="badge bg-info-subtle text-info border" data-i18n="ui.ws.txt_ec6f87f2" id="ws-docs-count-badge">0 документов</span>
-<span class="badge bg-success-subtle text-success border" data-i18n="ui.ws.txt_8f678cb6" id="ws-facts-count-badge">0 активных фактов</span>
+<span class="badge bg-secondary-subtle text-secondary border font-monospace" data-i18n="ui.ws.txt_7ffba818" id="ws-current-git-badge">{{ui.ws.txt_7ffba818}}</span>
+<span class="badge bg-info-subtle text-info border" data-i18n="ui.ws.txt_ec6f87f2" id="ws-docs-count-badge">{{ui.ws.txt_ec6f87f2}}</span>
+<span class="badge bg-success-subtle text-success border" data-i18n="ui.ws.txt_8f678cb6" id="ws-facts-count-badge">{{ui.ws.txt_8f678cb6}}</span>
 </div>
 </div>
 <div class="card-body p-3" id="panel-files-body">
 <!-- Выбор активной рабочей области -->
 <div class="row g-2 align-items-end mb-3" id="ws-selector-row">
 <div class="col-md-5" id="ws-selector-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.activeWorkspaceLabel" for="ws-selector" id="ws-selector-label">Активная рабочая область:</label>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.activeWorkspaceLabel" for="ws-selector" id="ws-selector-label">{{workspace.activeWorkspaceLabel}}</label>
 <div class="input-group input-group-sm" id="ws-selector-input-group">
 <select class="form-select form-select-sm" id="ws-selector"></select>
-<button class="btn btn-outline-danger d-flex align-items-center gap-1" data-i18n-title="workspace.deleteWorkspaceBtnTitle" id="ws-btn-delete-workspace" title="Удалить активную область" type="button">
+<button class="btn btn-outline-danger d-flex align-items-center gap-1" data-i18n-title="workspace.deleteWorkspaceBtnTitle" id="ws-btn-delete-workspace" title="{{workspace.deleteWorkspaceBtnTitle}}" type="button">
 <i class="bi bi-trash3"></i>
-<span class="d-none d-lg-inline" data-i18n="workspace.deleteBtn" id="ws-btn-delete-workspace-text">Удалить</span>
+<span class="d-none d-lg-inline" data-i18n="workspace.deleteBtn" id="ws-btn-delete-workspace-text">{{workspace.deleteBtn}}</span>
 </button>
 </div>
 </div>
 <div class="col-md-3" id="ws-new-id-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.newIdInputLabel" for="ws-new-id-input" id="ws-new-id-input-label">Или создать новую (ID / Имя):</label>
-<input class="form-control form-control-sm" data-i18n-placeholder="workspace.newIdPlaceholder" id="ws-new-id-input" placeholder="например: project_docs" type="text"/>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.newIdInputLabel" for="ws-new-id-input" id="ws-new-id-input-label">{{workspace.newIdInputLabel}}</label>
+<input class="form-control form-control-sm" data-i18n-placeholder="workspace.newIdPlaceholder" id="ws-new-id-input" placeholder="{{workspace.newIdPlaceholder}}" type="text"/>
 </div>
 <div class="col-md-2" id="ws-new-path-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.newPathInputLabel" for="ws-new-path-input" id="ws-new-path-input-label">Каталог (опционально):</label>
-<input class="form-control form-control-sm" data-i18n-placeholder="workspace.newPathPlaceholder" id="ws-new-path-input" placeholder="авто: data/workspaces" type="text"/>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.newPathInputLabel" for="ws-new-path-input" id="ws-new-path-input-label">{{workspace.newPathInputLabel}}</label>
+<input class="form-control form-control-sm" data-i18n-placeholder="workspace.newPathPlaceholder" id="ws-new-path-input" placeholder="{{workspace.newPathPlaceholder}}" type="text"/>
 </div>
 <div class="col-md-2 d-grid" id="ws-create-btn-col">
 <button class="btn btn-sm btn-primary" data-ai-tooltip="true" data-term="workspace" id="ws-create-btn" type="button">
-<i class="bi bi-plus-circle me-1"></i><span data-i18n="workspace.createBtn" id="ws-create-btn-text">Выбрать / Создать</span>
+<i class="bi bi-plus-circle me-1"></i><span data-i18n="workspace.createBtn" id="ws-create-btn-text">{{workspace.createBtn}}</span>
 </button>
 </div>
 </div>
@@ -125,22 +125,22 @@ Updated: 2026-11-07 00:36:00
 <div class="p-2.5 rounded border bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3" id="ws-folder-status-box">
 <div class="d-flex align-items-center gap-2 overflow-hidden text-truncate" id="ws-folder-info-wrap">
 <span class="badge bg-secondary-subtle text-secondary border" id="ws-folder-badge">
-<i class="bi bi-folder me-1"></i><span data-i18n="workspace.folderChecking" id="ws-folder-badge-text">Проверка папки...</span>
+<i class="bi bi-folder me-1"></i><span data-i18n="workspace.folderChecking" id="ws-folder-badge-text">{{workspace.folderChecking}}</span>
 </span>
 <span class="font-monospace small text-muted text-truncate" id="ws-path-display"></span>
 </div>
 <div class="d-flex align-items-center gap-1.5 flex-shrink-0" id="ws-folder-actions-container">
-<button class="btn btn-sm btn-outline-info d-none align-items-center gap-1 py-0.5 px-2" data-i18n-title="workspace.telegramScenarioBtnTitle" id="btn-ws-telegram-scenario" title="Запустить сценарий Telegram-бота (10 сек спиннер и добавление файла שיחה בין דוד משה לשמוליק.md)" type="button">
+<button class="btn btn-sm btn-outline-info d-none align-items-center gap-1 py-0.5 px-2" data-i18n-title="workspace.telegramScenarioBtnTitle" id="btn-ws-telegram-scenario" title="{{workspace.telegramScenarioBtnTitle}}" type="button">
 <i class="bi bi-telegram"></i>
-<span data-i18n="workspace.telegramScenarioBtn" id="btn-ws-telegram-scenario-text">Telegram: שיחה בין דוד משה לשמוליק</span>
+<span data-i18n="workspace.telegramScenarioBtn" id="btn-ws-telegram-scenario-text">{{workspace.telegramScenarioBtn}}</span>
 </button>
-<button class="btn btn-sm btn-success d-none align-items-center gap-1 py-0.5 px-2" data-i18n-title="workspace.createFolderTitle" id="btn-ws-create-folder" title="Создать физическую папку на диске и инициализировать Git" type="button">
+<button class="btn btn-sm btn-success d-none align-items-center gap-1 py-0.5 px-2" data-i18n-title="workspace.createFolderTitle" id="btn-ws-create-folder" title="{{workspace.createFolderTitle}}" type="button">
 <i class="bi bi-folder-plus"></i>
-<span data-i18n="workspace.createFolderBtn" id="btn-ws-create-folder-text">Создать рабочую папку</span>
+<span data-i18n="workspace.createFolderBtn" id="btn-ws-create-folder-text">{{workspace.createFolderBtn}}</span>
 </button>
-<button class="btn btn-sm btn-outline-danger align-items-center gap-1 py-0.5 px-2" data-i18n-title="workspace.deleteWorkspaceBtnTitle" id="btn-ws-delete-folder" title="Удалить активное рабочее пространство" type="button">
+<button class="btn btn-sm btn-outline-danger align-items-center gap-1 py-0.5 px-2" data-i18n-title="workspace.deleteWorkspaceBtnTitle" id="btn-ws-delete-folder" title="{{workspace.deleteWorkspaceBtnTitle}}" type="button">
 <i class="bi bi-trash3"></i>
-<span data-i18n="workspace.deleteWorkspaceBtn" id="btn-ws-delete-folder-text">Удалить область</span>
+<span data-i18n="workspace.deleteWorkspaceBtn" id="btn-ws-delete-folder-text">{{workspace.deleteWorkspaceBtn}}</span>
 </button>
 </div>
 </div>
@@ -151,12 +151,12 @@ Updated: 2026-11-07 00:36:00
 <div class="overflow-hidden" id="ws-telegram-scenario-text-wrap">
 <div class="fw-bold small d-flex align-items-center gap-1.5" id="ws-telegram-scenario-title-row">
 <i class="bi bi-telegram text-primary"></i>
-<span data-i18n="workspace.telegramScenarioSpinnerTitle" id="ws-telegram-scenario-title">Telegram-бот: обработка файла «שיחה בין דוד משה לשמוליק» в рабочей области «דוד משה»...</span>
+<span data-i18n="workspace.telegramScenarioSpinnerTitle" id="ws-telegram-scenario-title">{{workspace.telegramScenarioSpinnerTitle}}</span>
 </div>
 <div class="small text-secondary text-truncate" id="ws-telegram-scenario-subtitle-row">
-<span data-i18n="workspace.telegramScenarioSpinnerSubtitle" id="ws-telegram-scenario-subtitle">Выполняется приём и анализ диалога, добавление в рабочую область через:</span>
+<span data-i18n="workspace.telegramScenarioSpinnerSubtitle" id="ws-telegram-scenario-subtitle">{{workspace.telegramScenarioSpinnerSubtitle}}</span>
 <span class="badge bg-primary ms-1 font-monospace" id="ws-telegram-scenario-countdown">10</span>
-<span class="ms-1" data-i18n="workspace.telegramScenarioSecondsUnit" id="ws-telegram-scenario-sec-unit">сек.</span>
+<span class="ms-1" data-i18n="workspace.telegramScenarioSecondsUnit" id="ws-telegram-scenario-sec-unit">{{workspace.telegramScenarioSecondsUnit}}</span>
 <code class="ms-2 small text-body-secondary" id="ws-telegram-scenario-target-path"></code>
 </div>
 </div>
@@ -165,21 +165,21 @@ Updated: 2026-11-07 00:36:00
 <!-- Меню переключения подсекций: Содержимое Git, Добавление в слежение, Obsidian Vault, Внешние источники -->
 <div class="d-flex align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap gap-2" id="ws-files-subtabs-nav-wrapper">
 <div class="d-flex align-items-center gap-1.5 flex-wrap" id="ws-files-subtabs-nav" role="tablist">
-<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-dir" data-bs-target="#subpane-ws-files-dir" data-bs-toggle="pill" id="subtab-ws-files-dir-btn" role="tab" type="button" title="Содержимое репозитория (Git)" data-i18n-title="workspace.blocks.block-dirTitle">
+<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-dir" data-bs-target="#subpane-ws-files-dir" data-bs-toggle="pill" data-i18n-title="workspace.blocks.block-dirTitle" id="subtab-ws-files-dir-btn" role="tab" title="{{workspace.blocks.block-dirTitle}}" type="button">
 <i class="bi bi-hdd-rack text-primary"></i>
-<span data-i18n="workspace.filesSubtabs.repoContents" id="subtab-ws-files-dir-text">Содержимое репозитория (Git)</span>
+<span data-i18n="workspace.filesSubtabs.repoContents" id="subtab-ws-files-dir-text">{{workspace.filesSubtabs.repoContents}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-track" data-bs-target="#subpane-ws-files-track" data-bs-toggle="pill" id="subtab-ws-files-track-btn" role="tab" type="button" title="Добавление файлов в слежение" data-i18n-title="workspace.blocks.block-trackTitle">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-track" data-bs-target="#subpane-ws-files-track" data-bs-toggle="pill" data-i18n-title="workspace.blocks.block-trackTitle" id="subtab-ws-files-track-btn" role="tab" title="{{workspace.blocks.block-trackTitle}}" type="button">
 <i class="bi bi-plus-square-dotted text-success"></i>
-<span data-i18n="workspace.filesSubtabs.addTracking" id="subtab-ws-files-track-text">Добавление файлов в слежение</span>
+<span data-i18n="workspace.filesSubtabs.addTracking" id="subtab-ws-files-track-text">{{workspace.filesSubtabs.addTracking}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-obsidian" data-bs-target="#subpane-ws-files-obsidian" data-bs-toggle="pill" id="subtab-ws-files-obsidian-btn" role="tab" type="button" title="Раздел: Obsidian Vault" data-i18n-title="workspace.blocks.block-obsidianTitle">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-obsidian" data-bs-target="#subpane-ws-files-obsidian" data-bs-toggle="pill" data-i18n-title="workspace.blocks.block-obsidianTitle" id="subtab-ws-files-obsidian-btn" role="tab" title="{{workspace.blocks.block-obsidianTitle}}" type="button">
 <i class="bi bi-journal-richtext text-info"></i>
-<span data-i18n="workspace.filesSubtabs.obsidianVault" id="subtab-ws-files-obsidian-text">Obsidian Vault</span>
+<span data-i18n="workspace.filesSubtabs.obsidianVault" id="subtab-ws-files-obsidian-text">{{workspace.filesSubtabs.obsidianVault}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-sources" data-bs-target="#subpane-ws-files-sources" data-bs-toggle="pill" id="subtab-ws-files-sources-btn" role="tab" type="button" title="Раздел: Внешние источники" data-i18n-title="workspace.blocks.block-sourcesTitle">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-sources" data-bs-target="#subpane-ws-files-sources" data-bs-toggle="pill" data-i18n-title="workspace.blocks.block-sourcesTitle" id="subtab-ws-files-sources-btn" role="tab" title="{{workspace.blocks.block-sourcesTitle}}" type="button">
 <i class="bi bi-folder-symlink-fill text-warning"></i>
-<span data-i18n="workspace.filesSubtabs.externalSources" id="subtab-ws-files-sources-text">Внешние источники</span>
+<span data-i18n="workspace.filesSubtabs.externalSources" id="subtab-ws-files-sources-text">{{workspace.filesSubtabs.externalSources}}</span>
 </button>
 </div>
 </div>
@@ -191,17 +191,17 @@ Updated: 2026-11-07 00:36:00
 <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="ws-dir-contents-card-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-dir-contents-header-wrap">
 <i class="bi bi-hdd-rack text-primary"></i>
-<span data-i18n="workspace.dirContentsTitle" id="ws-dir-contents-header-title">Содержимое директории рабочей области (отслеживается Git)</span>
+<span data-i18n="workspace.dirContentsTitle" id="ws-dir-contents-header-title">{{workspace.dirContentsTitle}}</span>
 </div>
 <div class="d-flex align-items-center gap-2" id="ws-dir-contents-actions-wrap">
-<span class="badge bg-secondary-subtle text-secondary border font-monospace small" data-i18n="workspace.loadingFiles" id="ws-dir-summary-badge">Загрузка файлов...</span>
-<button class="btn btn-sm btn-outline-secondary py-0.5 px-2 d-flex align-items-center gap-1" id="btn-toggle-system-files" type="button" title="Показать или скрыть служебные файлы (.git, .gitignore, README.md и др.)" data-i18n-title="workspace.toggleSystemFilesTitle">
+<span class="badge bg-secondary-subtle text-secondary border font-monospace small" data-i18n="workspace.loadingFiles" id="ws-dir-summary-badge">{{workspace.loadingFiles}}</span>
+<button class="btn btn-sm btn-outline-secondary py-0.5 px-2 d-flex align-items-center gap-1" data-i18n-title="workspace.toggleSystemFilesTitle" id="btn-toggle-system-files" title="{{workspace.toggleSystemFilesTitle}}" type="button">
 <i class="bi bi-eye"></i>
-<span data-i18n="workspace.showAllFiles" id="btn-toggle-system-files-text">Показать все</span>
+<span data-i18n="workspace.showAllFiles" id="btn-toggle-system-files-text">{{workspace.showAllFiles}}</span>
 </button>
-<button class="btn btn-sm btn-outline-primary py-0.5 px-2 d-flex align-items-center gap-1" data-i18n-title="workspace.refreshDirTitle" id="btn-refresh-dir-contents" title="Обновить содержимое директории" type="button">
+<button class="btn btn-sm btn-outline-primary py-0.5 px-2 d-flex align-items-center gap-1" data-i18n-title="workspace.refreshDirTitle" id="btn-refresh-dir-contents" title="{{workspace.refreshDirTitle}}" type="button">
 <i class="bi bi-arrow-clockwise"></i>
-<span data-i18n="common.refresh" id="btn-refresh-dir-contents-text">Обновить</span>
+<span data-i18n="common.refresh" id="btn-refresh-dir-contents-text">{{common.refresh}}</span>
 </button>
 </div>
 </div>
@@ -210,18 +210,17 @@ Updated: 2026-11-07 00:36:00
 <table class="table table-sm table-hover table-striped align-middle mb-0 font-monospace small" id="ws-directory-contents-table">
 <thead class="table-light sticky-top">
 <tr id="ws-directory-table-header-row">
-<th data-i18n="workspace.tableColFilename" id="ws-th-filename" scope="col" style="width: 35%;">Имя файла / папки</th>
-<th data-i18n="workspace.tableColFilesize" id="ws-th-filesize" scope="col" style="width: 15%;">Размер</th>
-<th data-i18n="workspace.tableColFiletype" id="ws-th-filetype" scope="col" style="width: 15%;">Тип</th>
-<th data-i18n="workspace.tableColGitStatus" id="ws-th-gitstatus" scope="col" style="width: 15%;">Статус Git</th>
-<th data-i18n="workspace.tableColModified" id="ws-th-modified" scope="col" style="width: 20%;">Дата изменения</th>
+<th data-i18n="workspace.tableColFilename" id="ws-th-filename" scope="col" style="width: 35%;">{{workspace.tableColFilename}}</th>
+<th data-i18n="workspace.tableColFilesize" id="ws-th-filesize" scope="col" style="width: 15%;">{{workspace.tableColFilesize}}</th>
+<th data-i18n="workspace.tableColFiletype" id="ws-th-filetype" scope="col" style="width: 15%;">{{workspace.tableColFiletype}}</th>
+<th data-i18n="workspace.tableColGitStatus" id="ws-th-gitstatus" scope="col" style="width: 15%;">{{workspace.tableColGitStatus}}</th>
+<th data-i18n="workspace.tableColModified" id="ws-th-modified" scope="col" style="width: 20%;">{{workspace.tableColModified}}</th>
 </tr>
 </thead>
 <tbody id="ws-directory-contents-table-body">
 <tr id="ws-directory-empty-row">
-<td class="text-center py-3 text-muted font-sans-serif" colspan="5" data-i18n="workspace.readingDirFiles" id="ws-directory-empty-msg">
-<i class="bi bi-hourglass-split me-1"></i>Чтение файлов директории...
-                          </td>
+<td class="text-center py-3 text-muted font-sans-serif" colspan="5" id="ws-directory-empty-msg">
+<i class="bi bi-hourglass-split me-1"></i><span data-i18n="workspace.readingDirFiles" id="spn-workspace-reading-dir-files-text">{{workspace.readingDirFiles}}</span></td>
 </tr>
 </tbody>
 </table>
@@ -235,60 +234,89 @@ Updated: 2026-11-07 00:36:00
 <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="ws-track-card-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-track-header-wrap">
 <i class="bi bi-plus-square-dotted text-success"></i>
-<span data-i18n="workspace.trackHeaderTitle" id="ws-track-header-title">Включение файлов и папок в Git-слежение</span>
+<span data-i18n="workspace.trackHeaderTitle" id="ws-track-header-title">{{workspace.trackHeaderTitle}}</span>
 </div>
-<span class="badge bg-success-subtle text-success border small" data-i18n="workspace.autoCommitBadge" id="ws-track-autocommit-badge">Авто-коммит и извлечение знаний</span>
+<span class="badge bg-success-subtle text-success border small" data-i18n="workspace.autoCommitBadge" id="ws-track-autocommit-badge">{{workspace.autoCommitBadge}}</span>
 </div>
 <div class="card-body p-3" id="ws-track-card-body">
+<!-- Внутреннее меню подсекции «Добавление файлов в слежение» -->
+<div class="d-flex align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap gap-2" id="ws-track-subtabs-nav-wrapper">
+<div class="d-flex align-items-center gap-1.5 flex-wrap" id="ws-track-subtabs-nav" role="tablist">
+<button class="btn btn-sm btn-outline-secondary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-ws-track-picker" data-bs-toggle="pill" data-i18n-title="workspace.trackSubtabs.pickerTitle" id="subtab-ws-track-picker-btn" role="tab" title="{{workspace.trackSubtabs.pickerTitle}}" type="button">
+<i class="bi bi-folder2-open text-primary"></i>
+<span data-i18n="workspace.trackSubtabs.picker" id="subtab-ws-track-picker-text">{{workspace.trackSubtabs.picker}}</span>
+</button>
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-ws-track-upload" data-bs-toggle="pill" data-i18n-title="workspace.trackSubtabs.uploadTitle" id="subtab-ws-track-upload-btn" role="tab" title="{{workspace.trackSubtabs.uploadTitle}}" type="button">
+<i class="bi bi-cloud-arrow-up text-info"></i>
+<span data-i18n="workspace.trackSubtabs.upload" id="subtab-ws-track-upload-text">{{workspace.trackSubtabs.upload}}</span>
+</button>
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-ws-track-staged" data-bs-toggle="pill" data-i18n-title="workspace.trackSubtabs.stagedTitle" id="subtab-ws-track-staged-btn" role="tab" title="{{workspace.trackSubtabs.stagedTitle}}" type="button">
+<i class="bi bi-shield-check text-success"></i>
+<span data-i18n="workspace.trackSubtabs.staged" id="subtab-ws-track-staged-text">{{workspace.trackSubtabs.staged}}</span>
+</button>
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-ws-track-tracked" data-bs-toggle="pill" data-i18n-title="workspace.trackSubtabs.trackedTitle" id="subtab-ws-track-tracked-btn" role="tab" title="{{workspace.trackSubtabs.trackedTitle}}" type="button">
+<i class="bi bi-list-check text-warning"></i>
+<span data-i18n="workspace.trackSubtabs.tracked" id="subtab-ws-track-tracked-text">{{workspace.trackSubtabs.tracked}}</span>
+</button>
+</div>
+</div>
+<!-- Внутренние подпанели секции Добавления файлов в слежение -->
+<div class="tab-content" id="ws-track-subtabs-content">
+<!-- Подпанель 2.1: Выбор файлов и директорий на диске -->
+<div class="tab-pane fade show active" id="subpane-ws-track-picker" role="tabpanel">
+<!-- Единый модуль добавления файлов и директорий для отслеживания -->
+<div class="mb-3" id="ws-track-picker-container"></div>
+<!-- Режим слежения за файлами на диске: без копирования по умолчанию или с копированием в рабочую область -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2 px-2.5 py-1.5 rounded bg-body border" id="ws-track-copy-mode-row">
+<div class="form-check form-switch mb-0" id="ws-track-copy-check-wrap">
+<input class="form-check-input" id="ws-track-copy-checkbox" type="checkbox"/>
+<label class="form-check-label small fw-semibold" data-i18n="workspace.trackCopyToWorkspaceLabel" for="ws-track-copy-checkbox" id="ws-track-copy-label">{{workspace.trackCopyToWorkspaceLabel}}</label>
+</div>
+<span class="badge bg-info-subtle text-info-emphasis border small" id="ws-track-copy-mode-hint"><i class="bi bi-pin-angle me-1"></i><span data-i18n="workspace.trackInPlaceHint" id="spn-workspace-track-in-place-hint-text">{{workspace.trackInPlaceHint}}</span></span>
+</div>
+</div>
+<!-- Подпанель 2.2: Загрузка локальных файлов с компьютера -->
+<div class="tab-pane fade" id="subpane-ws-track-upload" role="tabpanel">
+<!-- Загрузка локальных файлов через форму -->
+<div class="row g-2 align-items-end mb-2" id="ws-track-upload-row">
+<div class="col-md-7" id="ws-track-upload-col">
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.trackUploadLabel" for="ws-track-upload-input" id="ws-track-upload-label">{{workspace.trackUploadLabel}}</label>
+<input class="form-control form-control-sm" id="ws-track-upload-input" multiple="" type="file"/>
+</div>
+<div class="col-md-5" id="ws-track-commit-msg-col">
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.trackCommitMsgLabel" for="ws-track-commit-msg" id="ws-track-commit-msg-label">{{workspace.trackCommitMsgLabel}}</label>
+<input class="form-control form-control-sm" data-i18n-placeholder="workspace.trackCommitMsgPlaceholder" id="ws-track-commit-msg" placeholder="{{workspace.trackCommitMsgPlaceholder}}" type="text"/>
+</div>
+</div>
+</div>
+<!-- Подпанель 2.3: Выбранные объекты и опции конвертации -->
+<div class="tab-pane fade" id="subpane-ws-track-staged" role="tabpanel">
 <!-- Список выбранных объектов для включения в слежение -->
 <div class="mb-3" id="ws-staged-items-container">
 <div class="d-flex align-items-center justify-content-between mb-2" id="ws-staged-header-row">
 <div class="small fw-semibold text-muted d-flex align-items-center gap-1.5" id="ws-staged-title-wrap">
 <i class="bi bi-shield-check text-success"></i>
-<span data-i18n="workspace.stagedItemsTitle" id="ws-staged-items-title">Выбранные файлы и папки для включения в слежение:</span>
+<span data-i18n="workspace.stagedItemsTitle" id="ws-staged-items-title">{{workspace.stagedItemsTitle}}</span>
 </div>
 <div class="d-flex align-items-center gap-1.5">
 <button class="btn btn-sm btn-outline-primary py-0.5 px-2 d-none" id="btn-track-add-path-to-list" type="button">
-<i class="bi bi-plus-lg me-1"></i><span data-i18n="workspace.addPathToList">Добавить в список</span>
+<i class="bi bi-plus-lg me-1"></i><span data-i18n="workspace.addPathToList" id="spn-workspace-add-path-to-list">{{workspace.addPathToList}}</span>
 </button>
-<span class="badge bg-info-subtle text-info border font-size-75" id="ws-staged-count-badge">0 объектов</span>
+<span class="badge bg-info-subtle text-info border font-size-75" data-i18n="ui.cws.txt_13ea0390" id="ws-staged-count-badge">{{ui.cws.txt_13ea0390}}</span>
 </div>
 </div>
 <div class="list-group list-group-flush border rounded overflow-auto font-size-80 max-h-220" id="ws-staged-items-list">
-<div class="p-3 text-center text-muted small bg-body-tertiary" data-i18n="workspace.stagedEmptyMsg" id="ws-staged-empty-msg">
-Объекты не выбраны. Выберите директорию или файл ниже, чтобы добавить их в список.
-</div>
-</div>
-</div>
-<!-- Единый модуль добавления файлов и директорий для отслеживания -->
-<div id="ws-track-picker-container" class="mb-3"></div>
-<!-- Режим слежения за файлами на диске: без копирования по умолчанию или с копированием в рабочую область -->
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2 px-2.5 py-1.5 rounded bg-body border" id="ws-track-copy-mode-row">
-<div class="form-check form-switch mb-0" id="ws-track-copy-check-wrap">
-<input class="form-check-input" id="ws-track-copy-checkbox" type="checkbox"/>
-<label class="form-check-label small fw-semibold" data-i18n="workspace.trackCopyToWorkspaceLabel" for="ws-track-copy-checkbox" id="ws-track-copy-label">Копировать файлы в директорию рабочей области</label>
-</div>
-<span class="badge bg-info-subtle text-info-emphasis border small" data-i18n="workspace.trackInPlaceHint" id="ws-track-copy-mode-hint"><i class="bi bi-pin-angle me-1"></i>По умолчанию: Git следит за файлами на диске без копирования</span>
-</div>
-<!-- Загрузка локальных файлов через форму -->
-<div class="row g-2 align-items-end mb-3" id="ws-track-upload-row">
-<div class="col-md-7" id="ws-track-upload-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.trackUploadLabel" for="ws-track-upload-input" id="ws-track-upload-label">Или выберите файлы с диска для прямой загрузки в репозиторий:</label>
-<input class="form-control form-control-sm" id="ws-track-upload-input" multiple="" type="file"/>
-</div>
-<div class="col-md-5" id="ws-track-commit-msg-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.trackCommitMsgLabel" for="ws-track-commit-msg" id="ws-track-commit-msg-label">Сообщение коммита Git (опционально):</label>
-<input class="form-control form-control-sm" data-i18n-placeholder="workspace.trackCommitMsgPlaceholder" id="ws-track-commit-msg" placeholder="Импорт в рабочую область" type="text"/>
+<div class="p-3 text-center text-muted small bg-body-tertiary" data-i18n="workspace.stagedEmptyMsg" id="ws-staged-empty-msg">{{workspace.stagedEmptyMsg}}</div>
 </div>
 </div>
 <!-- Опции конвертации (PDF -> MD, Изображения -> OCR, Звук -> Транскрибация) -->
-<div class="border rounded p-2.5 bg-body mb-3 d-none" id="ws-converters-block">
+<div class="border rounded p-2.5 bg-body mb-2 d-none" id="ws-converters-block">
 <div class="small fw-semibold mb-2 d-flex align-items-center justify-content-between text-primary" id="ws-converters-header">
 <div class="d-flex align-items-center gap-1.5" id="ws-converters-title-wrap">
 <i class="bi bi-sliders"></i>
-<span data-i18n="workspace.convertersTitle" id="ws-converters-title">Опции конвертации контента:</span>
+<span data-i18n="workspace.convertersTitle" id="ws-converters-title">{{workspace.convertersTitle}}</span>
 </div>
-<span class="badge bg-secondary-subtle text-secondary border small font-size-75" data-i18n="workspace.convHintBadge" id="ws-conv-hint-badge">Медиа по умолчанию в .gitignore, версионируются .md</span>
+<span class="badge bg-secondary-subtle text-secondary border small font-size-75" data-i18n="workspace.convHintBadge" id="ws-conv-hint-badge">{{workspace.convHintBadge}}</span>
 </div>
 <div class="row g-2" id="ws-converters-row">
 <!-- 1. PDF -> Markdown -->
@@ -296,19 +324,19 @@ Updated: 2026-11-07 00:36:00
 <div class="border rounded p-2 h-100 bg-body-tertiary" id="ws-conv-pdf-box">
 <div class="fw-semibold small mb-1.5 d-flex align-items-center gap-1" id="ws-conv-pdf-heading">
 <i class="bi bi-filetype-pdf text-danger"></i>
-<span data-i18n="workspace.convPdfTitle" id="ws-conv-pdf-title">PDF → Markdown:</span>
+<span data-i18n="workspace.convPdfTitle" id="ws-conv-pdf-title">{{workspace.convPdfTitle}}</span>
 </div>
 <div class="form-check form-check-sm mb-1" id="ws-conv-pdf-local-wrap">
 <input checked="" class="form-check-input" id="ws-conv-pdf-local" name="ws-conv-pdf-mode" type="radio" value="local"/>
-<label class="form-check-label small" data-i18n="workspace.convPdfLocal" for="ws-conv-pdf-local" id="ws-conv-pdf-local-label">Локальный конвертер (pypdf/pdfminer)</label>
+<label class="form-check-label small" data-i18n="workspace.convPdfLocal" for="ws-conv-pdf-local" id="ws-conv-pdf-local-label">{{workspace.convPdfLocal}}</label>
 </div>
 <div class="form-check form-check-sm mb-1" id="ws-conv-pdf-model-wrap">
 <input class="form-check-input" id="ws-conv-pdf-model" name="ws-conv-pdf-mode" type="radio" value="model"/>
-<label class="form-check-label small" data-i18n="workspace.convPdfModel" for="ws-conv-pdf-model" id="ws-conv-pdf-model-label">Расшифровка на модели (Gemini Flash)</label>
+<label class="form-check-label small" data-i18n="workspace.convPdfModel" for="ws-conv-pdf-model" id="ws-conv-pdf-model-label">{{workspace.convPdfModel}}</label>
 </div>
 <div class="form-check form-check-sm mb-0" id="ws-conv-pdf-raw-wrap">
 <input class="form-check-input" id="ws-conv-pdf-raw" name="ws-conv-pdf-mode" type="radio" value="raw"/>
-<label class="form-check-label small" data-i18n="workspace.convPdfRaw" for="ws-conv-pdf-raw" id="ws-conv-pdf-raw-label">Не конвертировать (Сырой PDF)</label>
+<label class="form-check-label small" data-i18n="workspace.convPdfRaw" for="ws-conv-pdf-raw" id="ws-conv-pdf-raw-label">{{workspace.convPdfRaw}}</label>
 </div>
 </div>
 </div>
@@ -317,19 +345,19 @@ Updated: 2026-11-07 00:36:00
 <div class="border rounded p-2 h-100 bg-body-tertiary" id="ws-conv-ocr-box">
 <div class="fw-semibold small mb-1.5 d-flex align-items-center gap-1" id="ws-conv-ocr-heading">
 <i class="bi bi-filetype-png text-warning-emphasis"></i>
-<span data-i18n="workspace.convOcrTitle" id="ws-conv-ocr-title">Изображения → OCR:</span>
+<span data-i18n="workspace.convOcrTitle" id="ws-conv-ocr-title">{{workspace.convOcrTitle}}</span>
 </div>
 <div class="form-check form-check-sm mb-1" id="ws-conv-ocr-model-wrap">
 <input checked="" class="form-check-input" id="ws-conv-ocr-model" name="ws-conv-ocr-mode" type="radio" value="model"/>
-<label class="form-check-label small" data-i18n="workspace.convOcrModel" for="ws-conv-ocr-model" id="ws-conv-ocr-model-label">Расшифровка на модели (Gemini Vision)</label>
+<label class="form-check-label small" data-i18n="workspace.convOcrModel" for="ws-conv-ocr-model" id="ws-conv-ocr-model-label">{{workspace.convOcrModel}}</label>
 </div>
 <div class="form-check form-check-sm mb-1" id="ws-conv-ocr-local-wrap">
 <input class="form-check-input" id="ws-conv-ocr-local" name="ws-conv-ocr-mode" type="radio" value="local"/>
-<label class="form-check-label small" data-i18n="workspace.convOcrLocal" for="ws-conv-ocr-local" id="ws-conv-ocr-local-label">Локальный конвертер (Tesseract / EXIF)</label>
+<label class="form-check-label small" data-i18n="workspace.convOcrLocal" for="ws-conv-ocr-local" id="ws-conv-ocr-local-label">{{workspace.convOcrLocal}}</label>
 </div>
 <div class="form-check form-check-sm mb-0" id="ws-conv-ocr-raw-wrap">
 <input class="form-check-input" id="ws-conv-ocr-raw" name="ws-conv-ocr-mode" type="radio" value="raw"/>
-<label class="form-check-label small" data-i18n="workspace.convOcrRaw" for="ws-conv-ocr-raw" id="ws-conv-ocr-raw-label">Не конвертировать (Сырое фото)</label>
+<label class="form-check-label small" data-i18n="workspace.convOcrRaw" for="ws-conv-ocr-raw" id="ws-conv-ocr-raw-label">{{workspace.convOcrRaw}}</label>
 </div>
 </div>
 </div>
@@ -338,60 +366,62 @@ Updated: 2026-11-07 00:36:00
 <div class="border rounded p-2 h-100 bg-body-tertiary" id="ws-conv-audio-box">
 <div class="fw-semibold small mb-1.5 d-flex align-items-center gap-1" id="ws-conv-audio-heading">
 <i class="bi bi-mic text-success"></i>
-<span data-i18n="workspace.convAudioTitle" id="ws-conv-audio-title">Звук → Транскрибация:</span>
+<span data-i18n="workspace.convAudioTitle" id="ws-conv-audio-title">{{workspace.convAudioTitle}}</span>
 </div>
 <div class="form-check form-check-sm mb-1" id="ws-conv-audio-model-wrap">
 <input checked="" class="form-check-input" id="ws-conv-audio-model" name="ws-conv-audio-mode" type="radio" value="model"/>
-<label class="form-check-label small" data-i18n="workspace.convAudioModel" for="ws-conv-audio-model" id="ws-conv-audio-model-label">Конвертировать (Google Gemini API)</label>
+<label class="form-check-label small" data-i18n="workspace.convAudioModel" for="ws-conv-audio-model" id="ws-conv-audio-model-label">{{workspace.convAudioModel}}</label>
 </div>
 <div class="form-check form-check-sm mb-1" id="ws-conv-audio-raw-wrap">
 <input class="form-check-input" id="ws-conv-audio-raw" name="ws-conv-audio-mode" type="radio" value="raw"/>
-<label class="form-check-label small" data-i18n="workspace.convAudioRaw" for="ws-conv-audio-raw" id="ws-conv-audio-raw-label">Не конвертировать (Сохранить сырой)</label>
+<label class="form-check-label small" data-i18n="workspace.convAudioRaw" for="ws-conv-audio-raw" id="ws-conv-audio-raw-label">{{workspace.convAudioRaw}}</label>
 </div>
-<div class="small text-muted fst-italic font-size-75" data-i18n="workspace.convAudioNote" id="ws-conv-audio-note">* Исходное аудио в .gitignore. При конвертации создаётся companion .md.</div>
-</div>
-</div>
+<div class="small text-muted fst-italic font-size-75" data-i18n="workspace.convAudioNote" id="ws-conv-audio-note">{{workspace.convAudioNote}}</div>
 </div>
 </div>
-<!-- Кнопка действия и индикатор статуса -->
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-2" id="ws-track-footer-row">
-<div class="small text-muted" data-i18n="workspace.trackReadyStatus" id="ws-track-status-text">Готов к добавлению файлов в Git и извлечению текста</div>
-<button class="btn btn-sm btn-success fw-semibold d-flex align-items-center gap-1.5 py-1 px-3" id="btn-track-add-items" type="button">
-<i class="bi bi-git"></i>
-<span data-i18n="workspace.trackAddItemsBtn" id="btn-track-add-items-text">Добавить в Git и начать слежение</span>
-</button>
 </div>
-<!-- Сводная таблица файлов и папок на Git-слежении -->
-<div class="card bg-body-tertiary border mt-3" id="ws-tracked-items-card">
+</div>
+</div>
+<!-- Подпанель 2.4: Сводная таблица файлов и папок на Git-слежении -->
+<div class="tab-pane fade" id="subpane-ws-track-tracked" role="tabpanel">
+<div class="card bg-body-tertiary border" id="ws-tracked-items-card">
 <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="ws-tracked-items-card-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-tracked-items-header-wrap">
 <i class="bi bi-list-check text-success"></i>
-<span data-i18n="workspace.trackedItemsCardTitle" id="ws-tracked-items-header-title">Файлы и папки, находящиеся на Git-слежении</span>
+<span data-i18n="workspace.trackedItemsCardTitle" id="ws-tracked-items-header-title">{{workspace.trackedItemsCardTitle}}</span>
 </div>
-<span class="badge bg-secondary-subtle text-secondary border font-monospace small" id="ws-tracked-items-summary-badge">0 объектов в слежении</span>
+<span class="badge bg-secondary-subtle text-secondary border font-monospace small" data-i18n="ui.workspace.txt_00bb46d5" id="ws-tracked-items-summary-badge">{{ui.workspace.txt_00bb46d5}}</span>
 </div>
 <div class="card-body p-0" id="ws-tracked-items-card-body">
 <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
 <table class="table table-sm table-hover table-striped align-middle mb-0 font-monospace small" id="ws-tracked-items-table">
 <thead class="table-light sticky-top">
 <tr>
-<th style="width: 40%;" data-i18n="workspace.tableColFilename">Имя файла / папки</th>
-<th style="width: 15%;" data-i18n="workspace.tableColFilesize">Размер</th>
-<th style="width: 15%;" data-i18n="workspace.tableColFiletype">Тип</th>
-<th style="width: 15%;" data-i18n="workspace.tableColGitStatus">Статус Git</th>
-<th style="width: 15%;" data-i18n="workspace.tableColModified">Дата изменения</th>
+<th data-i18n="workspace.tableColFilename" id="th-workspace-table-col-filename" style="width: 40%;">{{workspace.tableColFilename}}</th>
+<th data-i18n="workspace.tableColFilesize" id="th-workspace-table-col-filesize" style="width: 15%;">{{workspace.tableColFilesize}}</th>
+<th data-i18n="workspace.tableColFiletype" id="th-workspace-table-col-filetype" style="width: 15%;">{{workspace.tableColFiletype}}</th>
+<th data-i18n="workspace.tableColGitStatus" id="th-workspace-table-col-git-status" style="width: 15%;">{{workspace.tableColGitStatus}}</th>
+<th data-i18n="workspace.tableColModified" id="th-workspace-table-col-modified" style="width: 15%;">{{workspace.tableColModified}}</th>
 </tr>
 </thead>
 <tbody id="ws-tracked-items-table-body">
 <tr>
-<td colspan="5" class="text-center py-3 text-muted font-sans-serif" data-i18n="workspace.trackedEmptyMsg">
-В этой рабочей области пока нет файлов и папок на слежении.
-</td>
+<td class="text-center py-3 text-muted font-sans-serif" colspan="5" data-i18n="workspace.trackedEmptyMsg" id="td-workspace-tracked-empty-msg">{{workspace.trackedEmptyMsg}}</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
+</div>
+</div>
+</div>
+<!-- Кнопка действия и индикатор статуса -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top border-secondary border-opacity-25" id="ws-track-footer-row">
+<div class="small text-muted" data-i18n="workspace.trackReadyStatus" id="ws-track-status-text">{{workspace.trackReadyStatus}}</div>
+<button class="btn btn-sm btn-success fw-semibold d-flex align-items-center gap-1.5 py-1 px-3" id="btn-track-add-items" type="button">
+<i class="bi bi-git"></i>
+<span data-i18n="workspace.trackAddItemsBtn" id="btn-track-add-items-text">{{workspace.trackAddItemsBtn}}</span>
+</button>
 </div>
 </div>
 </div>
@@ -402,40 +432,40 @@ Updated: 2026-11-07 00:36:00
 <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between py-2 px-3 gap-2" id="ws-obsidian-card-header">
 <div class="fw-semibold small d-flex align-items-center gap-2 flex-wrap" id="ws-obsidian-header-info">
 <i class="bi bi-journal-richtext text-primary"></i>
-<span data-i18n="workspace.obsidianHeaderTitle" id="ws-obsidian-header-title">Компактная база знаний Obsidian Vault (внутри рабочей области)</span>
-<span class="badge bg-primary-subtle text-primary border" data-i18n="workspace.engineRuntimeBadge" id="ws-engine-runtime-badge">Движок: Electron</span>
-<span class="badge bg-success-subtle text-success border font-monospace" data-i18n="workspace.obsidianStatusBadge" id="ws-obsidian-status-badge">_Knowledge_Base.md: авто</span>
+<span data-i18n="workspace.obsidianHeaderTitle" id="ws-obsidian-header-title">{{workspace.obsidianHeaderTitle}}</span>
+<span class="badge bg-primary-subtle text-primary border" data-i18n="workspace.engineRuntimeBadge" id="ws-engine-runtime-badge">{{workspace.engineRuntimeBadge}}</span>
+<span class="badge bg-success-subtle text-success border font-monospace" data-i18n="workspace.obsidianStatusBadge" id="ws-obsidian-status-badge">{{workspace.obsidianStatusBadge}}</span>
 </div>
 <div class="d-flex align-items-center gap-1.5 flex-wrap" id="ws-obsidian-actions-wrap">
-<button class="btn btn-sm btn-outline-primary py-0.5 px-2 d-flex align-items-center gap-1" data-i18n-title="workspace.buildObsidianTitle" id="btn-ws-build-obsidian" title="Принудительно пересобрать компактные .md заметки и сводный _Knowledge_Base.md" type="button">
+<button class="btn btn-sm btn-outline-primary py-0.5 px-2 d-flex align-items-center gap-1" data-i18n-title="workspace.buildObsidianTitle" id="btn-ws-build-obsidian" title="{{workspace.buildObsidianTitle}}" type="button">
 <i class="bi bi-arrow-repeat"></i>
-<span data-i18n="workspace.buildObsidianBtn" id="btn-ws-build-obsidian-text">Собрать Obsidian Vault</span>
+<span data-i18n="workspace.buildObsidianBtn" id="btn-ws-build-obsidian-text">{{workspace.buildObsidianBtn}}</span>
 </button>
-<button class="btn btn-sm btn-primary py-0.5 px-2 d-flex align-items-center gap-1" data-i18n-title="workspace.openObsidianTitle" id="btn-ws-open-obsidian" title="Открыть рабочую область как хранилище в приложении Obsidian" type="button">
+<button class="btn btn-sm btn-primary py-0.5 px-2 d-flex align-items-center gap-1" data-i18n-title="workspace.openObsidianTitle" id="btn-ws-open-obsidian" title="{{workspace.openObsidianTitle}}" type="button">
 <i class="bi bi-box-arrow-up-right"></i>
-<span data-i18n="workspace.openObsidianBtn" id="btn-ws-open-obsidian-text">Открыть в Obsidian</span>
+<span data-i18n="workspace.openObsidianBtn" id="btn-ws-open-obsidian-text">{{workspace.openObsidianBtn}}</span>
 </button>
 </div>
 </div>
 <div class="card-body p-2.5" id="ws-obsidian-card-body">
 <div class="row g-2 align-items-end" id="ws-obsidian-inputs-row">
 <div class="col-md-4" id="ws-obsidian-topic-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.obsidianTopicLabel" for="ws-obsidian-topic-input" id="ws-obsidian-topic-label">Целенаправленный сбор знаний по теме (<code class="small">_Topics/&lt;Тема&gt;.md</code>):</label>
-<input class="form-control form-control-sm" data-i18n-placeholder="workspace.obsidianTopicPlaceholder" id="ws-obsidian-topic-input" placeholder="Например: Архитектура телеметрии или Ферма Давида" type="text"/>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.obsidianTopicLabel" for="ws-obsidian-topic-input" id="ws-obsidian-topic-label">{{workspace.obsidianTopicLabel}}</label>
+<input class="form-control form-control-sm" data-i18n-placeholder="workspace.obsidianTopicPlaceholder" id="ws-obsidian-topic-input" placeholder="{{workspace.obsidianTopicPlaceholder}}" type="text"/>
 </div>
 <div class="col-md-5" id="ws-obsidian-query-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.obsidianQueryLabel" for="ws-obsidian-query-input" id="ws-obsidian-query-label">Ключевые слова / семантический фильтр (опционально):</label>
-<input class="form-control form-control-sm" data-i18n-placeholder="workspace.obsidianQueryPlaceholder" id="ws-obsidian-query-input" placeholder="Уточняющий запрос для отбора фактов SQLite и чанков FAISS" type="text"/>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.obsidianQueryLabel" for="ws-obsidian-query-input" id="ws-obsidian-query-label">{{workspace.obsidianQueryLabel}}</label>
+<input class="form-control form-control-sm" data-i18n-placeholder="workspace.obsidianQueryPlaceholder" id="ws-obsidian-query-input" placeholder="{{workspace.obsidianQueryPlaceholder}}" type="text"/>
 </div>
 <div class="col-md-3 d-grid" id="ws-obsidian-btn-col">
 <button class="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center gap-1" id="btn-ws-compile-topic" type="button">
 <i class="bi bi-collection-play"></i>
-<span data-i18n="workspace.compileTopicBtn" id="btn-ws-compile-topic-text">Собрать конспект по теме</span>
+<span data-i18n="workspace.compileTopicBtn" id="btn-ws-compile-topic-text">{{workspace.compileTopicBtn}}</span>
 </button>
 </div>
 </div>
 <div class="small text-secondary mt-1.5 d-flex flex-wrap align-items-center justify-content-between gap-2" id="ws-obsidian-result-bar">
-<span data-i18n="workspace.obsidianResultInfo" id="ws-obsidian-result-info">Извлечённые факты, сущности и ответы QA автоматически записываются «на лету» в <code class="small">.md</code> файлы и <code class="small">_Knowledge_Base.md</code>.</span>
+<span data-i18n="workspace.obsidianResultInfo" id="ws-obsidian-result-info">{{workspace.obsidianResultInfo}}</span>
 <span class="font-monospace" id="ws-obsidian-topics-list"></span>
 </div>
 </div>
@@ -447,34 +477,34 @@ Updated: 2026-11-07 00:36:00
 <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="ws-sources-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-sources-header-wrap">
 <i class="bi bi-folder-symlink-fill text-primary"></i>
-<span data-i18n="workspace.sourcesHeaderTitle" id="ws-sources-header-title">Связанные внешние файлы, папки ПК и Google Таблицы (без перемещения и копирования)</span>
+<span data-i18n="workspace.sourcesHeaderTitle" id="ws-sources-header-title">{{workspace.sourcesHeaderTitle}}</span>
 </div>
 <div class="d-flex align-items-center gap-2 small" id="ws-sources-indicators-wrap">
-<span class="badge bg-secondary-subtle text-secondary border" data-i18n="workspace.sourcesCountBadge" id="ws-sources-count-badge">0 связанных источников</span>
-<span class="small text-muted" data-i18n="workspace.sourcesReadyStatus" id="ws-sources-status-indicator">Готов к синхронизации</span>
+<span class="badge bg-secondary-subtle text-secondary border" data-i18n="workspace.sourcesCountBadge" id="ws-sources-count-badge">{{workspace.sourcesCountBadge}}</span>
+<span class="small text-muted" data-i18n="workspace.sourcesReadyStatus" id="ws-sources-status-indicator">{{workspace.sourcesReadyStatus}}</span>
 </div>
 </div>
 <div class="card-body p-3" id="ws-sources-body">
 <div class="row g-2 align-items-end mb-3" id="ws-sources-inputs-row">
 <div class="col-md-5" id="ws-source-target-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.sourceTargetLabel" for="ws-source-target-input" id="ws-source-target-label">Путь к файлу (PDF, Excel, Audio, DOCX, CSV), папке ПК или ссылка Google Sheets:</label>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.sourceTargetLabel" for="ws-source-target-input" id="ws-source-target-label">{{workspace.sourceTargetLabel}}</label>
 <div class="input-group input-group-sm" id="ws-source-target-group">
 <span class="input-group-text bg-body-tertiary" id="ws-source-target-icon"><i class="bi bi-hdd-network"></i></span>
-<input class="form-control" data-i18n-placeholder="workspace.sourceTargetPlaceholder" id="ws-source-target-input" placeholder="например: C:\Docs\data.xlsx или https://docs.google.com/spreadsheets/..." type="text"/>
+<input class="form-control" data-i18n-placeholder="workspace.sourceTargetPlaceholder" id="ws-source-target-input" placeholder="{{workspace.sourceTargetPlaceholder}}" type="text"/>
 </div>
 </div>
 <div class="col-md-3" id="ws-source-name-col">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.sourceNameLabel" for="ws-source-name-input" id="ws-source-name-label">Имя / псевдоним (опционально):</label>
-<input class="form-control form-control-sm" data-i18n-placeholder="workspace.sourceNamePlaceholder" id="ws-source-name-input" placeholder="например: Финансовые отчёты" type="text"/>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.sourceNameLabel" for="ws-source-name-input" id="ws-source-name-label">{{workspace.sourceNameLabel}}</label>
+<input class="form-control form-control-sm" data-i18n-placeholder="workspace.sourceNamePlaceholder" id="ws-source-name-input" placeholder="{{workspace.sourceNamePlaceholder}}" type="text"/>
 </div>
 <div class="col-md-2 d-grid" id="ws-source-add-col">
-<button class="btn btn-sm btn-outline-primary fw-semibold" data-i18n-title="workspace.sourceAddTitle" id="ws-source-add-btn" title="Привязать файл или папку и начать отслеживание Git" type="button">
-<i class="bi bi-git me-1"></i><span data-i18n="workspace.sourceAddBtn" id="ws-source-add-btn-text">Связать в Git</span>
+<button class="btn btn-sm btn-outline-primary fw-semibold" data-i18n-title="workspace.sourceAddTitle" id="ws-source-add-btn" title="{{workspace.sourceAddTitle}}" type="button">
+<i class="bi bi-git me-1"></i><span data-i18n="workspace.sourceAddBtn" id="ws-source-add-btn-text">{{workspace.sourceAddBtn}}</span>
 </button>
 </div>
 <div class="col-md-2 d-grid" id="ws-sources-sync-col">
-<button class="btn btn-sm btn-success fw-semibold" data-i18n-title="workspace.sourcesSyncTitle" id="ws-sources-sync-btn" title="Конвертировать и пропустить через анализ файлов" type="button">
-<i class="bi bi-arrow-repeat me-1"></i><span data-i18n="workspace.sourcesSyncBtn" id="ws-sources-sync-btn-text">Синхронизировать</span>
+<button class="btn btn-sm btn-success fw-semibold" data-i18n-title="workspace.sourcesSyncTitle" id="ws-sources-sync-btn" title="{{workspace.sourcesSyncTitle}}" type="button">
+<i class="bi bi-arrow-repeat me-1"></i><span data-i18n="workspace.sourcesSyncBtn" id="ws-sources-sync-btn-text">{{workspace.sourcesSyncBtn}}</span>
 </button>
 </div>
 </div>
@@ -482,9 +512,9 @@ Updated: 2026-11-07 00:36:00
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 px-2.5 py-2 rounded border bg-body-tertiary" id="ws-sources-watchdog-row">
 <div class="form-check form-switch mb-0" id="ws-sources-auto-transcribe-wrap">
 <input class="form-check-input" id="ws-sources-auto-transcribe-toggle" role="switch" type="checkbox"/>
-<label class="form-check-label small fw-semibold" data-i18n="workspace.watchdogAutoTranscribeLabel" for="ws-sources-auto-transcribe-toggle" id="ws-sources-auto-transcribe-label">Автозахват транскрибации медиафайлов (Watchdog)</label>
+<label class="form-check-label small fw-semibold" data-i18n="workspace.watchdogAutoTranscribeLabel" for="ws-sources-auto-transcribe-toggle" id="ws-sources-auto-transcribe-label">{{workspace.watchdogAutoTranscribeLabel}}</label>
 </div>
-<span class="small text-muted" data-i18n="workspace.watchdogAutoTranscribeHint" id="ws-sources-auto-transcribe-hint">Автоматически извлекает звуковую дорожку и транскрибирует новые медиафайлы</span>
+<span class="small text-muted" data-i18n="workspace.watchdogAutoTranscribeHint" id="ws-sources-auto-transcribe-hint">{{workspace.watchdogAutoTranscribeHint}}</span>
 </div>
 <!-- Список связанных внешних источников -->
 <div class="list-group list-group-flush mb-0" id="ws-sources-list"></div>
@@ -496,11 +526,11 @@ Updated: 2026-11-07 00:36:00
 </div>
 <!-- Действия внизу интерфейса: Удаление рабочей области и переход к Шагу 2 -->
 <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2" id="ws-files-transition-row">
-<button class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1.5 py-1 px-3" data-i18n-title="workspace.deleteWorkspaceBtnTitle" id="ws-btn-delete-wizard" title="Удалить активное рабочее пространство" type="button">
-<i class="bi bi-trash3 me-1"></i><span data-i18n="workspace.deleteWorkspaceBtn" id="ws-btn-delete-wizard-text">Удалить область</span>
+<button class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1.5 py-1 px-3" data-i18n-title="workspace.deleteWorkspaceBtnTitle" id="ws-btn-delete-wizard" title="{{workspace.deleteWorkspaceBtnTitle}}" type="button">
+<i class="bi bi-trash3 me-1"></i><span data-i18n="workspace.deleteWorkspaceBtn" id="ws-btn-delete-wizard-text">{{workspace.deleteWorkspaceBtn}}</span>
 </button>
 <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 py-1 px-3 ms-auto" id="btn-goto-step2-from-files" onclick="window.switchWorkspaceSubTab('panel-documents')" type="button">
-<span data-i18n="workspace.gotoStep2" id="btn-goto-step2-from-files-text">Перейти к Шагу 2: Документы и факты (Git)</span>
+<span data-i18n="workspace.gotoStep2" id="btn-goto-step2-from-files-text">{{workspace.gotoStep2}}</span>
 <i class="bi bi-arrow-right"></i>
 </button>
 </div>
@@ -514,13 +544,13 @@ Updated: 2026-11-07 00:36:00
 <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="panel-facts-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-facts-header-wrap">
 <i class="bi bi-diagram-2-fill text-success"></i>
-<span data-i18n="workspace.factsHeaderTitle" id="ws-facts-header-title">Извлечённые канонические факты (action / possession)</span>
+<span data-i18n="workspace.factsHeaderTitle" id="ws-facts-header-title">{{workspace.factsHeaderTitle}}</span>
 <span class="badge bg-success-subtle text-success border font-monospace ms-1" id="ws-step2-active-badge"></span>
 </div>
 <div class="d-flex align-items-center gap-2" id="ws-facts-actions-wrap">
 <div class="form-check form-switch mb-0 small" id="ws-facts-stale-wrap">
 <input class="form-check-input" id="facts-show-stale-toggle" type="checkbox"/>
-<label class="form-check-label small" data-i18n="workspace.showStaleFactsLabel" for="facts-show-stale-toggle" id="facts-show-stale-label">Показать устаревшие (stale)</label>
+<label class="form-check-label small" data-i18n="workspace.showStaleFactsLabel" for="facts-show-stale-toggle" id="facts-show-stale-label">{{workspace.showStaleFactsLabel}}</label>
 </div>
 </div>
 </div>
@@ -529,11 +559,11 @@ Updated: 2026-11-07 00:36:00
 <table class="table table-hover align-middle mb-0 small" id="ws-facts-table">
 <thead class="bg-body-tertiary">
 <tr id="ws-facts-table-header-row">
-<th data-i18n="workspace.thFactType" id="ws-th-fact-type">Тип / Язык</th>
-<th data-i18n="workspace.thFactStructure" id="ws-th-fact-structure">Структура факта (Субъект/Владелец → Отношение → Объект)</th>
-<th data-i18n="workspace.thFactSource" id="ws-th-fact-source">Источник (Файл / Версия)</th>
-<th data-i18n="workspace.thFactStatus" id="ws-th-fact-status">Статус</th>
-<th data-i18n="workspace.thFactActions" id="ws-th-fact-actions">Действия</th>
+<th data-i18n="workspace.thFactType" id="ws-th-fact-type">{{workspace.thFactType}}</th>
+<th data-i18n="workspace.thFactStructure" id="ws-th-fact-structure">{{workspace.thFactStructure}}</th>
+<th data-i18n="workspace.thFactSource" id="ws-th-fact-source">{{workspace.thFactSource}}</th>
+<th data-i18n="workspace.thFactStatus" id="ws-th-fact-status">{{workspace.thFactStatus}}</th>
+<th data-i18n="workspace.thFactActions" id="ws-th-fact-actions">{{workspace.thFactActions}}</th>
 </tr>
 </thead>
 <tbody id="ws-facts-table-body"></tbody>
@@ -541,8 +571,8 @@ Updated: 2026-11-07 00:36:00
 </div>
 <!-- JSON инспектор выбранного факта -->
 <div class="p-3 border-top border-secondary-subtle bg-body-tertiary" id="ws-fact-json-container">
-<div class="small fw-semibold text-muted mb-1" data-i18n="workspace.factJsonTitle" id="ws-fact-json-title">Структурированное JSON-представление факта (ТЗ п. 3.4 / 3.4.1):</div>
-<pre class="mb-0 p-2 rounded bg-body border font-monospace small pre-scrollable-200" data-i18n="workspace.factJsonPlaceholder" id="ws-fact-json-viewer">Выберите факт в таблице или задайте вопрос для просмотра канонического JSON.</pre>
+<div class="small fw-semibold text-muted mb-1" data-i18n="workspace.factJsonTitle" id="ws-fact-json-title">{{workspace.factJsonTitle}}</div>
+<pre class="mb-0 p-2 rounded bg-body border font-monospace small pre-scrollable-200" data-i18n="workspace.factJsonPlaceholder" id="ws-fact-json-viewer">{{workspace.factJsonPlaceholder}}</pre>
 </div>
 </div>
 </div>
@@ -552,10 +582,10 @@ Updated: 2026-11-07 00:36:00
 <div class="d-flex justify-content-between mb-2" id="ws-step2-transitions-row">
 <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5 py-1 px-3" id="btn-goto-files-from-step2" onclick="window.switchWorkspaceSubTab('panel-files')" type="button">
 <i class="bi bi-arrow-left"></i>
-<span data-i18n="workspace.subtabs.files" id="btn-goto-files-from-step2-text">Файлы</span>
+<span data-i18n="workspace.subtabs.files" id="btn-goto-files-from-step2-text">{{workspace.subtabs.files}}</span>
 </button>
 <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 py-1 px-3" id="btn-goto-step3-from-step2" onclick="window.switchWorkspaceSubTab('panel-qa')" type="button">
-<span data-i18n="workspace.gotoStep3" id="btn-goto-step3-from-step2-text">Перейти к Шагу 3: Вопрос-Ответ (QA)</span>
+<span data-i18n="workspace.gotoStep3" id="btn-goto-step3-from-step2-text">{{workspace.gotoStep3}}</span>
 <i class="bi bi-arrow-right"></i>
 </button>
 </div>
@@ -565,67 +595,67 @@ Updated: 2026-11-07 00:36:00
 <div class="card bg-body border-primary-subtle shadow-sm mb-3" data-panel-id="panel-qa" id="panel-qa">
 <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="panel-qa-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-step3-header-wrap">
-<span class="badge bg-primary rounded-pill" data-i18n="workspace.step3Badge" id="ws-step3-badge">Шаг 3</span>
-<span data-i18n="workspace.step3HeaderTitle" id="ws-step3-header-title">Задайте вопрос по документам (Морфология + SQLite Факты + FAISS + WikiLLM + src/ai)</span>
+<span class="badge bg-primary rounded-pill" data-i18n="workspace.step3Badge" id="ws-step3-badge">{{workspace.step3Badge}}</span>
+<span data-i18n="workspace.step3HeaderTitle" id="ws-step3-header-title">{{workspace.step3HeaderTitle}}</span>
 </div>
-<span class="small text-muted" data-i18n="workspace.qaReadyStatus" id="qa-status-indicator">Готов к вопросу</span>
+<span class="small text-muted" data-i18n="workspace.qaReadyStatus" id="qa-status-indicator">{{workspace.qaReadyStatus}}</span>
 </div>
 <div class="card-body p-3" id="panel-qa-body">
 <div class="row g-2 mb-2" id="ws-qa-inputs-row">
 <div class="col-lg-6" id="ws-qa-question-col">
 <div class="input-group" id="ws-qa-question-group">
 <span class="input-group-text bg-body-tertiary" id="ws-qa-question-icon"><i class="bi bi-chat-dots text-primary"></i></span>
-<input class="form-control" data-i18n-placeholder="workspace.qaInputPlaceholder" id="qa-question-input" placeholder="Введите вопрос (например: Кем была вымыта рама? или למי הייתה חווה?)" type="text" value="Кем была вымыта рама?"/>
+<input class="form-control" data-i18n-placeholder="workspace.qaInputPlaceholder" id="qa-question-input" placeholder="{{workspace.qaInputPlaceholder}}" type="text" value="Кем была вымыта рама?"/>
 <button class="btn btn-primary px-4 fw-semibold" data-ai-tooltip="true" data-term="qa" id="qa-ask-btn" type="button">
-<i class="bi bi-search me-1"></i><span data-i18n="workspace.qaAskBtn" id="qa-ask-btn-text">Ответить</span>
+<i class="bi bi-search me-1"></i><span data-i18n="workspace.qaAskBtn" id="qa-ask-btn-text">{{workspace.qaAskBtn}}</span>
 </button>
 </div>
 </div>
 <div class="col-lg-3 col-md-6" id="ws-qa-mode-col">
-<select class="form-select" data-i18n-title="workspace.qaModeTitle" id="qa-mode-selector" title="Режим работы">
-<option data-i18n="workspace.qaModeLocalFirst" id="qa-opt-local-first" selected="" value="local_first">⚡ local_first (Локально + ИИ резерв)</option>
-<option data-i18n="workspace.qaModeLocalOnly" id="qa-opt-local-only" value="local_only">🔒 local_only (Строго локально SQLite/FAISS)</option>
-<option data-i18n="workspace.qaModeCloudAssist" id="qa-opt-cloud-assist" value="cloud_assist">☁️ cloud_assist (Облачный синтез)</option>
-<option data-i18n="workspace.qaModeCloudEnrich" id="qa-opt-cloud-enrich" value="cloud_enrich">🌐 cloud_enrich (WikiLLM + Облако)</option>
+<select class="form-select" data-i18n-title="workspace.qaModeTitle" id="qa-mode-selector" title="{{workspace.qaModeTitle}}">
+<option data-i18n="workspace.qaModeLocalFirst" id="qa-opt-local-first" selected="" value="local_first">{{workspace.qaModeLocalFirst}}</option>
+<option data-i18n="workspace.qaModeLocalOnly" id="qa-opt-local-only" value="local_only">{{workspace.qaModeLocalOnly}}</option>
+<option data-i18n="workspace.qaModeCloudAssist" id="qa-opt-cloud-assist" value="cloud_assist">{{workspace.qaModeCloudAssist}}</option>
+<option data-i18n="workspace.qaModeCloudEnrich" id="qa-opt-cloud-enrich" value="cloud_enrich">{{workspace.qaModeCloudEnrich}}</option>
 </select>
 </div>
 <div class="col-lg-3 col-md-6" id="ws-qa-model-col">
-<select class="form-select" data-i18n-title="workspace.qaModelTitle" id="qa-model-selector" title="Выбор модели ИИ">
-<option data-i18n="ui.ws.txt_9628095c" id="qa-opt-model-gemini" selected="" value="gemini-2.5-flash">Google Gemini 2.5 Flash</option>
-<option data-i18n="ui.ws.txt_569555f5" id="qa-opt-model-phi3" value="microsoft/phi-3-mini">Foundry: Phi-3 Mini (ONNX/DML)</option>
-<option data-i18n="ui.ws.txt_2f52716b" id="qa-opt-model-llama3" value="ollama/llama3">Ollama: Llama-3 Local</option>
-<option data-i18n="ui.ws.txt_3730b33b" id="qa-opt-model-gpt4o" value="openai/gpt-4o-mini">OpenAI: GPT-4o-mini</option>
+<select class="form-select" data-i18n-title="workspace.qaModelTitle" id="qa-model-selector" title="{{workspace.qaModelTitle}}">
+<option data-i18n="ui.ws.txt_9628095c" id="qa-opt-model-gemini" selected="" value="gemini-2.5-flash">{{ui.ws.txt_9628095c}}</option>
+<option data-i18n="ui.ws.txt_569555f5" id="qa-opt-model-phi3" value="microsoft/phi-3-mini">{{ui.ws.txt_569555f5}}</option>
+<option data-i18n="ui.ws.txt_2f52716b" id="qa-opt-model-llama3" value="ollama/llama3">{{ui.ws.txt_2f52716b}}</option>
+<option data-i18n="ui.ws.txt_3730b33b" id="qa-opt-model-gpt4o" value="openai/gpt-4o-mini">{{ui.ws.txt_3730b33b}}</option>
 </select>
 </div>
 </div>
 <!-- Готовые быстрые примеры вопросов из ТЗ -->
 <div class="mb-3" id="ws-sample-questions-container">
-<div class="small text-muted mb-1" data-i18n="workspace.sampleQuestionsTitle" id="ws-sample-questions-title">Примеры контрольных вопросов из ТЗ (кликните для проверки):</div>
+<div class="small text-muted mb-1" data-i18n="workspace.sampleQuestionsTitle" id="ws-sample-questions-title">{{workspace.sampleQuestionsTitle}}</div>
 <div class="d-flex flex-wrap gap-1" id="ws-sample-questions">
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q1" data-q="Что мыла мама?" id="sample-q-btn-1" type="button">🇷🇺 Что мыла мама?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q2" data-q="Кто мыл раму?" id="sample-q-btn-2" type="button">🇷🇺 Кто мыл раму?</button>
-<button class="btn btn-outline-primary btn-sm py-0 px-2 sample-q-btn fw-semibold" data-i18n="workspace.samples.q3" data-q="Кем была вымыта рама?" id="sample-q-btn-3" type="button">🇷🇺 Кем была вымыта рама?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q4" data-q="מה היה לדוד משה?" id="sample-q-btn-4" type="button">🇮🇱 מה היה לדוד משה?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q5" data-q="למי הייתה חווה?" id="sample-q-btn-5" type="button">🇮🇱 למי הייתה חווה?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q6" data-q="למי הייתה החווה?" id="sample-q-btn-6" type="button">🇮🇱 למי הייתה החווה?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q7" data-q="האם לדוד משה הייתה חווה?" id="sample-q-btn-7" type="button">🇮🇱 האם לדוד משה הייתה חווה?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q8" data-q="מה היה הקשר בין דוד משה לחווה?" id="sample-q-btn-8" type="button">🇮🇱 מה היה הקשר בין דוד משה לחווה?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q9" data-q="מי רחצה את המסגרת?" id="sample-q-btn-9" type="button">🇮🇱 מי רחצה את המסגרת?</button>
-<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q10" data-q="מה רחצה אמא?" id="sample-q-btn-10" type="button">🇮🇱 מה רחצה אמא?</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q1" data-q="Что мыла мама?" id="sample-q-btn-1" type="button">{{workspace.samples.q1}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q2" data-q="Кто мыл раму?" id="sample-q-btn-2" type="button">{{workspace.samples.q2}}</button>
+<button class="btn btn-outline-primary btn-sm py-0 px-2 sample-q-btn fw-semibold" data-i18n="workspace.samples.q3" data-q="Кем была вымыта рама?" id="sample-q-btn-3" type="button">{{workspace.samples.q3}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q4" data-q="מה היה לדוד משה?" id="sample-q-btn-4" type="button">{{workspace.samples.q4}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q5" data-q="למי הייתה חווה?" id="sample-q-btn-5" type="button">{{workspace.samples.q5}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q6" data-q="למי הייתה החווה?" id="sample-q-btn-6" type="button">{{workspace.samples.q6}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q7" data-q="האם לדוד משה הייתה חווה?" id="sample-q-btn-7" type="button">{{workspace.samples.q7}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q8" data-q="מה היה הקשר בין דוד משה לחווה?" id="sample-q-btn-8" type="button">{{workspace.samples.q8}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q9" data-q="מי רחצה את המסגרת?" id="sample-q-btn-9" type="button">{{workspace.samples.q9}}</button>
+<button class="btn btn-outline-secondary btn-sm py-0 px-2 sample-q-btn" data-i18n="workspace.samples.q10" data-q="מה רחצה אמא?" id="sample-q-btn-10" type="button">{{workspace.samples.q10}}</button>
 </div>
 </div>
 <!-- Блок отображения ответа -->
 <div class="p-3 rounded bg-body-tertiary border mt-3 d-none" id="qa-answer-box">
 <div class="row g-3 align-items-center" id="qa-answer-box-row">
 <div class="col-md-5" id="qa-answer-main-col">
-<div class="small text-muted text-uppercase fw-bold mb-1" data-i18n="workspace.ansExactTitle" id="qa-ans-exact-title">Точный грамматический ответ:</div>
+<div class="small text-muted text-uppercase fw-bold mb-1" data-i18n="workspace.ansExactTitle" id="qa-ans-exact-title">{{workspace.ansExactTitle}}</div>
 <div class="fs-3 fw-bold text-primary" id="qa-answer-main-text">---</div>
 <div class="d-flex flex-wrap gap-1 mt-2" id="qa-answer-badges"></div>
 </div>
 <div class="col-md-7 border-start border-secondary-subtle ps-md-3" id="qa-answer-details-col">
-<div class="small fw-semibold mb-1" data-i18n="workspace.ansProofTitle" id="qa-ans-proof-title">Доказательная база и морфологический разбор:</div>
+<div class="small fw-semibold mb-1" data-i18n="workspace.ansProofTitle" id="qa-ans-proof-title">{{workspace.ansProofTitle}}</div>
 <div class="small text-muted mb-2" id="qa-grammar-breakdown"></div>
-<div class="small fw-semibold mb-1" data-i18n="workspace.ansSourceTitle" id="qa-ans-source-title">Подтвержденный источник (Git &amp; Документ):</div>
+<div class="small fw-semibold mb-1" data-i18n="workspace.ansSourceTitle" id="qa-ans-source-title">{{workspace.ansSourceTitle}}</div>
 <div class="small" id="qa-sources-list"></div>
 </div>
 </div>
@@ -636,10 +666,10 @@ Updated: 2026-11-07 00:36:00
 <div class="d-flex justify-content-between mb-2" id="ws-step3-transitions-row">
 <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5 py-1 px-3" id="btn-goto-step2-from-step3" onclick="window.switchWorkspaceSubTab('panel-documents')" type="button">
 <i class="bi bi-arrow-left"></i>
-<span data-i18n="workspace.gotoStep2Short" id="btn-goto-step2-from-step3-text">← Шаг 2: Документы и факты (Git)</span>
+<span data-i18n="workspace.gotoStep2Short" id="btn-goto-step2-from-step3-text">{{workspace.gotoStep2Short}}</span>
 </button>
 <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 py-1 px-3" id="btn-goto-chat-from-step3" onclick="window.switchTab('tab-chat')" type="button">
-<span data-i18n="workspace.gotoChat" id="btn-goto-chat-from-step3-text">Перейти к Чату</span>
+<span data-i18n="workspace.gotoChat" id="btn-goto-chat-from-step3-text">{{workspace.gotoChat}}</span>
 <i class="bi bi-arrow-right"></i>
 </button>
 </div>
@@ -649,37 +679,87 @@ Updated: 2026-11-07 00:36:00
 <div class="card bg-body border-secondary-subtle shadow-sm mb-3" data-panel-id="panel-chat" id="panel-chat">
 <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between py-2 px-3" id="panel-chat-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-chat-header-wrap">
-<span class="badge bg-primary rounded-pill" data-i18n="workspace.chatBadge" id="ws-chat-badge">Чат</span>
-<span data-i18n="workspace.chatTitle" id="ws-chat-title">Диалог с ИИ</span>
+<span class="badge bg-primary rounded-pill" data-i18n="workspace.chatBadge" id="ws-chat-badge">{{workspace.chatBadge}}</span>
+<span data-i18n="workspace.chatTitle" id="ws-chat-title">{{workspace.chatTitle}}</span>
 </div>
 <div class="d-flex align-items-center gap-2 small" id="ws-chat-actions-wrap">
-<span class="text-secondary" data-i18n="workspace.chatReadyStatus" id="ws-chat-status">Готов к диалогу</span>
-<button class="btn btn-sm btn-outline-secondary py-0 px-2" data-i18n-title="workspace.chatClearTitle" id="ws-chat-clear-btn" title="Очистить сообщения чата" type="button">
-<i class="bi bi-trash3 me-1"></i><span data-i18n="workspace.chatClearBtn" id="ws-chat-clear-btn-text">Очистить</span>
+<span class="text-secondary" data-i18n="workspace.chatReadyStatus" id="ws-chat-status">{{workspace.chatReadyStatus}}</span>
+<button class="btn btn-sm btn-outline-secondary py-0 px-2" data-i18n-title="workspace.chatClearTitle" id="ws-chat-clear-btn" title="{{workspace.chatClearTitle}}" type="button">
+<i class="bi bi-trash3 me-1"></i><span data-i18n="workspace.chatClearBtn" id="ws-chat-clear-btn-text">{{workspace.chatClearBtn}}</span>
 </button>
 </div>
 </div>
 <div class="card-body p-3 d-flex flex-column gap-3" id="panel-chat-body">
+<!-- Трекер условий сценария покупки (выполненные и намеченные условия) -->
+<div class="card border-primary-subtle bg-body-tertiary d-none" id="ws-chat-scenario-tracker">
+<div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between py-2 px-3 gap-2" id="ws-chat-scenario-header">
+<div class="fw-semibold small d-flex align-items-center gap-2" id="ws-chat-scenario-title-wrap">
+<i class="bi bi-clipboard2-check text-primary" id="ws-chat-scenario-icon"></i>
+<span data-i18n="workspace.chatScenarioTitle" id="ws-chat-scenario-title">{{workspace.chatScenarioTitle}}</span>
+</div>
+<div class="d-flex align-items-center gap-2" id="ws-chat-scenario-meta-wrap">
+<span class="badge bg-primary-subtle text-primary border font-monospace" id="ws-chat-scenario-progress-badge">0 / 0</span>
+<button class="btn btn-sm btn-outline-secondary py-0 px-2" data-i18n-title="workspace.chatScenarioToggleTitle" id="ws-chat-scenario-toggle-btn" title="{{workspace.chatScenarioToggleTitle}}" type="button">
+<i class="bi bi-chevron-up" id="ws-chat-scenario-toggle-icon"></i>
+</button>
+</div>
+</div>
+<div class="card-body p-2.5" id="ws-chat-scenario-body">
+<div class="row g-2.5" id="ws-chat-scenario-columns">
+<div class="col-md-6" id="ws-chat-scenario-done-col">
+<div class="rounded border bg-body p-2 h-100" id="ws-chat-scenario-done-box">
+<div class="small fw-semibold text-success mb-2 d-flex align-items-center gap-1.5" id="ws-chat-scenario-done-heading">
+<i class="bi bi-check-circle-fill" id="ws-chat-scenario-done-icon"></i>
+<span data-i18n="workspace.chatScenarioCompletedTitle" id="ws-chat-scenario-done-title">{{workspace.chatScenarioCompletedTitle}}</span>
+<span class="badge bg-success-subtle text-success border ms-auto" id="ws-chat-scenario-done-count">0</span>
+</div>
+<div class="d-flex flex-column gap-1.5 small" id="ws-chat-scenario-done-list"></div>
+</div>
+</div>
+<div class="col-md-6" id="ws-chat-scenario-planned-col">
+<div class="rounded border bg-body p-2 h-100" id="ws-chat-scenario-planned-box">
+<div class="small fw-semibold text-warning-emphasis mb-2 d-flex align-items-center gap-1.5" id="ws-chat-scenario-planned-heading">
+<i class="bi bi-clock-history" id="ws-chat-scenario-planned-icon"></i>
+<span data-i18n="workspace.chatScenarioPlannedTitle" id="ws-chat-scenario-planned-title">{{workspace.chatScenarioPlannedTitle}}</span>
+<span class="badge bg-warning-subtle text-warning-emphasis border ms-auto" id="ws-chat-scenario-planned-count">0</span>
+</div>
+<div class="d-flex flex-column gap-1.5 small" id="ws-chat-scenario-planned-list"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <!-- Окно ответа -->
 <div class="rounded border bg-body-tertiary p-3 overflow-y-auto" id="ws-chat-response-window" style="min-height: 380px; max-height: 540px;">
 <div class="text-center text-muted my-5" id="ws-chat-empty-state">
 <i class="bi bi-chat-square-dots fs-1 d-block mb-2 text-primary opacity-50" id="ws-chat-empty-icon"></i>
-<div class="fw-semibold" data-i18n="workspace.chatEmptyTitle" id="ws-chat-empty-title">Диалог с ИИ ассистентом</div>
-<div class="small text-secondary" data-i18n="workspace.chatEmptyDesc" id="ws-chat-empty-desc">Введите ваш вопрос или запрос ниже и нажмите кнопку «Отправить».</div>
+<div class="fw-semibold" data-i18n="workspace.chatEmptyTitle" id="ws-chat-empty-title">{{workspace.chatEmptyTitle}}</div>
+<div class="small text-secondary" data-i18n="workspace.chatEmptyDesc" id="ws-chat-empty-desc">{{workspace.chatEmptyDesc}}</div>
 </div>
 <div class="d-flex flex-column gap-2.5" id="ws-chat-messages"></div>
 </div>
-<!-- Поле ввода и кнопки отправить / добавить факт -->
-<div class="input-group" id="ws-chat-input-group">
-<textarea class="form-control" data-i18n-placeholder="workspace.chatInputPlaceholder" id="ws-chat-input" placeholder="Введите сообщение... (Enter для отправки, Shift+Enter для новой строки)" rows="2"></textarea>
-<button class="btn btn-outline-success px-3 fw-semibold d-flex align-items-center gap-1.5" data-i18n-title="workspace.chatAddFactTitle" id="ws-chat-add-fact-btn" title="Добавить текст как новый факт во внутренние файлы и базу знаний" type="button">
+<!-- Поле ввода и кнопки под полем ввода: отправить / задача / добавить факт / загрузить файл -->
+<div class="d-flex flex-column gap-2" id="ws-chat-input-group">
+<input class="d-none" id="ws-chat-file-input" multiple="" type="file"/>
+<textarea class="form-control bg-body text-body w-100" data-i18n-placeholder="workspace.chatInputPlaceholder" id="ws-chat-input" placeholder="{{workspace.chatInputPlaceholder}}" rows="4"></textarea>
+<div class="chat-input-actions d-flex flex-wrap align-items-center gap-2" id="ws-chat-actions-row">
+<button class="btn btn-primary px-4 fw-semibold d-inline-flex align-items-center gap-1.5" data-i18n-title="workspace.chatSendTitle" id="ws-chat-send-btn" title="{{workspace.chatSendTitle}}" type="button">
+<i class="bi bi-send-fill" id="ws-chat-send-icon"></i>
+<span data-i18n="workspace.chatSendBtn" id="ws-chat-send-btn-text">{{workspace.chatSendBtn}}</span>
+</button>
+<button class="btn btn-outline-primary px-3 fw-semibold d-inline-flex align-items-center gap-1.5" data-i18n-title="workspace.chatAddTaskTitle" id="ws-chat-add-task-btn" title="{{workspace.chatAddTaskTitle}}" type="button">
+<i class="bi bi-clipboard2-check-fill" id="ws-chat-add-task-icon"></i>
+<span data-i18n="workspace.chatAddTaskBtn" id="ws-chat-add-task-btn-text">{{workspace.chatAddTaskBtn}}</span>
+</button>
+<button class="btn btn-outline-success px-3 fw-semibold d-inline-flex align-items-center gap-1.5" data-i18n-title="workspace.chatAddFactTitle" id="ws-chat-add-fact-btn" title="{{workspace.chatAddFactTitle}}" type="button">
 <i class="bi bi-plus-circle-fill" id="ws-chat-add-fact-icon"></i>
-<span data-i18n="workspace.chatAddFactBtn" id="ws-chat-add-fact-btn-text">Добавить факт</span>
+<span data-i18n="workspace.chatAddFactBtn" id="ws-chat-add-fact-btn-text">{{workspace.chatAddFactBtn}}</span>
 </button>
-<button class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-1.5" id="ws-chat-send-btn" type="button">
-<i class="bi bi-send-fill"></i>
-<span data-i18n="workspace.chatSendBtn" id="ws-chat-send-btn-text">Отправить</span>
+<button class="btn btn-outline-secondary px-3 d-inline-flex align-items-center gap-1.5" data-i18n-title="workspace.chatUploadFileTitle" id="ws-chat-upload-btn" title="{{workspace.chatUploadFileTitle}}" type="button">
+<i class="bi bi-paperclip" id="ws-chat-upload-icon"></i>
+<span data-i18n="workspace.chatUploadFileBtn" id="ws-chat-upload-btn-text">{{workspace.chatUploadFileBtn}}</span>
 </button>
+</div>
 </div>
 </div>
 </div>
@@ -687,7 +767,7 @@ Updated: 2026-11-07 00:36:00
 <div class="d-flex justify-content-start mb-2" id="ws-chat-transitions-row">
 <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5 py-1 px-3" id="btn-goto-step3-from-chat" onclick="window.switchWorkspaceSubTab('panel-qa')" type="button">
 <i class="bi bi-arrow-left"></i>
-<span data-i18n="workspace.gotoStep3Short" id="btn-goto-step3-from-chat-text">← Шаг 3: Вопрос-Ответ (QA)</span>
+<span data-i18n="workspace.gotoStep3Short" id="btn-goto-step3-from-chat-text">{{workspace.gotoStep3Short}}</span>
 </button>
 </div>
 </div>
@@ -697,15 +777,15 @@ Updated: 2026-11-07 00:36:00
 <div id="ws-commits-title-wrap">
 <h5 class="fw-bold mb-1 d-flex align-items-center gap-2" id="ws-commits-heading">
 <span class="fs-5" id="ws-commits-icon">📜</span>
-<span data-i18n="workspace.commitsHeaderTitle" id="ws-commits-header-title">История коммитов репозитория</span>
+<span data-i18n="workspace.commitsHeaderTitle" id="ws-commits-header-title">{{workspace.commitsHeaderTitle}}</span>
 </h5>
-<div class="small text-secondary" data-i18n="workspace.commitsHeaderSubtitle" id="ws-commits-header-subtitle">Полный аудит коммитов, хешей, авторов и описаний изменений рабочей области</div>
+<div class="small text-secondary" data-i18n="workspace.commitsHeaderSubtitle" id="ws-commits-header-subtitle">{{workspace.commitsHeaderSubtitle}}</div>
 </div>
 <div class="d-flex align-items-center gap-2" id="ws-commits-actions-wrap">
-<input class="form-control form-control-sm min-w-220" data-i18n-placeholder="workspace.commitsSearchPlaceholder" id="commits-search-input" placeholder="Поиск по коммитам..." type="text"/>
+<input class="form-control form-control-sm min-w-220" data-i18n-placeholder="workspace.commitsSearchPlaceholder" id="commits-search-input" placeholder="{{workspace.commitsSearchPlaceholder}}" type="text"/>
 <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="commits-refresh-btn" type="button">
 <i class="bi bi-arrow-clockwise"></i>
-<span data-i18n="common.refresh" id="commits-refresh-btn-text">Обновить</span>
+<span data-i18n="common.refresh" id="commits-refresh-btn-text">{{common.refresh}}</span>
 </button>
 </div>
 </div>
@@ -713,27 +793,27 @@ Updated: 2026-11-07 00:36:00
 <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 px-3" id="panel-commits-header">
 <div class="fw-semibold small d-flex align-items-center gap-2" id="ws-commits-panel-header-wrap">
 <i class="bi bi-git text-primary"></i>
-<span data-i18n="workspace.commitsPanelTitle" id="ws-commits-panel-title">Таблица коммитов (REST: /v1/panel/panel-commits)</span>
+<span data-i18n="workspace.commitsPanelTitle" id="ws-commits-panel-title">{{workspace.commitsPanelTitle}}</span>
 </div>
-<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.ws.txt_8f8e2027" id="commits-count-badge">0 коммитов</span>
+<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.ws.txt_8f8e2027" id="commits-count-badge">{{ui.ws.txt_8f8e2027}}</span>
 </div>
 <div class="card-body p-0" id="panel-commits-body">
 <div class="table-responsive">
 <table class="table table-hover align-middle mb-0 small" id="ws-commits-table">
 <thead class="table-light">
 <tr id="ws-commits-table-header-row">
-<th class="col-w-100" data-i18n="common.hash" id="ws-th-commit-hash">Commit</th>
-<th class="col-w-170" data-i18n="common.date" id="ws-th-commit-date">Дата</th>
-<th class="col-w-160" data-i18n="common.author" id="ws-th-commit-author">Автор</th>
-<th data-i18n="common.message" id="ws-th-commit-msg">Сообщение</th>
-<th class="col-w-80 text-end" data-i18n="common.actions" id="ws-th-commit-actions">Действия</th>
+<th class="col-w-100" data-i18n="common.hash" id="ws-th-commit-hash">{{common.hash}}</th>
+<th class="col-w-170" data-i18n="common.date" id="ws-th-commit-date">{{common.date}}</th>
+<th class="col-w-160" data-i18n="common.author" id="ws-th-commit-author">{{common.author}}</th>
+<th data-i18n="common.message" id="ws-th-commit-msg">{{common.message}}</th>
+<th class="col-w-80 text-end" data-i18n="common.actions" id="ws-th-commit-actions">{{common.actions}}</th>
 </tr>
 </thead>
 <tbody id="commits-table-body">
 <tr id="ws-commits-loading-row">
 <td class="text-center py-4 text-muted" colspan="5" id="ws-commits-loading-cell">
 <div class="spinner-border spinner-border-sm text-primary mb-2" id="ws-commits-spinner" role="status"></div>
-<div data-i18n="workspace.commitsLoading" id="ws-commits-loading-text">Загрузка списка коммитов...</div>
+<div data-i18n="workspace.commitsLoading" id="ws-commits-loading-text">{{workspace.commitsLoading}}</div>
 </td>
 </tr>
 </tbody>
@@ -745,7 +825,7 @@ Updated: 2026-11-07 00:36:00
 <div class="d-flex justify-content-start mb-2" id="ws-commits-transitions-row">
 <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5 py-1 px-3" id="btn-goto-files-from-commits" onclick="window.switchWorkspaceSubTab('panel-files')" type="button">
 <i class="bi bi-arrow-left"></i>
-<span data-i18n="workspace.gotoFilesShort" id="btn-goto-files-from-commits-text">← Назад к Файлам</span>
+<span data-i18n="workspace.gotoFilesShort" id="btn-goto-files-from-commits-text">{{workspace.gotoFilesShort}}</span>
 </button>
 </div>
 </div>
@@ -754,15 +834,15 @@ Updated: 2026-11-07 00:36:00
 <div class="card bg-body border-secondary-subtle shadow-sm mb-3" data-panel-id="panel-tree" id="panel-tree">
 <div class="card-header bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between py-2 px-3 gap-2" id="panel-tree-header">
 <div class="fw-semibold small d-flex align-items-center gap-2 flex-wrap" id="ws-tree-header-title-wrap">
-<span class="badge bg-warning text-dark rounded-pill" data-i18n="workspace.treeBadge" id="ws-tree-badge">Дерево</span>
-<span data-i18n="workspace.treeHeaderTitle" id="ws-tree-header-title">Виртуальное дерево всех файлов по содержимому (Локальные + Внешние Git + Ревизия ИИ)</span>
+<span class="badge bg-warning text-dark rounded-pill" data-i18n="workspace.treeBadge" id="ws-tree-badge">{{workspace.treeBadge}}</span>
+<span data-i18n="workspace.treeHeaderTitle" id="ws-tree-header-title">{{workspace.treeHeaderTitle}}</span>
 <code class="small text-body-secondary font-monospace" id="ws-tree-repo-path-badge">data/default</code>
 </div>
 <div class="d-flex align-items-center gap-2 small flex-wrap" id="ws-tree-header-badges-wrap">
-<span class="badge bg-success-subtle text-success border font-monospace" id="ws-tree-revision-badge">Ревизия #1</span>
-<span class="badge bg-info-subtle text-info border d-none" id="ws-tree-relocation-badge">Перемещено без потерь (R100): 0</span>
+<span class="badge bg-success-subtle text-success border font-monospace" data-i18n="ui.workspace.txt_fe7d688c" id="ws-tree-revision-badge">{{ui.workspace.txt_fe7d688c}}</span>
+<span class="badge bg-info-subtle text-info border d-none" data-i18n="ui.workspace.txt_6d96ae54" id="ws-tree-relocation-badge">{{ui.workspace.txt_6d96ae54}}</span>
 <span class="badge bg-secondary-subtle text-secondary border font-monospace" id="ws-tree-git-badge">Git HEAD</span>
-<span class="badge bg-primary-subtle text-primary border" id="ws-tree-count-badge">0 файлов</span>
+<span class="badge bg-primary-subtle text-primary border" data-i18n="ui.ide.txt_e9e5145e" id="ws-tree-count-badge">{{ui.ide.txt_e9e5145e}}</span>
 </div>
 </div>
 <div class="card-body p-3" id="panel-tree-body">
@@ -772,58 +852,58 @@ Updated: 2026-11-07 00:36:00
 <div class="col-lg-3 col-md-12" id="ws-tree-mode-switch-col">
 <div class="btn-group btn-group-sm w-100" id="ws-tree-mode-btn-group" role="group">
 <button class="btn btn-outline-primary active" id="btn-ws-tree-mode-virtual" type="button">
-<i class="bi bi-diagram-3 me-1"></i><span data-i18n="workspace.treeModeVirtual" id="btn-ws-tree-mode-virtual-text">Виртуальные категории</span>
+<i class="bi bi-diagram-3 me-1"></i><span data-i18n="workspace.treeModeVirtual" id="btn-ws-tree-mode-virtual-text">{{workspace.treeModeVirtual}}</span>
 </button>
 <button class="btn btn-outline-primary" id="btn-ws-tree-mode-physical" type="button">
-<i class="bi bi-folder2-open me-1"></i><span data-i18n="workspace.treeModePhysical" id="btn-ws-tree-mode-physical-text">Физические папки</span>
+<i class="bi bi-folder2-open me-1"></i><span data-i18n="workspace.treeModePhysical" id="btn-ws-tree-mode-physical-text">{{workspace.treeModePhysical}}</span>
 </button>
 </div>
 </div>
 <div class="col-lg-3 col-md-5" id="ws-tree-strategy-col">
 <select class="form-select form-select-sm" id="ws-tree-revision-strategy">
-<option data-i18n="workspace.treeStratDomain" id="ws-tree-strat-domain" selected="" value="semantic_domain">По смыслу и тематике содержимого</option>
-<option data-i18n="workspace.treeStratFacts" id="ws-tree-strat-facts" value="fact_semantics">По структуре фактов (Действия / Владение)</option>
-<option data-i18n="workspace.treeStratEntities" id="ws-tree-strat-entities" value="entity_centric">Вокруг ключевых субъектов и сущностей</option>
+<option data-i18n="workspace.treeStratDomain" id="ws-tree-strat-domain" selected="" value="semantic_domain">{{workspace.treeStratDomain}}</option>
+<option data-i18n="workspace.treeStratFacts" id="ws-tree-strat-facts" value="fact_semantics">{{workspace.treeStratFacts}}</option>
+<option data-i18n="workspace.treeStratEntities" id="ws-tree-strat-entities" value="entity_centric">{{workspace.treeStratEntities}}</option>
 </select>
 </div>
 <div class="col-lg-6 col-md-7" id="ws-tree-revision-input-col">
 <div class="input-group input-group-sm" id="ws-tree-revision-input-group">
-<input class="form-control" data-i18n-placeholder="workspace.treeRevisionPromptPlaceholder" id="ws-tree-revision-prompt-input" placeholder="Указание для ревизии категорий (опционально)..." type="text"/>
+<input class="form-control" data-i18n-placeholder="workspace.treeRevisionPromptPlaceholder" id="ws-tree-revision-prompt-input" placeholder="{{workspace.treeRevisionPromptPlaceholder}}" type="text"/>
 <button class="btn btn-primary fw-semibold d-flex align-items-center gap-1" id="btn-ws-tree-revise-taxonomy" type="button">
 <i class="bi bi-stars"></i>
-<span data-i18n="workspace.treeReviseBtn" id="btn-ws-tree-revise-taxonomy-text">Ревизия категорий (ИИ)</span>
+<span data-i18n="workspace.treeReviseBtn" id="btn-ws-tree-revise-taxonomy-text">{{workspace.treeReviseBtn}}</span>
 </button>
 </div>
 </div>
 </div>
 <div class="small text-secondary d-flex align-items-center gap-1.5" id="ws-tree-taxonomy-logic-box">
 <i class="bi bi-lightbulb text-warning"></i>
-<span class="fw-semibold" data-i18n="workspace.treeLogicLabel" id="ws-tree-logic-label">Логика категорий:</span>
-<span id="ws-tree-taxonomy-logic-text">Иерархия строится на основе семантической оценки содержимого всех локальных и внешних файлов Git.</span>
+<span class="fw-semibold" data-i18n="workspace.treeLogicLabel" id="ws-tree-logic-label">{{workspace.treeLogicLabel}}</span>
+<span data-i18n="ui.workspace.txt_436b812b" id="ws-tree-taxonomy-logic-text">{{ui.workspace.txt_436b812b}}</span>
 </div>
 </div>
 <!-- Панель инструментов дерева файлов -->
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3" id="ws-tree-toolbar-row">
 <div class="input-group input-group-sm w-auto flex-grow-1" id="ws-tree-search-group">
 <span class="input-group-text bg-body-tertiary" id="ws-tree-search-icon"><i class="bi bi-search text-secondary"></i></span>
-<input class="form-control" data-i18n-placeholder="workspace.treeSearchPlaceholder" id="ws-tree-search-input" placeholder="Поиск файла, виртуальной категории или тега..." type="text"/>
+<input class="form-control" data-i18n-placeholder="workspace.treeSearchPlaceholder" id="ws-tree-search-input" placeholder="{{workspace.treeSearchPlaceholder}}" type="text"/>
 </div>
 <div class="d-flex flex-wrap align-items-center gap-1.5" id="ws-tree-toolbar-buttons">
 <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btn-ws-tree-expand-all" type="button">
 <i class="bi bi-arrows-expand"></i>
-<span data-i18n="workspace.treeExpandAll" id="btn-ws-tree-expand-all-text">Развернуть всё</span>
+<span data-i18n="workspace.treeExpandAll" id="btn-ws-tree-expand-all-text">{{workspace.treeExpandAll}}</span>
 </button>
 <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btn-ws-tree-collapse-all" type="button">
 <i class="bi bi-arrows-collapse"></i>
-<span data-i18n="workspace.treeCollapseAll" id="btn-ws-tree-collapse-all-text">Свернуть всё</span>
+<span data-i18n="workspace.treeCollapseAll" id="btn-ws-tree-collapse-all-text">{{workspace.treeCollapseAll}}</span>
 </button>
 <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" id="btn-ws-tree-sync-external" type="button">
 <i class="bi bi-arrow-left-right"></i>
-<span data-i18n="workspace.treeSyncMovesBtn" id="btn-ws-tree-sync-external-text">Сверить внешние переносы</span>
+<span data-i18n="workspace.treeSyncMovesBtn" id="btn-ws-tree-sync-external-text">{{workspace.treeSyncMovesBtn}}</span>
 </button>
 <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btn-ws-tree-refresh" type="button">
 <i class="bi bi-arrow-clockwise"></i>
-<span data-i18n="common.refresh" id="btn-ws-tree-refresh-text">Обновить</span>
+<span data-i18n="common.refresh" id="btn-ws-tree-refresh-text">{{common.refresh}}</span>
 </button>
 </div>
 </div>
@@ -832,71 +912,71 @@ Updated: 2026-11-07 00:36:00
 <div class="row g-3" id="ws-tree-main-row">
 <div class="col-lg-7" id="ws-tree-left-col">
 <div class="rounded border bg-body-tertiary p-2 overflow-y-auto" id="ws-tree-viewport" style="min-height: 360px; max-height: 540px;">
-<div class="text-center text-muted py-4 small" data-i18n="workspace.treeLoading" id="ws-tree-loading-text">Загрузка виртуального дерева файлов...</div>
+<div class="text-center text-muted py-4 small" data-i18n="workspace.treeLoading" id="ws-tree-loading-text">{{workspace.treeLoading}}</div>
 </div>
 </div>
 <div class="col-lg-5" id="ws-tree-right-col">
 <div class="card bg-body-tertiary border h-100" id="ws-tree-inspector-card">
 <div class="card-header bg-body py-2 px-3 fw-semibold small d-flex align-items-center gap-2" id="ws-tree-inspector-header">
 <i class="bi bi-info-circle text-primary"></i>
-<span data-i18n="workspace.treeInspectorTitle" id="ws-tree-inspector-title">Инспектор узла и оценка содержимого</span>
+<span data-i18n="workspace.treeInspectorTitle" id="ws-tree-inspector-title">{{workspace.treeInspectorTitle}}</span>
 </div>
 <div class="card-body p-3" id="ws-tree-inspector-body">
 <div class="text-center text-muted py-5 small" id="ws-tree-inspector-empty">
 <i class="bi bi-folder-symlink fs-2 d-block mb-2 text-secondary"></i>
-<span data-i18n="workspace.treeInspectorEmpty" id="ws-tree-inspector-empty-text">Выберите файл в виртуальном дереве слева для просмотра его категории, оценки содержимого, статуса Git и SHA-256.</span>
+<span data-i18n="workspace.treeInspectorEmpty" id="ws-tree-inspector-empty-text">{{workspace.treeInspectorEmpty}}</span>
 </div>
 <div class="d-none" id="ws-tree-inspector-details">
 <div class="mb-2" id="ws-tree-insp-name-wrap">
-<div class="small text-secondary" data-i18n="workspace.treeInspNameLabel" id="ws-tree-insp-name-label">Имя объекта:</div>
+<div class="small text-secondary" data-i18n="workspace.treeInspNameLabel" id="ws-tree-insp-name-label">{{workspace.treeInspNameLabel}}</div>
 <div class="fw-bold font-monospace" id="ws-tree-insp-name">---</div>
 </div>
 <div class="mb-2 p-2 rounded bg-body border border-info-subtle" id="ws-tree-insp-vcat-wrap">
-<div class="small text-secondary" data-i18n="workspace.treeInspVCatLabel" id="ws-tree-insp-vcat-label">Виртуальная категория (по содержимому):</div>
+<div class="small text-secondary" data-i18n="workspace.treeInspVCatLabel" id="ws-tree-insp-vcat-label">{{workspace.treeInspVCatLabel}}</div>
 <div class="fw-semibold text-info small" id="ws-tree-insp-vcat">---</div>
 <div class="small text-secondary mt-1" id="ws-tree-insp-rationale">---</div>
 <div class="mt-1" id="ws-tree-insp-tags"></div>
 </div>
 <div class="mb-2" id="ws-tree-insp-relpath-wrap">
-<div class="small text-secondary" data-i18n="workspace.treeInspRelPathLabel" id="ws-tree-insp-relpath-label">Идентификатор в базе знаний:</div>
+<div class="small text-secondary" data-i18n="workspace.treeInspRelPathLabel" id="ws-tree-insp-relpath-label">{{workspace.treeInspRelPathLabel}}</div>
 <div class="small font-monospace text-break" id="ws-tree-insp-relpath">---</div>
 </div>
 <div class="mb-2" id="ws-tree-insp-qualpath-wrap">
-<div class="small text-secondary" data-i18n="workspace.treeInspQualPathLabel" id="ws-tree-insp-qualpath-label">Физический путь (ПК:Диск):</div>
+<div class="small text-secondary" data-i18n="workspace.treeInspQualPathLabel" id="ws-tree-insp-qualpath-label">{{workspace.treeInspQualPathLabel}}</div>
 <div class="small font-monospace text-break text-secondary" id="ws-tree-insp-qualpath">---</div>
 </div>
 <div class="row g-2 mb-2" id="ws-tree-insp-meta-row">
 <div class="col-6" id="ws-tree-insp-git-col">
-<div class="small text-secondary" data-i18n="workspace.treeInspGitLabel" id="ws-tree-insp-git-label">Статус Git:</div>
+<div class="small text-secondary" data-i18n="workspace.treeInspGitLabel" id="ws-tree-insp-git-label">{{workspace.treeInspGitLabel}}</div>
 <div class="small fw-semibold" id="ws-tree-insp-gitstatus">---</div>
 </div>
 <div class="col-6" id="ws-tree-insp-hash-col">
-<div class="small text-secondary" data-i18n="workspace.treeInspHashLabel" id="ws-tree-insp-hash-label">SHA-256 контента:</div>
+<div class="small text-secondary" data-i18n="workspace.treeInspHashLabel" id="ws-tree-insp-hash-label">{{workspace.treeInspHashLabel}}</div>
 <div class="small font-monospace" id="ws-tree-insp-hash">---</div>
 </div>
 </div>
 <div class="alert alert-info py-1.5 px-2 small mb-2 d-none" id="ws-tree-insp-moved-row">
 <i class="bi bi-check2-circle me-1"></i>
-<span data-i18n="workspace.treeMovedFromLabel" id="ws-tree-insp-moved-label">Перенесён без потери связей из:</span>
+<span data-i18n="workspace.treeMovedFromLabel" id="ws-tree-insp-moved-label">{{workspace.treeMovedFromLabel}}</span>
 <code class="ms-1 font-monospace" id="ws-tree-insp-moved-from"></code>
 </div>
 <!-- Перемещение файла в другую подпапку с git mv и миграцией базы знаний -->
 <div class="border-top border-secondary-subtle pt-2 mt-2 mb-2" id="ws-tree-move-box">
-<label class="form-label small fw-semibold mb-1" data-i18n="workspace.treeMoveInputLabel" for="ws-tree-move-target-input" id="ws-tree-move-input-label">Перенести / переименовать (git mv + база знаний):</label>
+<label class="form-label small fw-semibold mb-1" data-i18n="workspace.treeMoveInputLabel" for="ws-tree-move-target-input" id="ws-tree-move-input-label">{{workspace.treeMoveInputLabel}}</label>
 <div class="input-group input-group-sm" id="ws-tree-move-input-group">
 <input class="form-control font-monospace" id="ws-tree-move-target-input" placeholder="archive/doc.txt" type="text"/>
 <button class="btn btn-outline-primary" id="btn-ws-tree-move-submit" type="button">
-<i class="bi bi-folder-symlink me-1"></i><span data-i18n="workspace.treeMoveBtn" id="btn-ws-tree-move-submit-text">Перенести</span>
+<i class="bi bi-folder-symlink me-1"></i><span data-i18n="workspace.treeMoveBtn" id="btn-ws-tree-move-submit-text">{{workspace.treeMoveBtn}}</span>
 </button>
 </div>
 </div>
 <div class="d-flex flex-wrap gap-1.5 mb-2" id="ws-tree-insp-actions-row">
 <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btn-ws-tree-open-os" type="button">
 <i class="bi bi-box-arrow-up-right"></i>
-<span data-i18n="workspace.treeOpenOsBtn" id="btn-ws-tree-open-os-text">Открыть на ПК</span>
+<span data-i18n="workspace.treeOpenOsBtn" id="btn-ws-tree-open-os-text">{{workspace.treeOpenOsBtn}}</span>
 </button>
 </div>
-<div class="small text-secondary mb-1" data-i18n="workspace.treePreviewLabel" id="ws-tree-preview-label">Предпросмотр содержимого:</div>
+<div class="small text-secondary mb-1" data-i18n="workspace.treePreviewLabel" id="ws-tree-preview-label">{{workspace.treePreviewLabel}}</div>
 <pre class="mb-0 p-2 rounded bg-body border font-monospace small pre-scrollable-200" id="ws-tree-file-preview">---</pre>
 </div>
 </div>

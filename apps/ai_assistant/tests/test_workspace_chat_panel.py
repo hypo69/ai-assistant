@@ -12,7 +12,7 @@ File: test_workspace_chat_panel.py
 Package: apps/ai_assistant/tests
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-01 16:45:00
+Updated: 2026-11-19 21:11:00
 =============================================================================
 """
 
@@ -93,6 +93,15 @@ def test_chat_and_subtabs_i18n_keys_present_in_all_locales() -> None:
         "chatEmptyDesc",
         "chatInputPlaceholder",
         "chatSendBtn",
+        "chatFactsInFile",
+        "chatScheduleDefaultBtn",
+        "chatScheduleDateTime",
+        "chatScheduleAddress",
+        "chatScheduleAttendees",
+        "chatScheduleReminders",
+        "chatScheduleRemindersValue",
+        "chatScheduleIcsFile",
+        "chatScheduleGcalCreated",
     ]
 
     for lang in ["ru", "en", "he", "uk"]:
@@ -105,3 +114,27 @@ def test_chat_and_subtabs_i18n_keys_present_in_all_locales() -> None:
         for key in required_keys:
             assert key in ws_data, f"Ключ '{key}' отсутствует в {lang}.json"
             assert len(ws_data[key].strip()) > 0, f"Ключ '{key}' пуст в {lang}.json"
+
+
+def test_calendar_tab_and_scenario_i18n_compliance() -> None:
+    """Проверяет отсутствие захардкоженного русского языка в tab_calendar/main.js и pack.json сценария דוד משה."""
+    cal_js_path = _WEBGUI_DIR / "tab_calendar" / "main.js"
+    assert cal_js_path.exists()
+    cal_js = cal_js_path.read_text(encoding="utf-8")
+
+    # Дата/время должны форматироваться по активной локали интерфейса (getActiveLocale()), а не undefined
+    assert "getActiveLocale()" in cal_js
+    assert "toLocaleString(getActiveLocale()" in cal_js
+    assert "i18n:languageChanged" in cal_js
+
+    # Проверяем мультиязычность calendar_event и purchase_scenario в pack.json
+    pack_path = _WEBGUI_DIR.parent.parent / "demo_scenarios" / "david_moshe" / "pack.json"
+    assert pack_path.exists()
+    pack_data = json.loads(pack_path.read_text(encoding="utf-8"))
+    cal_ev = pack_data["purchase_scenario"]["calendar_event"]
+    assert "Осмотр коровы" not in cal_ev["summary"], "В summary события по умолчанию не должно быть русского текста"
+    assert "Совместный осмотр" not in cal_ev["description"], "В description по умолчанию не должно быть русского текста"
+    for lang in ("he", "ru", "en", "uk"):
+        assert lang in cal_ev.get("summary_i18n", {})
+        assert lang in cal_ev.get("description_i18n", {})
+

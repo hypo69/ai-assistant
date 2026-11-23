@@ -15,14 +15,16 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 20:58:00
+# Updated: 2026-11-20 02:38:00
 # =============================================================================
 
 from __future__ import annotations
 """Тесты watchdog, условной транскрибации медиафайлов и добавления фактов через чат."""
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -265,6 +267,7 @@ def test_webgui_toggles_buttons_and_locales() -> None:
         "chatFactSavedMsg",
         "chatFactSavedStatus",
         "chatFactAddError",
+        "chatFactsInFile",
     ]
     for lang in ("ru", "en", "he", "uk"):
         loc = json.loads((webgui_dir / "locales" / f"{lang}.json").read_text(encoding="utf-8"))
@@ -272,3 +275,129 @@ def test_webgui_toggles_buttons_and_locales() -> None:
             assert k in loc.get("userSettings", {}), f"Отсутствует userSettings.{k} в {lang}.json"
         for k in expected_ws_keys:
             assert k in loc.get("workspace", {}), f"Отсутствует workspace.{k} в {lang}.json"
+
+
+def test_watchdog_ignores_runtime_state_and_workspaces_dir(isolated_wm: WorkspaceManager, tmp_path: Path) -> None:
+    """Проверяет игнорирование electron_state.json, SQLite-журналов и файлов внутри workspaces_dir для linked_source."""
+    cfg_path = tmp_path / "ignore_config.json"
+    wd = WorkspaceWatchdogService(workspace_manager=isolated_wm, config_path=cfg_path)
+    parent_root = isolated_wm.workspaces_dir.parent
+    target = WatchTarget(kind="linked_source", workspace_id="test_wd", root_path=parent_root)
+
+    assert wd._should_ignore_path(target, parent_root / "data" / "electron_state.json") is True
+    assert wd._should_ignore_path(target, parent_root / "data" / "knowledge_store.db-wal") is True
+    assert wd._should_ignore_path(target, parent_root / "data" / "knowledge_store.db-shm") is True
+    assert wd._should_ignore_path(target, isolated_wm.workspaces_dir / "test_wd" / "notes.txt") is True
+    assert wd._should_ignore_path(target, parent_root / "docs" / "regular_note.md") is False
+
+
+def test_tracked_sources_atomic_write_concurrent_and_winerror32(
+    isolated_wm: WorkspaceManager,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Проверяет устойчивость обновления .tracked_sources.json при WinError 32 и параллельных потоках."""
+    src_dir = tmp_path / "external_src"
+    src_dir.mkdir(parents=True, exist_ok=True)
+    files = []
+    for idx in range(4):
+        f = src_dir / f"doc_{idx}.txt"
+        f.write_text(f"Содержимое документа {idx}", encoding="utf-8")
+        files.append(f)
+
+    real_replace = os.replace
+    fail_counter = {"n": 0}
+
+    def flaky_replace(src, dst):
+        if str(dst).endswith(".tracked_sources.json") and fail_counter["n"] < 2:
+            fail_counter["n"] += 1
+            err = PermissionError(13, "Процесс не может получить доступ к файлу", str(src), 32, str(dst))
+            err.winerror = 32
+            raise err
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(os, "replace", flaky_replace)
+
+    def _worker(idx: int) -> None:
+        f = files[idx]
+        isolated_wm.index_document_from_source(
+            workspace_id="test_wd",
+            document_id=f.name,
+            content=f.read_text(encoding="utf-8"),
+            file_path=str(f),
+            commit_message=f"Sync {f.name}",
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(_worker, range(4)))
+
+    manifest_file = isolated_wm.workspaces_dir / "test_wd" / ".tracked_sources.json"
+    assert manifest_file.exists()
+    manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+    for idx in range(4):
+        assert f"doc_{idx}.txt" in manifest_data
+    assert fail_counter["n"] == 2
+    assert not list(manifest_file.parent.glob("*.tmp"))
+
+
+@pytest.mark.asyncio
+async def test_watchdog_concurrent_events_serialized_without_db_lock(
+    isolated_wm: WorkspaceManager,
+    tmp_path: Path,
+) -> None:
+    """Проверяет отсутствие 'database is locked' при одновременной пачке событий modified в одном workspace."""
+    src_dir = tmp_path / "burst_src"
+    src_dir.mkdir(parents=True, exist_ok=True)
+    files = []
+    for idx in range(6):
+        f = src_dir / f"module_{idx}.js"
+        f.write_text(f"// Модуль {idx}\nexport const value_{idx} = {idx};\n", encoding="utf-8")
+        files.append(f)
+
+    cfg_path = tmp_path / "burst_config.json"
+    wd = WorkspaceWatchdogService(workspace_manager=isolated_wm, config_path=cfg_path)
+    target = WatchTarget(kind="linked_source", workspace_id="test_wd", root_path=src_dir)
+
+    results = await asyncio.gather(
+        *(wd.process_file_event(target, f, "modified") for f in files)
+    )
+
+    assert all(r.get("status") == "ok" for r in results), f"Обнаружены ошибки обработки: {results}"
+    assert wd._stats["errors"] == 0
+
+
+def test_sqlite_concurrent_store_and_graph_writes_no_lock_error(
+    isolated_wm: WorkspaceManager,
+    tmp_path: Path,
+) -> None:
+    """Проверяет конкурентную запись в knowledge_store.db из KnowledgeStore и TemporalCodeGraph без database is locked."""
+    def _write_worker(idx: int) -> None:
+        doc_id = f"concurrent_{idx}.txt"
+        fp = tmp_path / doc_id
+        isolated_wm.store.store_document_and_facts(
+            workspace_id="test_wd",
+            document_id=doc_id,
+            file_path=str(fp),
+            raw_content=f"Тестовый документ номер {idx} с фактом {idx}",
+            commit_hash=f"rev_{idx}",
+            analysis_result={
+                "language": "ru",
+                "analyzer": "TestAnalyzer",
+                "chunks": [{"chunk_index": 0, "text": f"Факт {idx}"}],
+                "entities": [],
+                "facts": [],
+            },
+        )
+        isolated_wm.graph.add_link(
+            source_id=doc_id,
+            target_id=f"entity_{idx}",
+            relation_type="mentions",
+            valid_from=f"rev_{idx}",
+            workspace_id="test_wd",
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(_write_worker, range(16)))
+
+    stats = isolated_wm.store.get_workspace_stats("test_wd")
+    assert stats["documents_count"] >= 16

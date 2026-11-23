@@ -10,15 +10,35 @@
  * Package: apps/ai_assistant/api/webgui/tab_calendar
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-27 16:30:00
+ * Updated: 2026-11-19 20:59:00
  * =============================================================================
  */
 
 (function () {
   'use strict';
 
+  const LOCALE_MAP = { ru: 'ru-RU', en: 'en-US', he: 'he-IL', uk: 'uk-UA' };
+
   let currentDays = 7;
   let allEvents = [];
+  let isHandlersBound = false;
+
+  function t(key, fallback = '') {
+    if (typeof window !== 'undefined' && window.i18n && typeof window.i18n.t === 'function') {
+      const val = window.i18n.t(key, fallback);
+      if (val && val !== key) return val;
+    }
+    return fallback;
+  }
+
+  function getActiveLocale() {
+    const lang =
+      (typeof window !== 'undefined' && window.i18n && window.i18n.lang) ||
+      (typeof document !== 'undefined' && document.documentElement.lang) ||
+      'ru';
+    const clean = String(lang).toLowerCase().slice(0, 2);
+    return LOCALE_MAP[clean] || 'ru-RU';
+  }
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -34,7 +54,7 @@
     if (!isoStr) return '';
     try {
       const d = new Date(isoStr);
-      return d.toLocaleString(undefined, {
+      return d.toLocaleString(getActiveLocale(), {
         month: 'short',
         day: 'numeric',
         weekday: 'short',
@@ -66,7 +86,7 @@
       const data = await res.json();
 
       if (!res.ok || data.status === 'error') {
-        throw new Error(data.detail || data.error || 'Ошибка загрузки календаря');
+        throw new Error(data.detail || data.error || t('ui.calendar.load_error', 'Ошибка загрузки календаря'));
       }
 
       allEvents = data.events || [];
@@ -98,12 +118,15 @@
 
     if (emptyState) emptyState.classList.add('d-none');
 
+    const openTitle = t('ui.calendar.open_in_gcal', 'Открыть в Google Calendar');
+    const deleteTitle = t('ui.calendar.delete_event', 'Удалить событие');
+    const noAttendeesText = t('ui.calendar.no_attendees', 'Без участников');
+
     listEl.innerHTML = events.map(ev => {
       const startStr = formatDateTime(ev.start);
-      const endStr = formatDateTime(ev.end);
       const attendees = (ev.attendees || []).map(a => `<span class="badge bg-secondary-subtle text-body border font-size-75 me-1">${escapeHtml(a)}</span>`).join('');
       const locBadge = ev.location ? `<div class="small text-muted mb-1"><i class="bi bi-geo-alt me-1 text-danger"></i>${escapeHtml(ev.location)}</div>` : '';
-      const linkBtn = ev.html_link ? `<a href="${escapeHtml(ev.html_link)}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="Открыть в Google Calendar"><i class="bi bi-box-arrow-up-right"></i></a>` : '';
+      const linkBtn = ev.html_link ? `<a href="${escapeHtml(ev.html_link)}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="${escapeHtml(openTitle)}"><i class="bi bi-box-arrow-up-right"></i></a>` : '';
 
       return `
         <div class="col-12 col-md-6 col-xl-4" id="calendar-card-${escapeHtml(ev.id)}">
@@ -115,7 +138,7 @@
                 </span>
                 <div class="d-flex gap-1">
                   ${linkBtn}
-                  <button class="btn btn-sm btn-outline-danger py-0 px-2 btn-delete-event" data-event-id="${escapeHtml(ev.id)}" title="Удалить событие">
+                  <button class="btn btn-sm btn-outline-danger py-0 px-2 btn-delete-event" data-event-id="${escapeHtml(ev.id)}" title="${escapeHtml(deleteTitle)}">
                     <i class="bi bi-trash3"></i>
                   </button>
                 </div>
@@ -124,7 +147,7 @@
               ${locBadge}
               ${ev.description ? `<p class="small text-muted mb-2 text-truncate-2">${escapeHtml(ev.description)}</p>` : ''}
               <div class="mt-auto pt-2 border-top">
-                ${attendees ? `<div class="d-flex flex-wrap align-items-center">${attendees}</div>` : '<span class="small text-muted">Без участников</span>'}
+                ${attendees ? `<div class="d-flex flex-wrap align-items-center">${attendees}</div>` : `<span class="small text-muted">${escapeHtml(noAttendeesText)}</span>`}
               </div>
             </div>
           </div>
@@ -134,26 +157,36 @@
 
     // Навешивание обработчиков удаления
     listEl.querySelectorAll('.btn-delete-event').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-event-id');
-        if (!confirm('Вы уверены, что хотите удалить это событие из Google Календаря?')) return;
+        if (!confirm(t('ui.calendar.confirm_delete', 'Вы уверены, что хотите удалить это событие из Google Календаря?'))) return;
         try {
           btn.disabled = true;
           const res = await fetch(`/api/v1/calendar/events/${id}`, { method: 'DELETE' });
           if (res.ok) {
             const card = document.getElementById(`calendar-card-${id}`);
             if (card) card.remove();
+            allEvents = allEvents.filter(item => item.id !== id);
           } else {
-            alert('Не удалось удалить событие');
+            alert(t('ui.calendar.delete_failed', 'Не удалось удалить событие'));
           }
         } catch (err) {
-          alert('Ошибка при удалении: ' + err.message);
+          alert(t('ui.calendar.delete_error_prefix', 'Ошибка при удалении: ') + err.message);
         }
       });
     });
   }
 
   function setupEventHandlers() {
+    if (isHandlersBound) return;
+    isHandlersBound = true;
+
+    window.addEventListener('i18n:languageChanged', () => {
+      if (allEvents && allEvents.length > 0) {
+        renderEvents(allEvents);
+      }
+    });
+
     const btnRefresh = document.getElementById('btn-calendar-refresh');
     if (btnRefresh) btnRefresh.addEventListener('click', loadEvents);
 
@@ -224,7 +257,7 @@
 
         if (!summary || !start || !end) {
           if (errBox) {
-            errBox.textContent = 'Пожалуйста, заполните тему и время события';
+            errBox.textContent = t('ui.calendar.fill_required', 'Пожалуйста, заполните тему и время события');
             errBox.classList.remove('d-none');
           }
           return;
@@ -248,7 +281,7 @@
           });
           const data = await res.json();
           if (!res.ok || data.status === 'error') {
-            throw new Error(data.detail || data.error || 'Ошибка при создании события');
+            throw new Error(data.detail || data.error || t('ui.calendar.create_error', 'Ошибка при создании события'));
           }
 
           const modal = bootstrap.Modal.getInstance(modalEl);

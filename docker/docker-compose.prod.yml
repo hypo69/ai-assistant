@@ -1,0 +1,13 @@
+# Updated: 2026-11-19 23:22:00
+# Продакшен-оверрайд: автономный образ AI-Assistant без монтирования всего кода.
+# Использование:
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d --build
+
+services:
+  app:
+    build:
+      target: prod
+    volumes: !override
+      - ../data:/app/data
+      - ../config.json:/app/config.json
+      - ../src/secrets:/app/src/secrets:ro

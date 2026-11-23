@@ -11,7 +11,7 @@
 # Package: .agents.skills.google-calendar.scripts
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-27 16:15:00
+# Updated: 2026-11-19 21:06:00
 # =============================================================================
 
 from __future__ import annotations
@@ -134,7 +134,7 @@ class GoogleCalendarClient:
             end = ev.get("end", {}).get("dateTime") or ev.get("end", {}).get("date")
             events.append({
                 "id": ev.get("id"),
-                "summary": ev.get("summary", "(Без названия)"),
+                "summary": ev.get("summary") or "—",
                 "description": ev.get("description", ""),
                 "start": start,
                 "end": end,
@@ -166,17 +166,21 @@ class GoogleCalendarClient:
         location: str = "",
         attendees: Optional[List[str]] = None,
         calendar_id: str = "primary",
+        send_updates: str = "all",
+        reminders: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
-        """Создает новое событие в календаре.
+        """Создает новое событие в календаре с отправкой приглашений и настройкой напоминаний.
 
         Args:
             summary: Название / тема события.
-            start_time: Время начала в ISO формате (например: '2026-10-28T10:00:00+02:00') или дата YYYY-MM-DD.
+            start_time: Время начала в ISO формате (например: '2026-11-20T06:00:00+02:00') или дата YYYY-MM-DD.
             end_time: Время окончания в ISO формате или дата YYYY-MM-DD.
             description: Описание события.
             location: Место проведения встречи.
             attendees: Список email участников.
             calendar_id: Идентификатор календаря (по умолчанию 'primary').
+            send_updates: Кому отправлять email-приглашения ('all', 'externalOnly', 'none').
+            reminders: Список напоминаний вида [{'method': 'email'|'popup', 'minutes': int}].
 
         Returns:
             Словарь созданного события с id и ссылкой html_link.
@@ -199,7 +203,24 @@ class GoogleCalendarClient:
         if attendees:
             event_body["attendees"] = [{"email": email.strip()} for email in attendees if email.strip()]
 
-        created = service.events().insert(calendarId=calendar_id, body=event_body).execute()
+        if reminders:
+            event_body["reminders"] = {
+                "useDefault": False,
+                "overrides": [
+                    {"method": str(r.get("method") or "popup"), "minutes": int(r.get("minutes", 60))}
+                    for r in reminders
+                ],
+            }
+
+        created = (
+            service.events()
+            .insert(
+                calendarId=calendar_id,
+                body=event_body,
+                sendUpdates=send_updates if attendees else "none",
+            )
+            .execute()
+        )
         return {
             "status": "success",
             "id": created.get("id"),
@@ -207,6 +228,38 @@ class GoogleCalendarClient:
             "html_link": created.get("htmlLink"),
             "start": created.get("start"),
             "end": created.get("end"),
+            "attendees": [a.get("email") for a in created.get("attendees", []) if a.get("email")],
+        }
+
+    def update_event(
+        self,
+        event_id: str,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
+        location: Optional[str] = None,
+        calendar_id: str = "primary",
+        send_updates: str = "none",
+    ) -> Dict[str, Any]:
+        """Обновляет существующее событие в календаре (PATCH)."""
+        service = self.get_service()
+        patch_body: Dict[str, Any] = {}
+        if summary is not None:
+            patch_body["summary"] = summary
+        if description is not None:
+            patch_body["description"] = description
+        if location is not None:
+            patch_body["location"] = location
+        updated = (
+            service.events()
+            .patch(calendarId=calendar_id, eventId=event_id, body=patch_body, sendUpdates=send_updates)
+            .execute()
+        )
+        return {
+            "status": "success",
+            "id": updated.get("id"),
+            "summary": updated.get("summary"),
+            "description": updated.get("description"),
+            "html_link": updated.get("htmlLink"),
         }
 
     def delete_event(self, event_id: str, calendar_id: str = "primary") -> Dict[str, Any]:

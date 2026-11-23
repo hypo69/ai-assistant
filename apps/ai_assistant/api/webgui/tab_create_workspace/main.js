@@ -15,13 +15,110 @@
  * Package: apps/ai_assistant/api/webgui/tab_create_workspace
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-10 20:30:00
+ * Updated: 2026-11-20 02:16:00
  * =============================================================================
  */
 
 let currentCreatedWorkspaceId = '';
 let currentCreatedWorkspaceName = '';
 let stagedItems = []; // Внешние директории и файлы, выбранные до создания пространства
+let cwsSubtabsInitialized = false;
+let activeCwsPanelId = 'panel-sources';
+
+/**
+ * Нормализует идентификатор панели к каноническому формату panel-xxx.
+ * @param {string} panelId
+ * @returns {string}
+ */
+function normalizeCwsPanelId(panelId) {
+  if (!panelId) return 'panel-sources';
+  const clean = String(panelId).toLowerCase().trim().replace(/^#/, '');
+  if (clean === 'panel-params' || clean === 'params') return 'panel-params';
+  if (clean === 'panel-sources' || clean === 'sources') return 'panel-sources';
+  return 'panel-sources';
+}
+
+/**
+ * Переключает активную панель вкладки создания рабочего пространства.
+ * @param {string} panelId - Идентификатор панели (panel-params | panel-sources)
+ * @param {boolean} [updateHash=true] - Обновлять ли URL-хэш
+ */
+function switchCwsSubpane(panelId, updateHash = true) {
+  const canonicalPanel = normalizeCwsPanelId(panelId);
+  activeCwsPanelId = canonicalPanel;
+
+  const navBtns = document.querySelectorAll('#cws-subtabs-nav button[data-panel-id]');
+  navBtns.forEach((btn) => {
+    if (normalizeCwsPanelId(btn.getAttribute('data-panel-id')) === canonicalPanel) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  const paneSuffix = canonicalPanel.replace('panel-', '');
+  const panes = document.querySelectorAll('.cws-subpane');
+  panes.forEach((pane) => {
+    if (pane.id === `cws-subpane-${paneSuffix}`) {
+      pane.classList.remove('d-none');
+      pane.classList.add('active');
+    } else {
+      pane.classList.add('d-none');
+      pane.classList.remove('active');
+    }
+  });
+
+  if (updateHash && window.history?.replaceState) {
+    window.history.replaceState(null, null, `#tab-create-workspace#${canonicalPanel}`);
+  }
+}
+
+/**
+ * Настраивает обработчик кликов по меню переключения панелей.
+ */
+function setupCwsSubtabsNavigation() {
+  const nav = document.getElementById('cws-subtabs-nav');
+  if (!nav || nav._boundSubtabs) return;
+  nav._boundSubtabs = true;
+
+  nav.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-panel-id]');
+    if (!btn) return;
+    const panelId = btn.getAttribute('data-panel-id');
+    switchCwsSubpane(panelId, true);
+  });
+}
+
+/**
+ * Настраивает двустороннюю синхронизацию активной панели с URL-хэшем.
+ */
+function setupCwsHashRouting() {
+  const syncFromHash = () => {
+    const rawHash = window.location.hash || '';
+    if (!rawHash.includes('#tab-create-workspace')) return;
+
+    const parts = rawHash.replace(/^#/, '').split('#');
+    let panelId = null;
+
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i].toLowerCase().trim();
+      if (part.startsWith('panel-') || part === 'params' || part === 'sources') {
+        panelId = part;
+        break;
+      }
+    }
+
+    // Если панель явно не передана в хэше, сохраняем уже выбранную пользователем панель
+    const targetPanel = panelId || activeCwsPanelId || 'panel-sources';
+    switchCwsSubpane(targetPanel, false);
+  };
+
+  if (!cwsSubtabsInitialized) {
+    cwsSubtabsInitialized = true;
+    window.addEventListener('hashchange', syncFromHash);
+  }
+  syncFromHash();
+}
 
 /**
  * Вспомогательный метод получения локализованной строки из словарей i18n.
@@ -109,30 +206,36 @@ function setupFolderBrowser(btn, picker, onSelect) {
   if (!btn || btn._bound) return;
   btn._bound = true;
   btn.addEventListener('click', async () => {
+    let shouldFallbackToPicker = false;
     try {
       setButtonLoading(btn, true, 'ui.cws.btn_selecting', 'Выбор...');
       const res = await apiFetch('/api/v1/workspaces/browse-folder', { method: 'POST' });
       if (res && res.status === 'ok' && res.path) {
-        onSelect(res.path);
+        await onSelect(res.path);
         return;
       }
+      if (res && (res.status === 'cancelled' || res.status === 'timeout')) {
+        return;
+      }
+      shouldFallbackToPicker = true;
     } catch (err) {
       console.debug('[BrowseFolder] Fallback к проводнику браузера:', err);
+      shouldFallbackToPicker = true;
     } finally {
       setButtonLoading(btn, false);
     }
-    if (picker) picker.click();
+    if (shouldFallbackToPicker && picker) picker.click();
   });
   if (picker && !picker._bound) {
     picker._bound = true;
-    picker.addEventListener('change', (e) => {
+    picker.addEventListener('change', async (e) => {
       const files = e.target.files;
       if (files && files.length > 0) {
         const first = files[0];
         const dir = first.path
           ? first.path.substring(0, Math.max(first.path.lastIndexOf('\\'), first.path.lastIndexOf('/')))
           : (first.webkitRelativePath || '').split('/')[0] || first.name;
-        if (dir) onSelect(dir);
+        if (dir) await onSelect(dir);
       }
       picker.value = '';
     });
@@ -146,27 +249,40 @@ function setupFileBrowser(btn, picker, onSelect) {
   if (!btn || btn._bound) return;
   btn._bound = true;
   btn.addEventListener('click', async () => {
+    let shouldFallbackToPicker = false;
     try {
       setButtonLoading(btn, true, 'ui.cws.btn_selecting', 'Выбор...');
       const res = await apiFetch('/api/v1/workspaces/browse-file', { method: 'POST' });
-      if (res && res.status === 'ok' && res.path) {
-        onSelect(res.path);
+      if (res && res.status === 'ok') {
+        const paths = Array.isArray(res.paths) && res.paths.length > 0
+          ? res.paths
+          : (res.path ? [res.path] : []);
+        for (const p of paths) {
+          if (p) await onSelect(p);
+        }
         return;
       }
+      if (res && (res.status === 'cancelled' || res.status === 'timeout')) {
+        return;
+      }
+      shouldFallbackToPicker = true;
     } catch (err) {
       console.debug('[BrowseFile] Fallback к проводнику браузера:', err);
+      shouldFallbackToPicker = true;
     } finally {
       setButtonLoading(btn, false);
     }
-    if (picker) picker.click();
+    if (shouldFallbackToPicker && picker) picker.click();
   });
   if (picker && !picker._bound) {
     picker._bound = true;
-    picker.addEventListener('change', (e) => {
+    picker.addEventListener('change', async (e) => {
       const files = e.target.files;
       if (files && files.length > 0) {
-        const filePath = files[0].path || files[0].name;
-        if (filePath) onSelect(filePath);
+        for (let i = 0; i < files.length; i++) {
+          const filePath = files[i].path || files[i].name;
+          if (filePath) await onSelect(filePath);
+        }
       }
       picker.value = '';
     });
@@ -189,6 +305,20 @@ function setupEnterKey(input, onEnter) {
       }
     }
   });
+}
+
+/**
+ * Оповещает боковую панель дерева файлов и связанные виджеты об изменении состава объектов пространства.
+ * @param {string} wsId
+ */
+function notifyExplorerItemsChanged(wsId) {
+  if (!wsId) return;
+  if (typeof window.invalidateExplorerFileTreeCache === 'function') {
+    window.invalidateExplorerFileTreeCache(wsId);
+  }
+  document.dispatchEvent(new CustomEvent('workspace:items-changed', {
+    detail: { workspaceId: wsId },
+  }));
 }
 
 /**
@@ -330,6 +460,7 @@ export async function loadTrackedSources(wsId) {
           });
           showStatusBanner(t('ui.cws.source_excluded', 'Источник исключен из наблюдения.'), 'info');
           await loadTrackedSources(wsId);
+          notifyExplorerItemsChanged(wsId);
         } catch (delErr) {
           showStatusBanner(t('ui.cws.err_deleting', 'Ошибка удаления: {error}').replace('{error}', delErr.message), 'danger');
         }
@@ -391,6 +522,7 @@ async function addTrackedItemInPlace(targetPath, itemType = 'directory') {
     );
 
     await loadTrackedSources(currentCreatedWorkspaceId);
+    notifyExplorerItemsChanged(currentCreatedWorkspaceId);
   } catch (err) {
     showStatusBanner(t('ui.cws.err_connecting_item', 'Ошибка подключения пути <code>{path}</code>: {error}').replace('{path}', cleanPath).replace('{error}', err.message), 'danger');
   }
@@ -435,6 +567,12 @@ async function navigateToCreatedWorkspace() {
  * Главная инициализация вкладки «Создать новое пространство».
  */
 export function initCreateWorkspaceTab() {
+  setupCwsSubtabsNavigation();
+  setupCwsHashRouting();
+  if (window.WebGUIMenuDnD && typeof window.WebGUIMenuDnD.initTabMenusFromConfig === 'function') {
+    window.WebGUIMenuDnD.initTabMenusFromConfig('tab_create_workspace');
+  }
+
   const submitBtnBottom = document.getElementById('btn-create-ws-submit-bottom');
   const nameInput = document.getElementById('create-ws-name-input');
   const langSelect = document.getElementById('create-ws-lang-select');
@@ -451,23 +589,89 @@ export function initCreateWorkspaceTab() {
   const backBtn = document.getElementById('btn-back-to-workspaces');
   const goToWsBtn = document.getElementById('btn-go-to-workspace');
 
+  // Гарантированная интерактивность и прямой фокус для всех полей ввода вкладки
+  const formInputs = [nameInput, pathInput, descInput, dirInput, fileInput].filter(Boolean);
+  formInputs.forEach((inp) => {
+    inp.removeAttribute('disabled');
+    inp.removeAttribute('readonly');
+    inp.tabIndex = 0;
+    if (inp._cwsInteractiveBound) return;
+    inp._cwsInteractiveBound = true;
+
+    inp.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      inp.focus();
+    });
+    inp.addEventListener('click', (e) => {
+      e.stopPropagation();
+      inp.focus();
+    });
+    inp.addEventListener('focus', () => {
+      if (window.GlobalTooltips && typeof window.GlobalTooltips.hide === 'function') {
+        window.GlobalTooltips.hide();
+      }
+    });
+  });
+
   if (currentCreatedWorkspaceId) {
     loadTrackedSources(currentCreatedWorkspaceId);
   } else {
     renderStagedSources();
   }
 
-  // Установка языка интерфейса по умолчанию в селекторе
-  if (langSelect && !langSelect._initialized) {
-    langSelect._initialized = true;
-    let uiLang = (typeof window !== 'undefined' && window.i18n?.lang) || localStorage.getItem('app_language') || 'ru';
-    if (uiLang === 'uk') uiLang = 'ua';
+  // Определение языка по введённому тексту имени пространства
+  const detectLangFromText = (txt) => {
+    const s = String(txt || '').trim();
+    if (!s) return null;
+    if (/[\u0590-\u05FF]/.test(s)) return 'he';
+    if (/[іїєґІЇЄҐ]/.test(s)) return 'ua';
+    if (/[а-яА-ЯёЁ]/.test(s)) return 'ru';
+    if (/[a-zA-Z]/.test(s)) return 'en';
+    return null;
+  };
+
+  const applySelectLang = (rawLang) => {
+    if (!langSelect || !rawLang) return;
+    const norm = rawLang === 'uk' ? 'ua' : String(rawLang).toLowerCase().slice(0, 2);
     for (const opt of langSelect.options) {
-      if (opt.value === uiLang) {
+      if (opt.value === norm) {
         langSelect.value = opt.value;
         break;
       }
     }
+  };
+
+  // Установка языка интерфейса в селекторе и синхронизация со сменой языка UI
+  if (langSelect && !langSelect._initialized) {
+    langSelect._initialized = true;
+    langSelect._userTouched = false;
+    const uiLang = (typeof window !== 'undefined' && window.i18n?.lang)
+      || document.documentElement?.getAttribute('lang')
+      || localStorage.getItem('app_language')
+      || '';
+    applySelectLang(uiLang);
+
+    langSelect.addEventListener('change', () => {
+      langSelect._userTouched = true;
+    });
+
+    window.addEventListener('i18n:languageChanged', (e) => {
+      if (!langSelect._userTouched && e?.detail?.lang) {
+        applySelectLang(e.detail.lang);
+      }
+    });
+  }
+
+  // Автоподбор языка пространства при вводе имени (если пользователь не менял селектор вручную)
+  if (nameInput && langSelect && !nameInput._langDetectBound) {
+    nameInput._langDetectBound = true;
+    nameInput.addEventListener('input', () => {
+      if (langSelect._userTouched) return;
+      const detected = detectLangFromText(nameInput.value);
+      if (detected) {
+        applySelectLang(detected);
+      }
+    });
   }
 
   // Настройка диалогов выбора путей
@@ -504,10 +708,11 @@ export function initCreateWorkspaceTab() {
     const nameVal = nameInput ? nameInput.value.trim() : '';
     const pathVal = pathInput ? pathInput.value.trim() : '';
     const descVal = descInput ? descInput.value.trim() : '';
-    let langVal = langSelect ? langSelect.value : 'ru';
+    let langVal = langSelect && langSelect.value ? langSelect.value : null;
     if (langVal === 'uk') langVal = 'ua';
 
     if (!nameVal) {
+      switchCwsSubpane('panel-params', true);
       showStatusBanner(t('ui.cws.warn_specify_name', 'Пожалуйста, укажите имя рабочего пространства.'), 'warning');
       if (nameInput) nameInput.focus();
       return;
@@ -534,15 +739,27 @@ export function initCreateWorkspaceTab() {
         }),
       });
 
-      currentCreatedWorkspaceId = res.workspace?.workspace_id || cleanId;
-      currentCreatedWorkspaceName = res.workspace?.name || nameVal;
+      // Подхватываем пути, введённые в полях директории/файла, даже если пользователь не нажал кнопку «Добавить»
+      const typedDir = dirInput ? dirInput.value.trim() : '';
+      if (typedDir && !stagedItems.some(it => it.path.toLowerCase() === typedDir.toLowerCase())) {
+        stagedItems.push({ path: typedDir, type: 'directory' });
+        if (dirInput) dirInput.value = '';
+      }
+      const typedFile = fileInput ? fileInput.value.trim() : '';
+      if (typedFile && !stagedItems.some(it => it.path.toLowerCase() === typedFile.toLowerCase())) {
+        stagedItems.push({ path: typedFile, type: 'file' });
+        if (fileInput) fileInput.value = '';
+      }
+
+      currentCreatedWorkspaceId = res.workspace?.workspace_id || res.workspace_id || cleanId;
+      currentCreatedWorkspaceName = res.workspace?.name || res.name || nameVal;
 
       if (idBadge) {
         idBadge.textContent = `${t('ui.cws.id_prefix', 'ID: ')}${currentCreatedWorkspaceId}`;
         idBadge.className = 'badge bg-success-subtle text-success border font-monospace small';
       }
 
-      let stagedAddedCount = 0;
+      let stagedAddedCount = Number(res.files_linked || 0);
       if (stagedItems.length > 0) {
         try {
           const attachCommitMsg = t('ui.cws.init_git_commit_multiple', 'Подключение внешних объектов ({count}) для слежения на месте').replace('{count}', stagedItems.length);
@@ -555,7 +772,7 @@ export function initCreateWorkspaceTab() {
               commit_message: attachCommitMsg,
             }),
           });
-          stagedAddedCount = linkRes.files_added || stagedItems.length;
+          stagedAddedCount += linkRes.files_added || stagedItems.length;
           stagedItems = [];
         } catch (linkErr) {
           console.error('[CreateWorkspaceTab] Ошибка подключения предварительных объектов:', linkErr);
@@ -563,8 +780,8 @@ export function initCreateWorkspaceTab() {
         }
       }
 
-      const headSha = res.workspace?.git_head ? res.workspace.git_head.slice(0, 8) : 'HEAD';
-      const wsDiskPath = res.workspace?.path || pathVal || 'auto-path';
+      const headSha = (res.workspace?.git_head || res.git_head) ? String(res.workspace?.git_head || res.git_head).slice(0, 8) : 'HEAD';
+      const wsDiskPath = res.workspace?.path || res.path || pathVal || 'auto-path';
 
       showStatusBanner(
         t('ui.cws.success_ws_created', '<strong>Пространство &laquo;{name}&raquo; успешно создано!</strong><div>Git-репозиторий: <code>{path}</code>. Язык: <code>{lang}</code>. HEAD: <code>{head}</code>. Подключено источников: {count}.</div>')
@@ -579,8 +796,9 @@ export function initCreateWorkspaceTab() {
       await loadTrackedSources(currentCreatedWorkspaceId);
 
       if (typeof window.updateTopWorkspaceDropdown === 'function') {
-        window.updateTopWorkspaceDropdown(currentCreatedWorkspaceId);
+        await window.updateTopWorkspaceDropdown(currentCreatedWorkspaceId);
       }
+      notifyExplorerItemsChanged(currentCreatedWorkspaceId);
 
       if (goToWsBtn) {
         goToWsBtn.classList.remove('d-none');
@@ -635,6 +853,7 @@ export function initCreateWorkspaceTab() {
     refreshSourcesBtn.addEventListener('click', async () => {
       if (currentCreatedWorkspaceId) {
         await loadTrackedSources(currentCreatedWorkspaceId);
+    notifyExplorerItemsChanged(currentCreatedWorkspaceId);
       } else {
         renderStagedSources();
       }
@@ -654,16 +873,23 @@ export function initCreateWorkspaceTab() {
   if (!window._cwsLangListenerAttached) {
     window._cwsLangListenerAttached = true;
     const reRenderSources = () => {
+      const activeEl = document.activeElement;
+      const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT');
+
       if (currentCreatedWorkspaceId) {
         loadTrackedSources(currentCreatedWorkspaceId);
       } else {
         renderStagedSources();
       }
-      if (typeof window.applyTranslations === 'function') {
-        window.applyTranslations();
-      } else if (window.i18n && typeof window.i18n.applyTranslations === 'function') {
-        const container = document.getElementById('cws-main-container');
-        if (container) window.i18n.applyTranslations(container);
+
+      // Не трогаем переводы при фокусе пользователя в инпуте, чтобы избежать потери фокуса
+      if (!isInputFocused) {
+        if (typeof window.applyTranslations === 'function') {
+          window.applyTranslations();
+        } else if (window.i18n && typeof window.i18n.applyTranslations === 'function') {
+          const container = document.getElementById('cws-main-container');
+          if (container) window.i18n.applyTranslations(container);
+        }
       }
     };
     window.addEventListener('languageChanged', reRenderSources);

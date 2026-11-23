@@ -16,7 +16,7 @@
 # Package: apps.ai_assistant
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 19:55:00
+# Updated: 2026-11-20 02:31:00
 # =============================================================================
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ from apps.ai_assistant.api.routers.router_git_wikillm import router as wikillm_r
 from apps.ai_assistant.api.routers.router_git_maintenance import router as git_maintenance_router
 from apps.ai_assistant.api.routers.router_knowledge import router as knowledge_router
 from apps.ai_assistant.api.routers.router_obsidian import router as ws_obsidian_router
-from apps.ai_assistant.api.routers.router_models import router as models_router
+from apps.common.models import models_router
 from apps.ai_assistant.api.routers.router_auth import router as auth_router
 from apps.ai_assistant.api.routers.router_panel import router as panel_router
 from apps.ai_assistant.core.git_maintenance import git_maintenance_service
@@ -60,10 +60,13 @@ from apps.ai_assistant.api.routers.router_drive import router as drive_router
 from apps.ai_assistant.api.routers.router_contacts import router as contacts_router
 from apps.ai_assistant.api.routers.router_keys import router as keys_router
 from apps.ai_assistant.api.routers.router_plugins import router as plugins_router
+from apps.ai_assistant.api.routers.router_skills import router as skills_router
+from apps.microsoft.api.routers.router_outlook import router as ms_outlook_router
 from apps.common.file_editor import file_editor_router
 from apps.common.file_tree import file_tree_router
 from apps.ai_assistant.api.routers.router_tooltips import router as tooltips_router
 from apps.ai_assistant.api.routers.router_ai_instruments import router as ai_instruments_router
+from apps.ai_assistant.api.routers.router_user_commands import router as user_commands_router
 from apps.ai_assistant.api.routers.router_connections import router as connections_router
 from apps.ai_assistant.api.routers.router_tasks import router as tasks_router
 from apps.ai_assistant.api.routers.router_menu_config import router as menu_config_router
@@ -190,16 +193,31 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 logger.warning(f"[GitMaintenance] Ошибка фоновой проверки: {exc}")
             await asyncio.sleep(1800)  # Проверка каждые 30 минут
 
-    # Автозапуск Telegram-бота при старте сервиса AI Assistant (если задан TELEGRAM_BOT_TOKEN)
+    # Автозапуск Telegram-бота при старте сервиса AI Assistant (если не отключён через TELEGRAM_BOT_AUTOSTART=0)
     tg_plugin = None
     try:
         from dotenv import load_dotenv
         load_dotenv(__root__ / ".env")
+        tg_autostart = os.getenv("TELEGRAM_BOT_AUTOSTART", "1").strip().lower() not in {"0", "false", "no", "off"}
         from apps.ai_assistant.api.routers.router_plugins import get_plugins_registry
         registry = get_plugins_registry()
         tg_plugin = registry.get("telegram_bot")
         if tg_plugin and getattr(tg_plugin, "enabled", True):
-            await tg_plugin.start()
+            try:
+                from apps.ai_assistant.api.routers.router_knowledge import _qa_engine, _workspace_manager
+                if hasattr(tg_plugin, "bot_engine") and hasattr(tg_plugin.bot_engine, "attach_services"):
+                    tg_plugin.bot_engine.attach_services(
+                        workspace_manager=_workspace_manager,
+                        qa_engine=_qa_engine,
+                    )
+            except Exception as attach_exc:
+                logger.debug(f"[AIAssistant] Не удалось привязать QA/Workspace сервисы к telegram_bot: {attach_exc}")
+            if tg_autostart:
+                await tg_plugin.start()
+            else:
+                logger.info(
+                    "[AIAssistant] Автозапуск polling telegram_bot пропущен (TELEGRAM_BOT_AUTOSTART=0)."
+                )
     except Exception as tg_exc:
         logger.warning(f"[AIAssistant] Не удалось запустить плагин telegram_bot при старте: {tg_exc}")
 
@@ -265,10 +283,13 @@ app.include_router(calendar_router)
 app.include_router(drive_router)
 app.include_router(contacts_router)
 app.include_router(plugins_router)
+app.include_router(skills_router)
+app.include_router(ms_outlook_router)
 app.include_router(file_editor_router)
 app.include_router(file_tree_router)
 app.include_router(tooltips_router)
 app.include_router(ai_instruments_router)
+app.include_router(user_commands_router)
 app.include_router(connections_router)
 app.include_router(tasks_router)
 app.include_router(menu_config_router)
@@ -287,7 +308,7 @@ def _render_index_response(request: Request) -> Response:
     rendered = render_i18n_placeholders(
         index_file.read_text(encoding="utf-8"),
         lang,
-        (WEBGUI_DIR, COMMON_WEBGUI_DIR),
+        (WEBGUI_DIR, COMMON_WEBGUI_DIR, GOOGLE_WEBGUI_DIR, MICROSOFT_WEBGUI_DIR),
     )
     return HTMLResponse(
         content=rendered,
@@ -313,17 +334,20 @@ async def serve_index(request: Request) -> Response:
     return _render_index_response(request)
 
 
+GOOGLE_WEBGUI_DIR: Path = __root__ / "apps" / "google" / "webgui"
+MICROSOFT_WEBGUI_DIR: Path = __root__ / "apps" / "microsoft" / "webgui"
+
 # Обслуживание статических файлов WebGUI
 if WEBGUI_DIR.exists():
-    app.mount("/static", SmartMultiDirStaticFiles(WEBGUI_DIR, COMMON_WEBGUI_DIR), name="static")
-    app.mount("/html", SmartMultiDirStaticFiles(WEBGUI_DIR, COMMON_WEBGUI_DIR), name="html")
+    app.mount("/static", SmartMultiDirStaticFiles(WEBGUI_DIR, COMMON_WEBGUI_DIR, GOOGLE_WEBGUI_DIR, MICROSOFT_WEBGUI_DIR), name="static")
+    app.mount("/html", SmartMultiDirStaticFiles(WEBGUI_DIR, COMMON_WEBGUI_DIR, GOOGLE_WEBGUI_DIR, MICROSOFT_WEBGUI_DIR), name="html")
 
     @app.get("/health", summary="Проверка статуса сервиса")
     async def health_check() -> Dict[str, str]:
         """Возвращает статус готовности микросервиса."""
         return {"status": "ok", "service": "apps.ai_assistant", "version": "1.0.0"}
 
-    @app.get("/api/themes", summary="Каталог тем оформления WebGUI")
+    @app.get("/api/v1/themes", summary="Каталог тем оформления WebGUI")
     async def get_themes_catalog() -> FileResponse:
         """Отдаёт общий каталог тем `apps/common/webgui/themes/themes_catalog.json`."""
         return FileResponse(str(COMMON_WEBGUI_DIR / "themes" / "themes_catalog.json"))
@@ -637,13 +661,23 @@ def run(
     except Exception as exc:
         logger.warning(f"[AIAssistant] Ошибка определения активного пространства: {exc}")
 
+    last_active_url = cfg.get("last_active_url") or cfg.get("active_url")
+    last_active_tab = cfg.get("last_active_tab") or cfg.get("active_tab")
+
     url = f"http://{target_host}:{target_port}"
-    if active_ws_id:
-        from urllib.parse import quote
-        url = f"{url}/#tab-workspace#panel-files#workspace={quote(active_ws_id)}"
-    else:
+    from urllib.parse import quote
+    if not all_workspaces:
         # Если ни одного рабочего пространства нет — сразу переходим на менеджер создания
         url = f"{url}/#tab-create-workspace"
+    elif active_ws_id:
+        target_tab = (last_active_tab or "tab-workspace").strip().lstrip("#")
+        url = f"{url}/#{target_tab}#panel-files#workspace={quote(active_ws_id)}"
+    elif last_active_url and isinstance(last_active_url, str) and last_active_url.strip().startswith("#"):
+        url = f"{url}/{last_active_url.strip().lstrip('/')}"
+    elif last_active_tab and isinstance(last_active_tab, str) and last_active_tab.strip():
+        url = f"{url}/#{last_active_tab.strip().lstrip('#')}"
+    else:
+        url = f"{url}/#tab-workspace#panel-files"
 
 
     chromium_cfg = cfg.get("chromium") or cfg.get("browser", {})

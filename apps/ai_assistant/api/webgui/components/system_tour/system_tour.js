@@ -17,7 +17,7 @@
  * Package: apps/ai_assistant/api/webgui/components/system_tour
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-26 01:57:00
+ * Updated: 2026-11-16 01:58:00
  * =============================================================================
  */
 
@@ -551,6 +551,16 @@
 
     // 1. Кнопка в верхней навигации
     document.getElementById('btn-start-system-tour')?.addEventListener('click', () => showTour(0));
+
+    // 2. Кнопка в общем модальном окне настроек пользователя (#userSettingsModal)
+    document.getElementById('modal-btn-start-system-tour')?.addEventListener('click', () => {
+      const modalEl = document.getElementById('userSettingsModal');
+      if (modalEl && window.bootstrap) {
+        const inst = bootstrap.Modal.getInstance(modalEl);
+        if (inst) inst.hide();
+      }
+      setTimeout(() => showTour(0), 250);
+    });
 
     // 3. Кнопка в боковом меню Offcanvas
     document.getElementById('drawer-btn-start-tour')?.addEventListener('click', () => {

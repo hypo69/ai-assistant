@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Windows-Admin AI - Text RAG Engine
+# Process Name: AI-Windows-Admin AI - Text RAG Engine (SQLite WAL + FTS5 + RRF)
 # =============================================================================
 # Description:
-#   Движок текстового и документального RAG на основе эмбеддингов,
-#   FAISS индекса и локального векторного поиска с поддержкой мультипровайдеров
-#   (AGY, Gemini, локальные хэш-эмбеддинги) и потокобезопасного сохранения.
+#   Локальный гибридный RAG-движок на SQLite (WAL): бинарное хранение векторов
+#   float32 BLOB (0 МБ RAM в простое), лексический поиск FTS5 Okapi BM25,
+#   склейка через Reciprocal Rank Fusion (RRF), SQL-фильтрация (INSTR вместо LIKE
+#   для Windows-путей) и адаптер размерностей векторов на лету.
 #
 # Usage Examples:
 #   Python API:
@@ -20,43 +21,37 @@
 # Package: src.ai.rag
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 19:27:00
+# Updated: 2026-11-23 17:50:00
 # =============================================================================
 
 from __future__ import annotations
-"""Движок текстового и документального RAG на основе эмбеддингов и FAISS."""
+"""Локальный гибридный RAG-движок на SQLite WAL (float32 BLOB + FTS5 BM25 + RRF)."""
 
-import hashlib
 import json
-import os
 import re
+import sqlite3
 import threading
 import time
-import uuid
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
+
 import numpy as np
 
 from logger import logger
+from src.ai.orchestration.embeddings import embed_texts, hash_embed
 
-_WORD_RE = re.compile(r"\w+")
-
-
-def _get_faiss():
-    """Ленивая загрузка модуля faiss."""
-    try:
-        import faiss
-        return faiss
-    except ImportError:
-        return None
+_FTS_TOKEN_RE = re.compile(r"\w+", re.UNICODE)
+_RRF_K = 60
 
 
 class TextRAG:
-    """Движок векторного поиска и семантического извлечения текстовых документов.
+    """Гибридный векторно-лексический RAG-движок на SQLite WAL (0 МБ RAM в простое).
 
     Attributes:
-        db_path: Путь к файлу базы/индекса.
-        dimension: Размерность векторного пространства.
+        db_path: Базовый путь к базе данных индекса.
+        db_file: Файл SQLite (.sqlite).
+        dimension: Размерность векторов по умолчанию.
         provider: Имя активного провайдера ИИ.
     """
 
@@ -67,31 +62,25 @@ class TextRAG:
         dimension: int = 3072,
         provider: Optional[str] = None,
     ) -> None:
-        """Инициализирует TextRAG.
+        """Инициализирует SQLite-хранилище TextRAG.
 
         Args:
-            api_key: Ключ API для генерации эмбеддингов.
+            api_key: Прямой ключ API для генерации эмбеддингов (опционально).
             db_path: Путь к файлу индекса (по умолчанию data/rag/text_index).
             dimension: Размерность векторов (по умолчанию 3072 для Gemini, 256 для рабочих пространств).
-            provider: Имя провайдера ИИ ('agy', 'gemini' и др.). Если не передан, определяется из конфигурации.
+            provider: Имя провайдера ИИ ('agy', 'gemini', 'ollama', 'openai' и др.).
         """
-        self.db_path = db_path or Path("data/rag/text_index")
-        self.index_file = self.db_path.with_suffix(".faiss")
-        self.meta_file = self.db_path.with_suffix(".json")
-        self.dimension = dimension
+        self.db_path = Path(db_path) if db_path else Path("data/rag/text_index")
+        self.db_file = self.db_path.with_suffix(".sqlite")
+        self.index_file = self.db_file
+        self.meta_file = self.db_file
+        self.dimension = int(dimension)
         self.api_key = api_key
         self._lock = threading.RLock()
+        self.provider = str(provider).lower().strip() if provider else self._resolve_default_provider()
 
-        if provider:
-            self.provider = str(provider).lower().strip()
-        else:
-            self.provider = self._resolve_default_provider()
-
-        self.metadatas: List[Dict[str, Any]] = []
-        self.index: Any = False
-
-        self.index_file.parent.mkdir(parents=True, exist_ok=True)
-        self._load()
+        self.db_file.parent.mkdir(parents=True, exist_ok=True)
+        self._init_schema()
 
     @staticmethod
     def _resolve_default_provider() -> str:
@@ -105,308 +94,419 @@ class TextRAG:
             pass
         return "gemini"
 
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
+        """Открывает потокобезопасное соединение SQLite с режимом WAL и busy_timeout."""
+        conn = sqlite3.connect(str(self.db_file), timeout=15.0)
+        try:
+            conn.execute("PRAGMA journal_mode=WAL;")
+            conn.execute("PRAGMA synchronous=NORMAL;")
+            conn.execute("PRAGMA busy_timeout=15000;")
+            yield conn
+        finally:
+            conn.close()
+
+    def _init_schema(self) -> None:
+        """Создаёт таблицы rag_chunks и полнотекстовый индекс FTS5 (BM25)."""
+        with self._lock, self._connect() as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS rag_chunks (
+                    id TEXT PRIMARY KEY,
+                    text TEXT NOT NULL,
+                    meta_json TEXT NOT NULL DEFAULT '{}',
+                    workspace_id TEXT NOT NULL DEFAULT '',
+                    document_id TEXT NOT NULL DEFAULT '',
+                    file_path TEXT NOT NULL DEFAULT '',
+                    vector BLOB NOT NULL,
+                    dim INTEGER NOT NULL,
+                    is_sparse INTEGER NOT NULL DEFAULT 0,
+                    updated_at REAL NOT NULL
+                )
+            """)
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_rag_chunks_ws_doc ON rag_chunks(workspace_id, document_id)"
+            )
+            conn.execute("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS rag_chunks_fts USING fts5(
+                    id UNINDEXED,
+                    text,
+                    tokenize='unicode61'
+                )
+            """)
+            conn.commit()
+
     @staticmethod
-    def _safe_replace(src: Path, dst: Path, max_retries: int = 5, delay: float = 0.05) -> None:
-        """Атомарная замена файла с повторными попытками для предотвращения сбоев блокировок Windows."""
-        for attempt in range(max_retries):
-            try:
-                os.replace(src, dst)
-                return
-            except (PermissionError, OSError):
-                if attempt == max_retries - 1:
-                    raise
-                time.sleep(delay * (attempt + 1))
+    def _is_sparse_hash_vector(vec: Any) -> bool:
+        """Проверяет, является ли вектор разреженным детерминированным хэш-эмбеддингом (>50% нулей)."""
+        arr = np.asarray(vec, dtype=np.float32)
+        if arr.size == 0:
+            return False
+        return bool(np.count_nonzero(arr == 0.0) > (arr.size * 0.5))
 
-    def _load(self) -> None:
-        """Загрузка сохранённого индекса и метаданных."""
-        with self._lock:
-            if self.meta_file.exists():
-                try:
-                    with open(self.meta_file, "r", encoding="utf-8") as f:
-                        self.metadatas = json.load(f)
-                except Exception as e:
-                    logger.error(f"[TextRAG] Ошибка чтения метаданных: {e}")
-                    self.metadatas = []
-            else:
-                self.metadatas = []
+    @staticmethod
+    def _normalize_vector(vec: Any) -> np.ndarray:
+        """Приводит вектор к float32 и выполняет L2-нормализацию."""
+        arr = np.asarray(vec, dtype=np.float32).ravel()
+        norm = float(np.linalg.norm(arr))
+        if norm > 1e-12:
+            arr = arr / norm
+        return arr.astype(np.float32, copy=False)
 
-            faiss = _get_faiss()
-            if not faiss:
-                self.index = False
-                return
+    @staticmethod
+    def _adapt_query_vector(query_vec: np.ndarray, stored_dim: int) -> np.ndarray:
+        """Адаптирует размерность вектора запроса под размерность сохранённого индекса на лету."""
+        dim = int(query_vec.shape[0])
+        if dim == stored_dim:
+            return TextRAG._normalize_vector(query_vec)
+        if dim > stored_dim:
+            adapted = query_vec[:stored_dim]
+        else:
+            adapted = np.zeros(stored_dim, dtype=np.float32)
+            adapted[:dim] = query_vec
+        return TextRAG._normalize_vector(adapted)
 
-            if self.index_file.exists() and self.metadatas:
-                try:
-                    self.index = faiss.read_index(str(self.index_file))
-                except Exception as e:
-                    logger.error(f"[TextRAG] Ошибка чтения FAISS индекса, перестроение: {e}")
-                    self._rebuild_index()
-            else:
-                self.index = faiss.IndexFlatL2(self.dimension)
-
-    def _rebuild_index(self) -> None:
-        """Перестроение FAISS индекса из загруженных метаданных."""
-        with self._lock:
-            faiss = _get_faiss()
-            if not faiss:
-                self.index = False
-                return
-
-            self.index = faiss.IndexFlatL2(self.dimension)
-            if not self.metadatas:
-                return
-
-            valid_items = [
-                m for m in self.metadatas
-                if isinstance(m, dict) and "vector" in m
-                and isinstance(m["vector"], (list, np.ndarray))
-                and len(m["vector"]) == self.dimension
-            ]
-            self.metadatas = valid_items
-            if self.metadatas:
-                try:
-                    vectors = np.array([m["vector"] for m in self.metadatas], dtype=np.float32)
-                    self.index.add(vectors)
-                except Exception as e:
-                    logger.error(f"[TextRAG] Ошибка добавления векторов в FAISS: {e}")
-
-    def _save(self) -> None:
-        """Атомарное и потокобезопасное сохранение индекса и метаданных на диск."""
-        with self._lock:
-            faiss = _get_faiss()
-            tmp_meta: Optional[Path] = None
-            tmp_faiss: Optional[Path] = None
-
-            try:
-                self.meta_file.parent.mkdir(parents=True, exist_ok=True)
-
-                if faiss and self.index:
-                    tmp_faiss = self.index_file.parent / f".{self.index_file.name}.{uuid.uuid4().hex[:8]}.tmp"
-                    faiss.write_index(self.index, str(tmp_faiss))
-                    self._safe_replace(tmp_faiss, self.index_file)
-                    tmp_faiss = None
-
-                tmp_meta = self.meta_file.parent / f".{self.meta_file.name}.{uuid.uuid4().hex[:8]}.tmp"
-                with open(tmp_meta, "w", encoding="utf-8") as f:
-                    json.dump(self.metadatas, f, ensure_ascii=False, indent=2)
-                    f.flush()
-                    os.fsync(f.fileno())
-
-                self._safe_replace(tmp_meta, self.meta_file)
-                tmp_meta = None
-
-            except Exception as e:
-                logger.error(f"[TextRAG] Ошибка сохранения индекса: {e}")
-            finally:
-                for tmp_file in (tmp_meta, tmp_faiss):
-                    if tmp_file and tmp_file.exists():
-                        try:
-                            tmp_file.unlink()
-                        except OSError:
-                            pass
+    def _hash_embed(self, texts: List[str]) -> List[List[float]]:
+        """Генерирует детерминированные локальные хэш-векторы заданной размерности."""
+        return hash_embed(texts, dimension=self.dimension)
 
     def _embed(self, texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List[List[float]]:
-        """Генерация эмбеддингов для списка строк с учетом текущего провайдера."""
+        """Генерация эмбеддингов через единый маршрутизатор src.ai.orchestration.embeddings."""
         if not texts:
             return []
+        return embed_texts(
+            texts=texts,
+            provider=self.provider,
+            dimension=self.dimension,
+            task_type=task_type,
+            api_key=self.api_key or None,
+        )
 
-        # Облачные эмбеддинги Gemini используются только если провайдер явно gemini или передан прямой api_key
-        if self.provider == "gemini" or self.api_key:
-            try:
-                from src.ai.gemini.gemini_api_key_state import load_api_keys, mark_exhausted
-                from google import genai
-                from google.genai import types
-
-                if self.api_key:
-                    api_keys = [self.api_key]
-                    key_names = ["direct_api_key"]
-                else:
-                    api_keys, key_names, _ = load_api_keys(skip_exhausted=True)
-
-                if api_keys:
-                    client = genai.Client(api_key=api_keys[0])
-                    response = client.models.embed_content(
-                        model="models/gemini-embedding-2",
-                        contents=[types.Content(parts=[types.Part.from_text(text=t)]) for t in texts],
-                        config=types.EmbedContentConfig(
-                            task_type=task_type,
-                            output_dimensionality=self.dimension,
-                        ),
-                    )
-                    embeddings = [e.values for e in response.embeddings]
-                    if embeddings and all(len(v) == self.dimension for v in embeddings):
-                        return embeddings
-                    logger.warning(
-                        f"[TextRAG] Gemini вернул некорректную размерность векторов "
-                        f"({len(embeddings[0]) if embeddings else 0} != {self.dimension}), переход на fallback."
-                    )
-            except Exception as e:
-                err_str = str(e)
-                if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-                    try:
-                        from src.ai.gemini.gemini_api_key_state import mark_exhausted
-                        if "key_names" in locals() and key_names:
-                            mark_exhausted(key_names[0])
-                    except Exception:
-                        pass
-                    logger.warning(
-                        "[TextRAG] Превышена квота (429) для Gemini Embeddings, переключение на локальный хэш-эмбеддинг."
-                    )
-                else:
-                    logger.debug(
-                        f"[TextRAG] Gemini Embeddings недоступны ({e}), использование детерминированного хэш-эмбеддинга."
-                    )
-        else:
-            logger.debug(
-                f"[TextRAG] Для провайдера '{self.provider}' используются детерминированные локальные эмбеддинги."
-            )
-
-        # Fallback: Детерминированный TF-IDF / хэш-вектор для офлайн-режима или локальных/agy провайдеров
-        vectors: List[List[float]] = []
-        for text in texts:
-            vec = np.zeros(self.dimension, dtype=np.float32)
-            words = _WORD_RE.findall(text.lower())
-            for w in words:
-                h = int.from_bytes(hashlib.md5(w.encode("utf-8", errors="replace")).digest()[:4], "little") % self.dimension
-                vec[h] += 1.0
-            norm = np.linalg.norm(vec)
-            if norm > 0:
-                vec = vec / norm
-            vectors.append(vec.tolist())
-        return vectors
-
-    def add_documents(self, docs: List[Dict[str, Any]], batch_size: int = 50) -> int:
-        """Векторизация и добавление документов в RAG-индекс.
+    def add_documents(self, docs: List[Dict[str, Any]], batch_size: int = 100) -> int:
+        """Инкрементально векторизует и сохраняет документы в SQLite (BLOB + FTS5) одной транзакцией.
 
         Args:
             docs: Список словарей формата {'id': str, 'text': str, 'meta': dict}.
-            batch_size: Размер пачки для обработки.
+            batch_size: Размер пачки для вызовов эмбеддера (до 100).
 
         Returns:
-            Количество успешно добавленных документов.
+            Количество добавленных/обновлённых документов.
         """
         if not docs:
             return 0
 
-        with self._lock:
-            for i in range(0, len(docs), batch_size):
-                batch = docs[i : i + batch_size]
-                texts = [d["text"] for d in batch]
-                vectors = self._embed(texts, task_type="RETRIEVAL_DOCUMENT")
-                existing_ids = {doc["id"] for doc in batch}
-                self.metadatas = [m for m in self.metadatas if m["id"] not in existing_ids]
+        rows: List[Tuple[str, str, str, str, str, str, bytes, int, int, float]] = []
+        now = time.time()
 
-                for doc, vec in zip(batch, vectors):
-                    self.metadatas.append({
-                        "id": doc["id"],
-                        "text": doc["text"],
-                        "meta": doc.get("meta", {}),
-                        "vector": vec,
-                    })
+        for i in range(0, len(docs), batch_size):
+            batch = docs[i : i + batch_size]
+            texts = [str(d["text"]) for d in batch]
+            vectors = self._embed(texts, task_type="RETRIEVAL_DOCUMENT")
+            for doc, vec in zip(batch, vectors):
+                arr = self._normalize_vector(vec)
+                meta = doc.get("meta") or {}
+                f_path = str(meta.get("original_path") or meta.get("file_path") or meta.get("document_id") or "")
+                rows.append((
+                    str(doc["id"]),
+                    str(doc["text"]),
+                    json.dumps(meta, ensure_ascii=False, separators=(",", ":")),
+                    str(meta.get("workspace_id", "")),
+                    str(meta.get("document_id", "")),
+                    f_path,
+                    arr.tobytes(),
+                    int(arr.shape[0]),
+                    1 if self._is_sparse_hash_vector(arr) else 0,
+                    now,
+                ))
 
-                self._rebuild_index()
-                self._save()
-            return len(docs)
+        with self._lock, self._connect() as conn:
+            cur = conn.cursor()
+            ids = [(r[0],) for r in rows]
+            cur.executemany("DELETE FROM rag_chunks_fts WHERE id = ?", ids)
+            cur.executemany(
+                """
+                INSERT OR REPLACE INTO rag_chunks
+                    (id, text, meta_json, workspace_id, document_id, file_path, vector, dim, is_sparse, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                rows,
+            )
+            cur.executemany(
+                "INSERT INTO rag_chunks_fts (id, text) VALUES (?, ?)",
+                [(r[0], r[1]) for r in rows],
+            )
+            conn.commit()
+        return len(rows)
 
     def delete_document(self, doc_id: str) -> None:
-        """Удаление документа из индекса по идентификатору."""
-        with self._lock:
-            self.metadatas = [m for m in self.metadatas if m["id"] != doc_id]
-            self._rebuild_index()
-            self._save()
+        """Удаляет один чанк/документ по точному идентификатору."""
+        with self._lock, self._connect() as conn:
+            conn.execute("DELETE FROM rag_chunks WHERE id = ?", (doc_id,))
+            conn.execute("DELETE FROM rag_chunks_fts WHERE id = ?", (doc_id,))
+            conn.commit()
+
+    def delete_by_prefix(self, prefix: str) -> int:
+        """Удаляет все чанки, чей идентификатор начинается с указанного префикса (без LIKE)."""
+        if not prefix:
+            return 0
+        with self._lock, self._connect() as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM rag_chunks_fts WHERE INSTR(id, ?) = 1", (prefix,))
+            cur.execute("DELETE FROM rag_chunks WHERE INSTR(id, ?) = 1", (prefix,))
+            deleted = cur.rowcount
+            conn.commit()
+            return max(0, int(deleted))
+
+    def rename_prefix(
+        self,
+        old_prefix: str,
+        new_prefix: str,
+        meta_updates: Optional[Dict[str, Any]] = None,
+    ) -> int:
+        """Переименовывает префикс идентификаторов и обновляет метаданные без пересчёта векторов."""
+        if not old_prefix or old_prefix == new_prefix:
+            return 0
+        with self._lock, self._connect() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT id, text, meta_json, workspace_id, document_id, file_path, vector, dim, is_sparse, updated_at "
+                "FROM rag_chunks WHERE INSTR(id, ?) = 1",
+                (old_prefix,),
+            )
+            matched = cur.fetchall()
+            if not matched:
+                return 0
+
+            updated_rows = []
+            for row in matched:
+                old_id, text, meta_json, ws_id, doc_id, f_path, vec_blob, dim, is_sparse, upd = row
+                new_id = f"{new_prefix}{old_id[len(old_prefix):]}"
+                meta = json.loads(meta_json) if meta_json else {}
+                if meta_updates:
+                    meta.update({k: v for k, v in meta_updates.items() if v is not None})
+                    if "document_id" in meta_updates and meta_updates["document_id"] is not None:
+                        doc_id = str(meta_updates["document_id"])
+                    if "workspace_id" in meta_updates and meta_updates["workspace_id"] is not None:
+                        ws_id = str(meta_updates["workspace_id"])
+                    if "original_path" in meta_updates and meta_updates["original_path"] is not None:
+                        f_path = str(meta_updates["original_path"])
+                updated_rows.append((
+                    new_id,
+                    text,
+                    json.dumps(meta, ensure_ascii=False, separators=(",", ":")),
+                    ws_id,
+                    doc_id,
+                    f_path,
+                    vec_blob,
+                    dim,
+                    is_sparse,
+                    upd,
+                ))
+
+            cur.execute("DELETE FROM rag_chunks WHERE INSTR(id, ?) = 1", (old_prefix,))
+            cur.execute("DELETE FROM rag_chunks_fts WHERE INSTR(id, ?) = 1", (old_prefix,))
+            cur.executemany(
+                "DELETE FROM rag_chunks_fts WHERE id = ?",
+                [(r[0],) for r in updated_rows],
+            )
+            cur.executemany(
+                """
+                INSERT OR REPLACE INTO rag_chunks
+                    (id, text, meta_json, workspace_id, document_id, file_path, vector, dim, is_sparse, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                updated_rows,
+            )
+            cur.executemany(
+                "INSERT INTO rag_chunks_fts (id, text) VALUES (?, ?)",
+                [(r[0], r[1]) for r in updated_rows],
+            )
+            conn.commit()
+            return len(updated_rows)
+
+    def list_by_prefix(self, prefix: str = "") -> List[Dict[str, Any]]:
+        """Возвращает список чанков (id, text, meta) по префиксу без загрузки бинарных векторов."""
+        with self._lock, self._connect() as conn:
+            cur = conn.cursor()
+            if prefix:
+                cur.execute(
+                    "SELECT id, text, meta_json FROM rag_chunks WHERE INSTR(id, ?) = 1 ORDER BY id",
+                    (prefix,),
+                )
+            else:
+                cur.execute("SELECT id, text, meta_json FROM rag_chunks ORDER BY id")
+            return [
+                {
+                    "id": row[0],
+                    "text": row[1],
+                    "meta": json.loads(row[2]) if row[2] else {},
+                }
+                for row in cur.fetchall()
+            ]
 
     def clear(self) -> None:
-        """Полная очистка индекса."""
-        with self._lock:
-            faiss = _get_faiss()
-            self.metadatas = []
-            self.index = faiss.IndexFlatL2(self.dimension) if faiss else False
-            self._save()
+        """Полная очистка индекса и FTS5-таблицы."""
+        with self._lock, self._connect() as conn:
+            conn.execute("DELETE FROM rag_chunks")
+            conn.execute("DELETE FROM rag_chunks_fts")
+            conn.commit()
 
-    def search(self, query: str, top_k: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
-        """Семантический поиск ближайших документов по косинусному сходству.
+    def _build_where(
+        self,
+        workspace_id: Optional[str] = None,
+        document_id: Optional[str] = None,
+        path_contains: Optional[str] = None,
+        alias: str = "",
+    ) -> Tuple[str, List[Any]]:
+        """Формирует SQL-условие фильтрации (с INSTR вместо LIKE для Windows-путей)."""
+        p = f"{alias}." if alias else ""
+        clauses: List[str] = []
+        params: List[Any] = []
+        if workspace_id:
+            clauses.append(f"{p}workspace_id = ?")
+            params.append(workspace_id)
+        if document_id:
+            clauses.append(f"{p}document_id = ?")
+            params.append(document_id)
+        if path_contains:
+            clauses.append(f"INSTR(LOWER({p}file_path), LOWER(?)) > 0")
+            params.append(path_contains)
+        return (" AND ".join(clauses) if clauses else "1=1"), params
+
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        threshold: float = 0.0,
+        workspace_id: Optional[str] = None,
+        document_id: Optional[str] = None,
+        path_contains: Optional[str] = None,
+        hybrid: bool = True,
+    ) -> List[Dict[str, Any]]:
+        """Гибридный семантический (float32 BLOB) + лексический (FTS5 BM25) поиск с RRF.
 
         Args:
             query: Поисковый запрос.
             top_k: Максимальное количество результатов.
-            threshold: Порог минимального сходства (от 0.0 до 1.0).
+            threshold: Минимальный порог релевантности (от 0.0 до 1.0).
+            workspace_id: Опциональный SQL-фильтр по рабочей области.
+            document_id: Опциональный SQL-фильтр по идентификатору документа.
+            path_contains: Опциональный SQL-фильтр подстроки в метаданных (через INSTR).
+            hybrid: Включить склейку Dense + FTS5 BM25 через RRF (по умолчанию True).
 
         Returns:
-            Список найденных документов с оценкой релевантности.
+            Список найденных документов с оценками релевантности.
         """
-        with self._lock:
-            valid_metadatas = [
-                m for m in self.metadatas
-                if isinstance(m, dict) and "vector" in m
-                and isinstance(m["vector"], (list, np.ndarray))
-                and len(m["vector"]) == self.dimension
-            ]
-            if not valid_metadatas:
+        if not query or not query.strip():
+            return []
+
+        where_sql, params = self._build_where(workspace_id, document_id, path_contains)
+
+        with self._lock, self._connect() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                f"SELECT id, text, meta_json, vector, dim, is_sparse FROM rag_chunks WHERE {where_sql}",
+                params,
+            )
+            rows = cur.fetchall()
+            if not rows:
                 return []
 
-            query_vecs = self._embed([query], task_type="RETRIEVAL_QUERY")
+            # 1. Плотный векторный поиск (с адаптацией размерности на лету)
+            stored_dim = int(rows[0][4])
+            is_sparse_index = bool(rows[0][5])
+            query_vecs = self._hash_embed([query]) if is_sparse_index else self._embed([query], task_type="RETRIEVAL_QUERY")
             if not query_vecs:
                 return []
 
-            query_vec = np.array(query_vecs[0], dtype=np.float32)
-            if query_vec.shape[0] != self.dimension:
-                logger.warning(
-                    f"[TextRAG] Несоответствие размерности вектора запроса ({query_vec.shape[0]}) "
-                    f"и индекса ({self.dimension}), семантический поиск пропущен."
-                )
+            query_norm = self._adapt_query_vector(np.asarray(query_vecs[0], dtype=np.float32), stored_dim)
+
+            valid_rows: List[Tuple[str, str, str, np.ndarray]] = []
+            for r_id, r_text, r_meta, r_blob, r_dim, _ in rows:
+                if not r_blob:
+                    continue
+                vec = np.frombuffer(r_blob, dtype=np.float32)
+                if vec.shape[0] != stored_dim:
+                    vec = self._adapt_query_vector(vec, stored_dim)
+                valid_rows.append((r_id, r_text, r_meta, vec))
+
+            if not valid_rows:
                 return []
 
-            doc_vectors = np.array([m["vector"] for m in valid_metadatas], dtype=np.float32)
-            if doc_vectors.ndim != 2 or doc_vectors.shape[1] != query_vec.shape[0]:
-                logger.warning(
-                    f"[TextRAG] Несоответствие размерности векторов документов ({doc_vectors.shape}) "
-                    f"и вектора запроса ({query_vec.shape}), семантический поиск пропущен."
-                )
-                return []
+            matrix = np.vstack([r[3] for r in valid_rows])
+            similarities = np.dot(matrix, query_norm)
+            cand_k = min(max(top_k * 4, 20), len(valid_rows))
+            dense_order = np.argsort(similarities)[::-1][:cand_k]
 
-            query_norm = query_vec / (np.linalg.norm(query_vec) + 1e-10)
-            doc_norms = np.linalg.norm(doc_vectors, axis=1, keepdims=True) + 1e-10
-            doc_vectors_normalized = doc_vectors / doc_norms
+            row_map: Dict[str, Tuple[str, str, float]] = {}
+            dense_ranks: Dict[str, int] = {}
+            for rank_idx, idx in enumerate(dense_order, start=1):
+                r_id, r_text, r_meta, _ = valid_rows[int(idx)]
+                sim = max(0.0, float(similarities[int(idx)]))
+                row_map[r_id] = (r_text, r_meta, sim)
+                dense_ranks[r_id] = rank_idx
 
-            actual_k = min(top_k, len(valid_metadatas))
-            faiss = _get_faiss()
+            # 2. Лексический поиск FTS5 Okapi BM25
+            bm25_ranks: Dict[str, int] = {}
+            if hybrid:
+                tokens = [t for t in _FTS_TOKEN_RE.findall(query) if len(t) >= 2][:16]
+                if tokens:
+                    fts_expr = " OR ".join(f'"{t}"' for t in tokens)
+                    where_join, join_params = self._build_where(workspace_id, document_id, path_contains, alias="c")
+                    try:
+                        cur.execute(
+                            f"""
+                            SELECT c.id, c.text, c.meta_json
+                            FROM rag_chunks_fts f
+                            JOIN rag_chunks c ON c.id = f.id
+                            WHERE rag_chunks_fts MATCH ? AND {where_join}
+                            ORDER BY bm25(rag_chunks_fts)
+                            LIMIT ?
+                            """,
+                            [fts_expr, *join_params, cand_k],
+                        )
+                        for rank_idx, (r_id, r_text, r_meta) in enumerate(cur.fetchall(), start=1):
+                            bm25_ranks[r_id] = rank_idx
+                            if r_id not in row_map:
+                                row_map[r_id] = (r_text, r_meta, 0.0)
+                    except sqlite3.OperationalError as fts_err:
+                        logger.debug(f"[TextRAG] Пропуск FTS5 BM25 для запроса '{query[:40]}': {fts_err}")
 
-            if not faiss or not self.index:
-                similarities = np.dot(doc_vectors_normalized, query_norm)
-                top_indices = np.argsort(similarities)[::-1][:actual_k]
-                results: List[Dict[str, Any]] = []
-                for idx in top_indices:
-                    sim = float(similarities[idx])
-                    if sim >= threshold:
-                        meta = valid_metadatas[idx]
-                        results.append({
-                            "id": meta["id"],
-                            "text": meta["text"],
-                            "meta": meta.get("meta", {}),
-                            "score": round(sim, 4),
-                        })
-                return results
+        # 3. Reciprocal Rank Fusion (RRF)
+        max_rrf = (1.0 / (_RRF_K + 1)) * (2.0 if bm25_ranks else 1.0)
+        fused: List[Tuple[float, float, str]] = []
+        for r_id, (_, _, vec_sim) in row_map.items():
+            rrf = 0.0
+            if r_id in dense_ranks:
+                rrf += 1.0 / (_RRF_K + dense_ranks[r_id])
+            if r_id in bm25_ranks:
+                rrf += 1.0 / (_RRF_K + bm25_ranks[r_id])
+            # Комбинированная оценка в [0.0, 1.0]: сохраняет косинусный масштаб и усиливает BM25-совпадения
+            if r_id in bm25_ranks:
+                rrf_norm = min(1.0, rrf / max_rrf) if max_rrf > 0 else 0.0
+                final_score = (0.65 * vec_sim + 0.35 * rrf_norm) if vec_sim > 0 else (0.5 * rrf_norm)
+            else:
+                final_score = vec_sim
+            if final_score >= threshold:
+                fused.append((rrf, final_score, r_id))
 
-            temp_index = faiss.IndexFlatL2(self.dimension)
-            temp_index.add(doc_vectors_normalized)
-            distances, indices = temp_index.search(query_norm.reshape(1, -1), actual_k)
-            results = []
-            for i in range(actual_k):
-                idx = int(indices[0][i])
-                if 0 <= idx < len(valid_metadatas):
-                    l2_dist = float(distances[0][i])
-                    cosine_sim = max(0.0, 1.0 - (l2_dist / 2.0))
-                    if cosine_sim >= threshold:
-                        meta = valid_metadatas[idx]
-                        results.append({
-                            "id": meta["id"],
-                            "text": meta["text"],
-                            "meta": meta.get("meta", {}),
-                            "score": round(cosine_sim, 4),
-                        })
-            return results
+        fused.sort(key=lambda item: (item[0], item[1]), reverse=True)
+
+        results: List[Dict[str, Any]] = []
+        for rrf, final_score, r_id in fused[:top_k]:
+            r_text, r_meta, vec_sim = row_map[r_id]
+            results.append({
+                "id": r_id,
+                "text": r_text,
+                "meta": json.loads(r_meta) if r_meta else {},
+                "score": round(final_score, 4),
+                "vector_score": round(vec_sim, 4),
+                "bm25_rank": bm25_ranks.get(r_id),
+                "rrf_score": round(rrf, 6),
+            })
+        return results
 
     def count(self) -> int:
-        """Возвращает общее количество документов в индексе."""
-        with self._lock:
-            return len(self.metadatas)
+        """Возвращает общее количество чанков в SQLite-индексе."""
+        with self._lock, self._connect() as conn:
+            row = conn.execute("SELECT COUNT(*) FROM rag_chunks").fetchone()
+            return int(row[0]) if row else 0

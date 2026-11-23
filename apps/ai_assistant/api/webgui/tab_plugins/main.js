@@ -11,9 +11,11 @@
  * Package: apps/ai_assistant/api/webgui/tab_plugins
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 11:46:00
+ * Updated: 2026-11-15 20:35:00
  * =============================================================================
  */
+
+import { initSkillsManager } from './skills_manager.js?v=20261115_v1';
 
 let allPlugins = [];
 let marketplacePlugins = [];
@@ -39,6 +41,7 @@ export async function initPluginsTab() {
   setupMarketplaceSearchHandlers();
   setupReloadHandler();
   setupConfigModalHandlers();
+  initSkillsManager();
   await Promise.all([
     loadPluginsCatalog(),
     loadMarketplaceCatalog(),
@@ -661,14 +664,17 @@ function setupFilterHandlers() {
   group.querySelectorAll('button[data-filter-scope]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       group.querySelectorAll('button[data-filter-scope]').forEach(b => {
-        b.classList.remove('btn-primary', 'active');
-        b.classList.add('btn-outline-secondary');
+        b.classList.remove('active');
       });
       const target = e.currentTarget;
-      target.classList.remove('btn-outline-secondary');
-      target.classList.add('btn-primary', 'active');
+      target.classList.add('active');
       currentScopeFilter = target.getAttribute('data-filter-scope') || 'all';
       renderPlugins();
+
+      // Обновляем хэш с активным блоком
+      const bId = target.getAttribute('data-block-id') || `block-${currentScopeFilter}`;
+      const normBlock = bId.startsWith('block-') ? bId : `block-${bId}`;
+      history.replaceState(null, null, `#tab-plugins#panel-installed#${normBlock}`);
     });
   });
 }
@@ -743,7 +749,7 @@ function setupReloadHandler() {
 }
 
 /**
- * Автоматическая синхронизация активной панели вкладки с URL-хэшем.
+ * Автоматическая синхронизация активной панели и блока вкладки с URL-хэшем.
  */
 export function initTabUrlHashRouting() {
   const canonicalTabId = 'tab-plugins';
@@ -751,26 +757,48 @@ export function initTabUrlHashRouting() {
     const raw = window.location.hash || '';
     if (!raw.includes(canonicalTabId)) return;
     const parts = raw.replace(/^#/, '').split('#');
-    const panelPart = parts.find((p) => p.startsWith('panel-'));
+    let panelPart = parts.find((p) => p.startsWith('panel-'));
+    if (!panelPart) {
+      const fallback = parts.find((p) => ['installed', 'marketplace'].includes(p.toLowerCase()));
+      if (fallback) panelPart = `panel-${fallback.toLowerCase()}`;
+    }
+    const blockPart = parts.find((p) => p.startsWith('block-'));
+
     if (panelPart) {
       const btn = document.querySelector(`button[data-panel-id="${panelPart}"]`) ||
-                  document.querySelector(`button[data-bs-target="#${panelPart}"]`);
+                  document.querySelector(`button[data-bs-target="#${panelPart}"]`) ||
+                  document.querySelector(`button[data-bs-target="#tab-pane-${panelPart.replace('panel-', '')}"]`);
       if (btn && window.bootstrap && window.bootstrap.Tab) {
         (window.bootstrap.Tab.getInstance?.(btn) || window.bootstrap.Tab.getOrCreateInstance?.(btn) || new window.bootstrap.Tab(btn)).show();
+      }
+    }
+
+    if (blockPart) {
+      const cleanBlock = blockPart.replace(/^block-/, '');
+      const scopeBtn = document.querySelector(`#plugins-scope-filter-group button[data-block-id="${blockPart}"]`) ||
+                       document.querySelector(`#plugins-scope-filter-group button[data-filter-scope="${cleanBlock}"]`);
+      if (scopeBtn) {
+        scopeBtn.click();
       }
     }
   };
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-panel-id], button[data-bs-toggle="pill"]');
+    const btn = e.target.closest('#pluginsTabNav button[data-panel-id], #pluginsTabNav button[data-bs-toggle="pill"]');
     if (btn) {
-      const panelId = btn.getAttribute('data-panel-id') || btn.getAttribute('data-bs-target')?.replace('#', '');
-      const blockId = btn.getAttribute('data-block-id');
-      if (panelId) {
-        let hash = `#${canonicalTabId}#${panelId}`;
-        if (blockId) hash += `#${blockId}`;
-        history.replaceState(null, null, hash);
+      let rawPanel = btn.getAttribute('data-panel-id') || btn.getAttribute('data-bs-target')?.replace('#tab-pane-', '')?.replace('#', '');
+      const panelId = rawPanel.startsWith('panel-') ? rawPanel : `panel-${rawPanel}`;
+      let hash = `#${canonicalTabId}#${panelId}`;
+
+      if (panelId === 'panel-installed') {
+        const activeScope = document.querySelector('#plugins-scope-filter-group button.active');
+        if (activeScope) {
+          const bId = activeScope.getAttribute('data-block-id') || `block-${activeScope.getAttribute('data-filter-scope')}`;
+          const normBlock = bId.startsWith('block-') ? bId : `block-${bId}`;
+          hash += `#${normBlock}`;
+        }
       }
+      history.replaceState(null, null, hash);
     }
   });
 

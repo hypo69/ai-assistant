@@ -10,18 +10,18 @@
 #
 # Usage Examples:
 #   pack = DemoScenarioPack.load(pack_dir)
-#   result = await pack.apply(wm, "דוד_משה", transcript_text, "assets/call.mp3", "דוד משה")
+#   result = await pack.apply(wm, "demo_ws", transcript_text, "assets/call.mp3", "Demo Workspace")
 #
 # File: demo_scenario_pack.py
 # Project: ai-windows-admin
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-12 00:10:00
+# Updated: 2026-11-19 19:14:00
 # =============================================================================
 
 from __future__ import annotations
-"""Пакет демо-сценария: обогащение транскрипта для Obsidian и Paperless."""
+"""Пакет демо-сценария: интеллектуальное обогащение транскрипта для Obsidian и Paperless."""
 
 import asyncio
 import json
@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from logger import logger
+from apps.ai_assistant.core.transcript_parser_service import TranscriptParserService
 
 if TYPE_CHECKING:
     from apps.ai_assistant.core.workspace_manager import WorkspaceManager
@@ -61,7 +62,15 @@ class DemoScenarioPack:
     @property
     def transcript_dest_dir(self) -> str:
         """Каталог внутри рабочей области, куда помещается транскрипт."""
-        return str(self.data["transcript"]["dest_dir"])
+        return str(self.data.get("deal_dir") or self.data["transcript"]["dest_dir"])
+
+    @property
+    def purchase_scenario(self) -> Dict[str, Any]:
+        """Возвращает описание интерактивного сценария покупки для окна чата."""
+        raw = self.data.get("purchase_scenario")
+        if not isinstance(raw, dict):
+            return {}
+        return json.loads(json.dumps(raw, ensure_ascii=False))
 
     def render_obsidian_transcript(self, text: str, title: str, audio_rel: str, paperless_id: Optional[int]) -> str:
         """Формирует Obsidian-версию транскрипта: frontmatter, вложение аудио, wikilinks, связанные заметки."""
@@ -165,15 +174,38 @@ class DemoScenarioPack:
             paperless_id=paperless_id,
         )
 
-        notes = []
-        for note in self.data["notes"]:
-            src = self.pack_dir / "notes" / note["src"]
-            wm.import_document(
-                workspace_id=workspace_id,
-                document_id=note["dest"],
-                content=src.read_text(encoding="utf-8"),
-                commit_message=f"Демо-сценарий: заметка {note['dest']}",
-                language="he",
-            )
-            notes.append(note["dest"])
+        notes: list[str] = []
+        if bool(self.data.get("create_extra_notes", False)):
+            # Извлекаем сущности коров, сделки и расписания через TranscriptParserService
+            try:
+                parser = TranscriptParserService()
+                pruned = parser.prune_transcript(transcript_text)
+                extracted = await parser.extract_data(pruned)
+                generated = parser.generate_markdown_documents(extracted, transcript_name)
+                for doc_rel, content in generated.items():
+                    wm.import_document(
+                        workspace_id=workspace_id,
+                        document_id=doc_rel,
+                        content=content,
+                        commit_message=f"[AI-Parse] Актуализация {doc_rel} из транскрипта {transcript_name}",
+                        language="he",
+                    )
+                    notes.append(doc_rel)
+            except Exception as parse_exc:
+                logger.warning(f"[DemoScenarioPack] Ошибка динамического парсинга, используется шаблон: {parse_exc}")
+
+            # Гарантируем наличие базовых шаблонных заметок из pack.json (если не были сгенерированы)
+            for note in self.data.get("notes", []):
+                if note["dest"] in notes:
+                    continue
+                src = self.pack_dir / "notes" / note["src"]
+                if src.is_file():
+                    wm.import_document(
+                        workspace_id=workspace_id,
+                        document_id=note["dest"],
+                        content=src.read_text(encoding="utf-8"),
+                        commit_message=f"Демо-сценарий: заметка {note['dest']}",
+                        language="he",
+                    )
+                    notes.append(note["dest"])
         return {"transcript_rel": transcript_rel, "paperless_id": paperless_id, "notes": notes}

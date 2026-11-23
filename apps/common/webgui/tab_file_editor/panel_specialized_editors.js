@@ -16,7 +16,7 @@
  * Package: apps/common/webgui/tab_file_editor
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-28 17:09:00
+ * Updated: 2026-11-19 20:23:30
  * =============================================================================
  */
 
@@ -176,7 +176,7 @@ export function renderTabularGrid(docState, onContentUpdated) {
   const headRow = rows[0] || [];
   let headHtml = '<tr><th class="text-center text-muted small">#</th>';
   for (let c = 0; c < colCount; c++) {
-    headHtml += `<th><input type="text" class="form-control form-control-sm fw-bold border-0 bg-transparent" data-csv-cell="0:${c}" value="${escapeAttr(headRow[c] || '')}"></th>`;
+    headHtml += `<th><input type="text" dir="auto" class="form-control form-control-sm fw-bold border-0 bg-transparent" data-csv-cell="0:${c}" value="${escapeAttr(headRow[c] || '')}"></th>`;
   }
   headHtml += '</tr>';
   thead.innerHTML = headHtml;
@@ -186,7 +186,7 @@ export function renderTabularGrid(docState, onContentUpdated) {
   for (let r = 1; r < rows.length; r++) {
     bodyHtml += `<tr><td class="text-center text-muted small font-monospace">${r}</td>`;
     for (let c = 0; c < colCount; c++) {
-      bodyHtml += `<td><input type="text" class="form-control form-control-sm border-0 bg-transparent" data-csv-cell="${r}:${c}" value="${escapeAttr(rows[r][c] || '')}"></td>`;
+      bodyHtml += `<td><input type="text" dir="auto" class="form-control form-control-sm border-0 bg-transparent" data-csv-cell="${r}:${c}" value="${escapeAttr(rows[r][c] || '')}"></td>`;
     }
     bodyHtml += '</tr>';
   }
@@ -226,6 +226,7 @@ export function renderNotebookEditor(docState, onContentUpdated) {
     .map((cell, idx) => {
       const isCode = cell.cell_type === 'code';
       const srcText = Array.isArray(cell.source) ? cell.source.join('') : String(cell.source || '');
+      const cellDir = /[\u0590-\u05FF]/.test(srcText) ? 'rtl' : 'ltr';
       return `
         <div class="card border-subtle shadow-sm bg-body" data-nb-cell-idx="${idx}">
           <div class="card-header py-1 px-3 bg-body-tertiary d-flex align-items-center justify-content-between small">
@@ -238,7 +239,7 @@ export function renderNotebookEditor(docState, onContentUpdated) {
             </button>
           </div>
           <div class="card-body p-2">
-            <textarea class="form-control font-monospace small" rows="${Math.min(12, Math.max(3, srcText.split('\n').length))}" data-nb-textarea="${idx}">${escapeAttr(srcText)}</textarea>
+            <textarea dir="${cellDir}" style="direction: ${cellDir}; text-align: ${cellDir === 'rtl' ? 'right' : 'left'};" class="form-control font-monospace small" rows="${Math.min(12, Math.max(3, srcText.split('\n').length))}" data-nb-textarea="${idx}">${escapeAttr(srcText)}</textarea>
           </div>
         </div>
       `;

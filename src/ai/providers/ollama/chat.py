@@ -36,7 +36,7 @@ class OllamaChatBase:
     @classmethod
     def get_available_models(cls, force_refresh: bool=False) -> List[str]:
         """Returns list доступных моделей для Ollama через единый менеджер моделей."""
-        from src.ai.model_manager import get_available_models as _mgr_get_available_models
+        from src.ai.orchestration.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider='ollama', force_refresh=force_refresh)
 
     def __init__(self, model_id: str, temperature: float=0.7, max_tokens: int=2048, system_prompt: str='You are a helpful AI assistant.', api_url: Optional[str]=''):
@@ -102,7 +102,7 @@ class OllamaChatBase:
                     self._last_error = res.get('error', 'Unknown error')
                     self._error_count += 1
                     if '404' in self._last_error or 'not found' in self._last_error.lower():
-                        from src.ai.model_manager import add_unsupported_model
+                        from src.ai.orchestration.model_manager import add_unsupported_model
                         from src.ai.orchestration.model_error_hub import record_model_error
                         record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, status_code=404, attempt=attempt, max_attempts=attempts, action_taken='failed')
                         add_unsupported_model('ollama', self.model_id, reason=self._last_error)
@@ -131,7 +131,7 @@ class OllamaChatBase:
                     raise ex
                 from src.ai.orchestration.model_error_hub import record_model_error
                 if '404' in self._last_error or 'not found' in self._last_error.lower():
-                    from src.ai.model_manager import add_unsupported_model
+                    from src.ai.orchestration.model_manager import add_unsupported_model
                     record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, status_code=404, attempt=attempt, max_attempts=attempts, action_taken='failed')
                     add_unsupported_model('ollama', self.model_id, reason=self._last_error)
                     return ''

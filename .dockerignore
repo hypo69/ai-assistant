@@ -1,0 +1,54 @@
+# Updated: 2026-11-19 23:22:00
+# Исключения контекста сборки Docker для проекта AI-Assistant.
+
+# Системы контроля версий и служебные каталоги IDE / агентов
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+.gemini/
+.kiro/
+.amazonq/
+.chatgpt/
+.agents/
+
+# Виртуальные окружения и кэши Python / Node
+venv/
+.venv/
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+node_modules/
+
+# Артефакты сборки и дистрибутивы
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Локальные исходники Paperless-ngx (собираются отдельным контекстом в docker-compose.build.yml)
+paperless-ngx/
+
+# Временные файлы, логи, бэкапы и исключения проекта (~*)
+scratch/
+%ProgramData%/
+~*
+**/~*
+*.log
+*.tmp
+*.bak
+storage_snapshot.json
+ramla_to_netanya_*.html
+
+# Локальные секреты (прокидываются через env_file / volumes в runtime, не попадают в образ)
+.env
+.env.*
+!.env.example
+docker/.env.paperless
+src/secrets/

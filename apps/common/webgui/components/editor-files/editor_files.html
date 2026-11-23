@@ -1,0 +1,134 @@
+<!--
+=============================================================================
+Process Name: Common WebGUI - Universal WYSIWYG Editor Files Component Template
+=============================================================================
+Description:
+  Переиспользуемый HTML-компонент файлового редактора с режимами WYSIWYG,
+  Raw Code, Split Preview, оглавлением TOC, панелью форматирования и статусом WASM.
+  Полное соблюдение правил i18n (токены {{key}}), отсутствие инлайн-стилей и хардкода.
+
+File: editor_files.html
+Project: ai-windows-admin
+Package: apps.common.webgui.components.editor-files
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-11-16 02:14:15
+=============================================================================
+-->
+
+<div id="editor-files-container" class="editor-files-wrapper">
+  <!-- Верхняя панель инструментов форматирования (WYSIWYG Toolbar) -->
+  <header class="editor-files-toolbar" role="toolbar" aria-label="{{editor_files_toolbar_aria}}">
+    <!-- Группа основных команд форматирования -->
+    <div class="editor-files-btn-group" role="group">
+      <button type="button" class="editor-btn" id="btn-editor-bold" data-cmd="bold" data-i18n-title="editor_files_bold_tooltip" title="{{editor_files_bold_tooltip}}" aria-label="{{editor_files_bold_aria}}">
+        <i class="fas fa-bold"></i>
+      </button>
+      <button type="button" class="editor-btn" id="btn-editor-italic" data-cmd="italic" data-i18n-title="editor_files_italic_tooltip" title="{{editor_files_italic_tooltip}}" aria-label="{{editor_files_italic_aria}}">
+        <i class="fas fa-italic"></i>
+      </button>
+      <button type="button" class="editor-btn" id="btn-editor-heading" data-cmd="heading" data-i18n-title="editor_files_heading_tooltip" title="{{editor_files_heading_tooltip}}" aria-label="{{editor_files_heading_aria}}">
+        <i class="fas fa-heading"></i>
+      </button>
+      <button type="button" class="editor-btn" id="btn-editor-code" data-cmd="code" data-i18n-title="editor_files_code_tooltip" title="{{editor_files_code_tooltip}}" aria-label="{{editor_files_code_aria}}">
+        <i class="fas fa-code"></i>
+      </button>
+    </div>
+
+    <div class="editor-files-divider" role="separator"></div>
+
+    <!-- Списки и цитаты -->
+    <div class="editor-files-btn-group" role="group">
+      <button type="button" class="editor-btn" id="btn-editor-ul" data-cmd="ul" data-i18n-title="editor_files_ul_tooltip" title="{{editor_files_ul_tooltip}}" aria-label="{{editor_files_ul_aria}}">
+        <i class="fas fa-list-ul"></i>
+      </button>
+      <button type="button" class="editor-btn" id="btn-editor-ol" data-cmd="ol" data-i18n-title="editor_files_ol_tooltip" title="{{editor_files_ol_tooltip}}" aria-label="{{editor_files_ol_aria}}">
+        <i class="fas fa-list-ol"></i>
+      </button>
+      <button type="button" class="editor-btn" id="btn-editor-quote" data-cmd="quote" data-i18n-title="editor_files_quote_tooltip" title="{{editor_files_quote_tooltip}}" aria-label="{{editor_files_quote_aria}}">
+        <i class="fas fa-quote-right"></i>
+      </button>
+      <button type="button" class="editor-btn" id="btn-editor-table" data-cmd="table" data-i18n-title="editor_files_table_tooltip" title="{{editor_files_table_tooltip}}" aria-label="{{editor_files_table_aria}}">
+        <i class="fas fa-table"></i>
+      </button>
+    </div>
+
+    <div class="editor-files-divider" role="separator"></div>
+
+    <!-- Переключатели режимов отображения -->
+    <div class="editor-files-mode-group" role="radiogroup">
+      <button type="button" class="editor-btn editor-mode-btn is-active" id="btn-editor-mode-wysiwyg" data-mode="wysiwyg" data-i18n-title="editor_files_mode_wysiwyg_tooltip" title="{{editor_files_mode_wysiwyg_tooltip}}">
+        <span id="txt-editor-mode-wysiwyg" data-i18n="editor_files_mode_wysiwyg">{{editor_files_mode_wysiwyg}}</span>
+      </button>
+      <button type="button" class="editor-btn editor-mode-btn" id="btn-editor-mode-split" data-mode="split" data-i18n-title="editor_files_mode_split_tooltip" title="{{editor_files_mode_split_tooltip}}">
+        <span id="txt-editor-mode-split" data-i18n="editor_files_mode_split">{{editor_files_mode_split}}</span>
+      </button>
+      <button type="button" class="editor-btn editor-mode-btn" id="btn-editor-mode-raw" data-mode="raw" data-i18n-title="editor_files_mode_raw_tooltip" title="{{editor_files_mode_raw_tooltip}}">
+        <span id="txt-editor-mode-raw" data-i18n="editor_files_mode_raw">{{editor_files_mode_raw}}</span>
+      </button>
+    </div>
+
+    <!-- Действия сохранения и сброса -->
+    <div class="editor-files-actions">
+      <button type="button" class="editor-btn editor-btn-primary" id="btn-editor-save" data-i18n-title="editor_files_save_tooltip" title="{{editor_files_save_tooltip}}" aria-label="{{editor_files_save_aria}}">
+        <i class="fas fa-save"></i>
+        <span id="txt-editor-save" data-i18n="editor_files_save">{{editor_files_save}}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Основная рабочая область редактора -->
+  <main class="editor-files-body">
+    <!-- Боковая панель структуры (Оглавление / Headings) -->
+    <aside class="editor-files-toc" id="editor-files-toc-panel">
+      <div class="editor-files-toc-header">
+        <span id="txt-editor-toc-title" class="editor-files-toc-title" data-i18n="editor_files_toc_title">{{editor_files_toc_title}}</span>
+      </div>
+      <nav id="editor-files-toc-list" class="editor-files-toc-list" aria-label="{{editor_files_toc_aria}}">
+        <!-- Генерируется Rust WASM ядром динамически -->
+      </nav>
+    </aside>
+
+    <!-- Рабочая область редактирования -->
+    <div class="editor-files-workspace" id="editor-files-workspace">
+      <!-- Поле ввода исходного кода / разметки -->
+      <div class="editor-files-pane editor-files-source-pane" id="editor-source-pane">
+        <textarea id="editor-files-textarea" class="editor-files-textarea" placeholder="{{editor_files_placeholder}}" aria-label="{{editor_files_input_aria}}" spellcheck="false"></textarea>
+      </div>
+
+      <!-- Контейнер интерактивного WYSIWYG отображения -->
+      <div class="editor-files-pane editor-files-wysiwyg-pane" id="editor-wysiwyg-pane">
+        <div id="editor-files-visual" class="editor-files-visual" contenteditable="true" aria-label="{{editor_files_visual_aria}}"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Подвал со статистикой и индикатором Wasm -->
+  <footer class="editor-files-statusbar">
+    <div class="editor-files-status-left">
+      <span class="editor-stat-item" id="editor-stat-lines-item">
+        <span id="lbl-editor-stat-lines" data-i18n="editor_files_stat_lines">{{editor_files_stat_lines}}</span>:
+        <span id="editor-stat-lines" class="editor-stat-val">0</span>
+      </span>
+      <span class="editor-stat-item" id="editor-stat-words-item">
+        <span id="lbl-editor-stat-words" data-i18n="editor_files_stat_words">{{editor_files_stat_words}}</span>:
+        <span id="editor-stat-words" class="editor-stat-val">0</span>
+      </span>
+      <span class="editor-stat-item" id="editor-stat-chars-item">
+        <span id="lbl-editor-stat-chars" data-i18n="editor_files_stat_chars">{{editor_files_stat_chars}}</span>:
+        <span id="editor-stat-chars" class="editor-stat-val">0</span>
+      </span>
+    </div>
+
+    <div class="editor-files-status-right">
+      <span class="editor-stat-item" id="editor-stat-reading-item">
+        <span id="lbl-editor-stat-time" data-i18n="editor_files_stat_time">{{editor_files_stat_time}}</span>:
+        <span id="editor-stat-reading" class="editor-stat-val">0s</span>
+      </span>
+      <span class="ui-badge ui-badge-wasm" id="editor-wasm-badge" data-i18n-title="editor_files_wasm_tooltip" title="{{editor_files_wasm_tooltip}}">
+        <i class="fas fa-microchip"></i>
+        <span id="txt-editor-wasm-status" data-i18n="editor_files_wasm_active">{{editor_files_wasm_active}}</span>
+      </span>
+    </div>
+  </footer>
+</div>

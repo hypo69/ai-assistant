@@ -11,7 +11,7 @@
 # Package: apps.common.webgui.tab_instruments
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-03 16:44:00
+# Updated: 2026-11-19 20:16:00
 # =============================================================================
 
 # 🛠️ Вкладка управления внутренними инструментами агента CoT (`tab_instruments`)
@@ -44,6 +44,10 @@
    - Настройка таймаута выполнения (сек).
    - SafeOps фильтрация деструктивных операций.
    - Интерактивный CoT-парсер для автоматического извлечения блоков кода из рассуждений LLM в базу инструментов.
+
+5. **Готовность подсистем (`#pill-inst-status` / `panel-system-status`):**
+   - Диагностическая панель состояния ключевых движков системы (`Git Repository Engine`, `WikiLLM Knowledge Adapter`, `Temporal Code Graph`, `RAG FAISS Retriever`), перенесённая из бывшей вкладки `#tab-status` в панель `#tab-instruments#panel-system-status`.
+   - Работает через универсальный роутер панелей `GET /api/v1/panel/panel-system-status`.
 
 ---
 

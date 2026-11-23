@@ -12,12 +12,13 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-27 21:30:00
+# Updated: 2026-11-16 00:36:00
 # =============================================================================
 
 from __future__ import annotations
 """Тесты валидации сервиса Gmail RAG и семантического поиска писем."""
 
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
@@ -138,7 +139,7 @@ def test_gmail_rag_semantic_search_with_mocked_messages(monkeypatch):
     )
 
     rag = GmailRagService()
-    res = rag.semantic_search("Найди все письма по сделаке по корове зина", limit=5)
+    res = rag.semantic_search("Найди все письма по сделаке по корове зина", limit=5, account_name="test_user")
 
     assert res["status"] == "success"
     assert res["count"] >= 1
@@ -147,6 +148,19 @@ def test_gmail_rag_semantic_search_with_mocked_messages(monkeypatch):
     assert top_msg["semantic_score"] > 0.6
     assert "relevance_reason" in top_msg
     assert res.get("engine") == "gmail-rag-faiss"
+
+
+def test_gmail_rag_account_isolation(tmp_path: Path):
+    """Проверяет изолированность индексов по аккаунтам-владельцам."""
+    rag = GmailRagService()
+    dir_davidka = rag.get_index_dir("davidka")
+    dir_work = rag.get_index_dir("work_account")
+
+    assert "davidka" in str(dir_davidka)
+    assert "work_account" in str(dir_work)
+    assert dir_davidka != dir_work
+    assert str(dir_davidka).endswith(str(Path("data/google/davidka/search_index")))
+    assert str(dir_work).endswith(str(Path("data/google/work_account/search_index")))
 
 
 def test_api_gmail_semantic_search_endpoint(client: TestClient, monkeypatch):

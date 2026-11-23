@@ -19,7 +19,7 @@
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 23:50:00
+ * Updated: 2026-11-19 20:52:00
 
 
  * =============================================================================
@@ -28,9 +28,9 @@
 
 
 
-import { getActiveWorkspaceId } from './top_workspace_dropdown.js';
+import { getActiveWorkspaceId } from './top_workspace_dropdown.js?v=20261116_v1';
 
-import { initIdeTreeContextMenu, openEditorModal } from './ide_tree_context_menu.js?v=20261111_v2';
+import { initIdeTreeContextMenu, openEditorModal } from './ide_tree_context_menu.js?v=20261119_v3';
 
 
 
@@ -57,6 +57,7 @@ try {
 
 
 export const expandedFolders = new Set(['', '_Topics']); // папки, раскрытые по умолчанию
+const autoExpandedLinkedFolders = new Set(); // внешние директории, уже автоматически раскрытые при первом обнаружении
 
 
 
@@ -586,57 +587,107 @@ export function renderTreeNode(node, depth = 0) {
 
 
 
+const inFlightExplorerFetches = new Map();
+const explorerResponseCache = new Map();
+const EXPLORER_CACHE_TTL_MS = 1000;
+let treeDebounceTimer = null;
+let pendingTreeResolvers = [];
+
 /**
-
- * Загружает содержимое директории активного рабочего пространства и рендерит дерево файлов.
-
- * @param {string|null} [wsId=null] 
-
+ * Сбрасывает кэш содержимого проводника файлов (при создании/удалении файлов).
+ * @param {string|null} [wsId=null]
  */
+export function invalidateExplorerFileTreeCache(wsId = null) {
+  if (wsId) {
+    explorerResponseCache.delete(wsId);
+  } else {
+    explorerResponseCache.clear();
+  }
+}
+if (typeof window !== 'undefined') {
+  window.invalidateExplorerFileTreeCache = invalidateExplorerFileTreeCache;
+}
 
+/**
+ * Загружает содержимое директории активного рабочего пространства и рендерит дерево файлов.
+ * Выполняет сквозной дебаунс (60мс) и дедупликацию сетевых GET-запросов на лету.
+ * @param {string|null} [wsId=null] 
+ */
 export async function refreshFileTree(wsId = null) {
-
-  const targetWs = wsId || getActiveWorkspaceId() || 'default';
-
-  const treeContainer = document.getElementById('ide-file-tree-container');
+  const targetWs = wsId || (typeof window.getActiveWorkspaceId === 'function' ? window.getActiveWorkspaceId() : null) || getActiveWorkspaceId() || 'default';
+  const currentActive = (typeof window.getActiveWorkspaceId === 'function' ? window.getActiveWorkspaceId() : null) || getActiveWorkspaceId();
+  if (wsId && wsId !== currentActive && typeof window.setActiveWorkspaceId === 'function') {
+    window.setActiveWorkspaceId(wsId);
+  }
 
   const titleNameEl = document.getElementById('ide-explorer-ws-title');
-
-  const branchBadge = document.getElementById('ide-explorer-ws-branch');
-
-  const summaryBadge = document.getElementById('ide-explorer-summary-badge');
-
-
-
-  if (titleNameEl) titleNameEl.textContent = targetWs;
-
-
-
-  if (treeContainer) {
-
-    treeContainer.innerHTML = `
-
-      <div class="p-3 text-center text-muted font-size-80">
-
-        <div class="spinner-border spinner-border-sm text-primary mb-1" role="status"></div>
-
-        <div>Загрузка файлов ${targetWs}...</div>
-
-      </div>
-
-    `;
-
+  const displayName = (typeof window.getActiveWorkspaceDisplayName === 'function' ? window.getActiveWorkspaceDisplayName(targetWs) : null) || targetWs;
+  if (titleNameEl) {
+    titleNameEl.textContent = displayName;
+    titleNameEl.title = `Рабочее пространство: ${displayName} [${targetWs}]`;
   }
 
 
 
+  return new Promise((resolve, reject) => {
+    pendingTreeResolvers.push({ resolve, reject, targetWs });
+    if (treeDebounceTimer) {
+      clearTimeout(treeDebounceTimer);
+    }
+    treeDebounceTimer = setTimeout(async () => {
+      treeDebounceTimer = null;
+      const batch = pendingTreeResolvers;
+      pendingTreeResolvers = [];
+      try {
+        const result = await doRefreshFileTree(targetWs);
+        batch.forEach((b) => b.resolve(result));
+      } catch (err) {
+        batch.forEach((b) => b.reject(err));
+      }
+    }, 60);
+  });
+}
+
+/**
+ * Непосредственное выполнение загрузки и отрисовки дерева файлов с дедупликацией сетевых запросов.
+ * @param {string} targetWs
+ */
+async function doRefreshFileTree(targetWs) {
+  const treeContainer = document.getElementById('ide-file-tree-container');
+  const branchBadge = document.getElementById('ide-explorer-ws-branch');
+  const summaryBadge = document.getElementById('ide-explorer-summary-badge');
+
+  if (treeContainer && !currentFilesData) {
+    treeContainer.innerHTML = `
+      <div class="p-3 text-center text-muted font-size-80">
+        <div class="spinner-border spinner-border-sm text-primary mb-1" role="status"></div>
+        <div>Загрузка файлов ${targetWs}...</div>
+      </div>
+    `;
+  }
+
   try {
-
-    const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(targetWs)}/directory-contents`);
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const data = await res.json();
+    let data = null;
+    const cached = explorerResponseCache.get(targetWs);
+    if (cached && (Date.now() - cached.time < EXPLORER_CACHE_TTL_MS)) {
+      data = cached.data;
+    } else if (inFlightExplorerFetches.has(targetWs)) {
+      data = await inFlightExplorerFetches.get(targetWs);
+    } else {
+      const fetchPromise = (async () => {
+        try {
+          const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(targetWs)}/directory-contents`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          explorerResponseCache.set(targetWs, { data: json, time: Date.now() });
+          return json;
+        } finally {
+          inFlightExplorerFetches.delete(targetWs);
+        }
+      })();
+      inFlightExplorerFetches.set(targetWs, fetchPromise);
+      data = await fetchPromise;
+    }
 
     currentFilesData = data;
 
@@ -703,6 +754,18 @@ export async function refreshFileTree(wsId = null) {
       }
 
 
+
+      // Автоматически раскрываем присоединённые внешние директории при первом появлении в дереве
+      (visibleItems || []).forEach((item) => {
+        if (item.is_dir && (item.is_external || item.source_mode === 'linked')) {
+          const linkedPath = (item.rel_path || item.name || '').replace(/\\/g, '/').replace(/^\/+/, '');
+          const seenKey = `${targetWs}::${linkedPath}`;
+          if (linkedPath && !autoExpandedLinkedFolders.has(seenKey)) {
+            autoExpandedLinkedFolders.add(seenKey);
+            expandedFolders.add(linkedPath);
+          }
+        }
+      });
 
       const treeRoot = buildTreeHierarchy(visibleItems);
 
@@ -922,6 +985,7 @@ async function promptCreateFile() {
 
       if (window.showToast) window.showToast(`Файл ${fileName} создан`, 'success');
 
+      invalidateExplorerFileTreeCache(wsId);
       await refreshFileTree(wsId);
 
       if (typeof window.switchWorkspaceSubTab === 'function') {
@@ -1079,9 +1143,8 @@ export function initIdeFileExplorer() {
   // 2. Кнопка обновления дерева файлов
 
   document.getElementById('ide-btn-refresh-explorer')?.addEventListener('click', () => {
-
+    invalidateExplorerFileTreeCache();
     refreshFileTree();
-
   });
 
 
@@ -1185,39 +1248,62 @@ export function initIdeFileExplorer() {
 
 
   // 6. Первая загрузка дерева файлов
-
-  refreshFileTree();
+  const initialWs = (typeof window.getActiveWorkspaceId === 'function' ? window.getActiveWorkspaceId() : null) || getActiveWorkspaceId();
+  refreshFileTree(initialWs);
 
   // 7. Обновление дерева при изменении состава файлов или смене рабочего пространства
-  document.addEventListener('workspace:items-changed', (e) => {
-    const wsId = e.detail?.workspaceId || getActiveWorkspaceId();
+  const handleWorkspaceSync = (e) => {
+    const wsId = e.detail?.workspaceId || (typeof window.getActiveWorkspaceId === 'function' ? window.getActiveWorkspaceId() : null) || getActiveWorkspaceId();
     currentFilesData = null;
     if (wsId) {
+      invalidateExplorerFileTreeCache(wsId);
       refreshFileTree(wsId);
+    }
+  };
+
+  document.addEventListener('workspace:items-changed', handleWorkspaceSync);
+  document.addEventListener('workspace:changed', handleWorkspaceSync);
+  document.addEventListener('context:changed', handleWorkspaceSync);
+  document.addEventListener('repo:changed', handleWorkspaceSync);
+
+  // 7.1 Синхронизация при смене хэша URL
+  let lastProcessedHashWs = null;
+  window.addEventListener('hashchange', () => {
+    if (typeof location !== 'undefined' && location.hash) {
+      const match = location.hash.match(/workspace=([^&/#]+)/i);
+      if (match && match[1]) {
+        let wsId = match[1];
+        try {
+          wsId = decodeURIComponent(match[1]);
+        } catch (_) {}
+        if (wsId && wsId !== lastProcessedHashWs) {
+          lastProcessedHashWs = wsId;
+          refreshFileTree(wsId);
+        }
+      }
     }
   });
 
-  document.addEventListener('workspace:changed', (e) => {
-    const wsId = e.detail?.workspaceId;
-    currentFilesData = null;
-    if (wsId) {
-      refreshFileTree(wsId);
-    }
-  });
+  // 7.2 Клик по заголовку проводника открывает верхний выпадающий список рабочих пространств
+  const explorerTitleWrapper = document.getElementById('ide-explorer-ws-title')?.closest('.ide-explorer-section-title') || document.getElementById('ide-explorer-ws-title');
+  if (explorerTitleWrapper && !explorerTitleWrapper._boundDropdown) {
+    explorerTitleWrapper._boundDropdown = true;
+    explorerTitleWrapper.style.cursor = 'pointer';
+    explorerTitleWrapper.title = 'Переключить рабочее пространство';
+    explorerTitleWrapper.addEventListener('click', () => {
+      const topDropdownBtn = document.getElementById('top-workspace-dropdown-btn');
+      if (topDropdownBtn) {
+        topDropdownBtn.click();
+      }
+    });
+  }
 
   // 8. Инициализация контекстного меню по ПКМ для дерева файлов
-
   initIdeTreeContextMenu();
 
-
-
   // 10. Перерисовка дерева файлов при переключении языка (RTL <-> LTR)
-
   window.addEventListener('languageChanged', () => {
-
     refreshFileTree();
-
   });
-
 }
 

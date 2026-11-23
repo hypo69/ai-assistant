@@ -11,7 +11,7 @@
 # Package: .agents.skills.google-contacts.scripts
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-27 16:15:00
+# Updated: 2026-11-15 20:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -219,6 +219,97 @@ class GoogleContactsClient:
 
         created = service.people().createContact(body=body).execute()
         return {"status": "success", "contact": self._normalize_person(created)}
+
+    def update_contact(
+        self,
+        resource_name: str,
+        given_name: Optional[str] = None,
+        family_name: Optional[str] = None,
+        phone: Optional[str] = None,
+        email: Optional[str] = None,
+        organization: Optional[str] = None,
+        title: Optional[str] = None,
+        notes: Optional[str] = None,
+        etag: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Обновляет существующий контакт в Google Contacts.
+
+        Args:
+            resource_name: Идентификатор контакта вида 'people/c...'.
+            given_name: Имя контакта.
+            family_name: Фамилия контакта.
+            phone: Номер телефона.
+            email: Электронная почта.
+            organization: Организация / компания.
+            title: Должность.
+            notes: Заметки о контакте.
+            etag: etag контакта (если не передан, запрашивается автоматически).
+
+        Returns:
+            Словарь с результатом обновления контакта.
+        """
+        service = self.get_service()
+
+        # Если etag не передан, получаем актуальные метаданные контакта
+        if not etag:
+            current = service.people().get(
+                resourceName=resource_name,
+                personFields="metadata,names,emailAddresses,phoneNumbers,organizations,biographies",
+            ).execute()
+            etag = current.get("etag")
+        else:
+            current = {}
+
+        body: Dict[str, Any] = {"etag": etag}
+        update_fields: List[str] = []
+
+        if given_name is not None or family_name is not None:
+            cur_names = current.get("names", [{}])[0] if current.get("names") else {}
+            new_given = given_name if given_name is not None else cur_names.get("givenName", "")
+            new_family = family_name if family_name is not None else cur_names.get("familyName", "")
+            body["names"] = [{"givenName": new_given, "familyName": new_family}]
+            update_fields.append("names")
+
+        if phone is not None:
+            if phone.strip():
+                body["phoneNumbers"] = [{"value": phone.strip(), "type": "mobile"}]
+            else:
+                body["phoneNumbers"] = []
+            update_fields.append("phoneNumbers")
+
+        if email is not None:
+            if email.strip():
+                body["emailAddresses"] = [{"value": email.strip(), "type": "home"}]
+            else:
+                body["emailAddresses"] = []
+            update_fields.append("emailAddresses")
+
+        if organization is not None or title is not None:
+            cur_org = current.get("organizations", [{}])[0] if current.get("organizations") else {}
+            new_org = organization if organization is not None else cur_org.get("name", "")
+            new_title = title if title is not None else cur_org.get("title", "")
+            if new_org or new_title:
+                body["organizations"] = [{"name": new_org, "title": new_title}]
+            else:
+                body["organizations"] = []
+            update_fields.append("organizations")
+
+        if notes is not None:
+            if notes.strip():
+                body["biographies"] = [{"value": notes.strip()}]
+            else:
+                body["biographies"] = []
+            update_fields.append("biographies")
+
+        if not update_fields:
+            return {"status": "success", "message": "Нет полей для обновления", "contact": self.get_contact(resource_name)}
+
+        updated = service.people().updateContact(
+            resourceName=resource_name,
+            updatePersonFields=",".join(update_fields),
+            body=body,
+        ).execute()
+        return {"status": "success", "contact": self._normalize_person(updated)}
 
     def delete_contact(self, resource_name: str) -> Dict[str, Any]:
         """Удаляет контакт по resourceName.

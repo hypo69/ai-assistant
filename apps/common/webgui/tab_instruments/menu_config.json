@@ -38,6 +38,17 @@
         "title_i18n": "instruments.subtabs.runtimeTitle",
         "default_title": "Параметры рантайма и SafeOps",
         "order": 2
+      },
+      {
+        "id": "status",
+        "button_id": "pill-inst-status-tab",
+        "pane_id": "pill-inst-status",
+        "panel_id": "panel-system-status",
+        "icon": "bi-heart-pulse",
+        "label_i18n": "instruments.subtabs.statusLabel",
+        "title_i18n": "instruments.subtabs.statusTitle",
+        "default_title": "Диагностическая готовность подсистем (Git, WikiLLM, темпоральный граф и RAG)",
+        "order": 3
       }
     ]
   },

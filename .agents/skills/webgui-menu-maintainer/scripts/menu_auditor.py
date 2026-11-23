@@ -6,8 +6,9 @@ Description:
   Инструмент автоматической проверки, контроля качества и автоисправления (--fix)
   меню суб-панелей и подменю блоков WebGUI. Обеспечивает соблюдение принципа
   «Меню - всегда меню», наличие статических тултипов без обращения к AI-модели,
-  сквозное связывание i18n, двухуровневую URL-маршрутизацию и генерацию
-  локального menu_config.json для Drag & Drop.
+  сквозное связывание i18n (с токенами {{key}}), двухуровневую URL-маршрутизацию
+  и генерацию локального menu_config.json для Drag & Drop во всех слоях WebGUI
+  (apps/ai_assistant/api/webgui и apps/common/webgui).
 
 Usage Examples:
   1. Полный аудит всех вкладок WebGUI:
@@ -26,7 +27,7 @@ File: menu_auditor.py
 Package: .agents/skills/webgui-menu-maintainer/scripts
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-06 23:40:00
+Updated: 2026-11-15 19:52:00
 =============================================================================
 """
 
@@ -40,6 +41,12 @@ from typing import Any, Dict, List, Optional
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[4]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from logger import logger
+
 
 CANONICAL_COMMENT = "<!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->"
 
@@ -48,13 +55,14 @@ class WebGUIMenuAuditor:
     """Аудитор и автофиксер структуры навигационных меню и подменю блоков WebGUI."""
 
     def __init__(self, root_dir: Optional[Path] = None):
-        self.root_dir = root_dir or Path(__file__).resolve().parents[4]
+        self.root_dir = root_dir or _PROJECT_ROOT
         self.locales_dir = self._find_locales_dir()
         self.ru_dict = self._load_dict("ru")
 
     def _find_locales_dir(self) -> Optional[Path]:
         candidates = [
             self.root_dir / "apps" / "ai_assistant" / "api" / "webgui" / "locales",
+            self.root_dir / "apps" / "common" / "webgui" / "locales",
             self.root_dir / "apps" / "windows" / "api" / "webgui" / "locales",
         ]
         for c in candidates:
@@ -74,13 +82,26 @@ class WebGUIMenuAuditor:
         return {}
 
     def _save_dict(self, lang: str, data: Dict[str, Any]) -> None:
-        if not self.locales_dir:
-            return
-        dict_file = self.locales_dir / f"{lang}.json"
-        try:
-            dict_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-        except Exception as e:
-            print(f"⚠️ Не удалось сохранить {lang}.json: {e}")
+        candidates = [
+            self.root_dir / "apps" / "ai_assistant" / "api" / "webgui" / "locales",
+            self.root_dir / "apps" / "common" / "webgui" / "locales",
+            self.root_dir / "apps" / "windows" / "api" / "webgui" / "locales",
+        ]
+        saved_any = False
+        for loc_dir in candidates:
+            if loc_dir.is_dir():
+                dict_file = loc_dir / f"{lang}.json"
+                try:
+                    dict_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+                    saved_any = True
+                except Exception as e:
+                    logger.console(f"⚠️ Не удалось сохранить {lang}.json в {loc_dir}: {e}")
+        if not saved_any and self.locales_dir:
+            dict_file = self.locales_dir / f"{lang}.json"
+            try:
+                dict_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+            except Exception as e:
+                logger.console(f"⚠️ Не удалось сохранить {lang}.json: {e}")
 
     def _has_locale_key(self, key: str) -> bool:
         if key in self.ru_dict:
@@ -94,10 +115,11 @@ class WebGUIMenuAuditor:
         return True
 
     def discover_tab_directories(self) -> List[Path]:
-        """Ищет все директории вкладок tab_* в проекте."""
+        """Ищет все директории вкладок tab_* в проекте (включая общий слой apps/common/webgui)."""
         found = []
         search_roots = [
             self.root_dir / "apps" / "ai_assistant" / "api" / "webgui",
+            self.root_dir / "apps" / "common" / "webgui",
             self.root_dir / "apps" / "windows" / "api" / "webgui",
         ]
         for s_root in search_roots:
@@ -250,7 +272,7 @@ class WebGUIMenuAuditor:
                 "icon": icon_m.group(1) if icon_m else "bi-card-checklist",
                 "label_i18n": i18n_lbl.group(1) if i18n_lbl else "",
                 "title_i18n": i18n_title.group(1) if i18n_title else "",
-                "default_title": title_attr.group(1) if title_attr else "",
+                "default_title": f"{{{{{i18n_title.group(1)}}}}}" if i18n_title else (title_attr.group(1) if title_attr else ""),
                 "order": idx
             })
 
@@ -280,7 +302,7 @@ class WebGUIMenuAuditor:
                     "icon": icon_m.group(1) if icon_m else "bi-grid",
                     "label_i18n": i18n_lbl.group(1) if i18n_lbl else "",
                     "title_i18n": i18n_title.group(1) if i18n_title else "",
-                    "default_title": title_attr.group(1) if title_attr else "",
+                    "default_title": f"{{{{{i18n_title.group(1)}}}}}" if i18n_title else (title_attr.group(1) if title_attr else ""),
                     "order": idx
                 })
             blocks_data["default"] = {
@@ -381,7 +403,7 @@ class WebGUIMenuAuditor:
                     is_active = 'active' in old_cls
                     base_cls = "btn btn-sm btn-outline-secondary" if is_block else "btn btn-sm btn-outline-primary"
                     active_cls = " active" if is_active else ""
-                    
+
                     # Извлечем полезные модификаторы расположения
                     extras = []
                     for c in old_cls.split():
@@ -422,20 +444,12 @@ class WebGUIMenuAuditor:
                 target_m = re.search(r'data-bs-target="#([^"]+)"', btn_tag)
                 btn_ident = b_id_m.group(1) if b_id_m else (target_m.group(1) if target_m else "btn")
                 clean_ident = re.sub(r'^(?:subtab-|nav-|pill-|btn-)', '', btn_ident).replace('-tab', '')
-                
+
                 is_block = 'data-block-id' in btn_tag or 'block-' in btn_tag
                 category = "blocks" if is_block else "subtabs"
                 title_key = f"{prefix}.{category}.{clean_ident}Title"
 
                 title_ru = f"Раздел: {label}" if "раздел" not in label.lower() and len(label) < 25 else label
-
-                if not has_title:
-                    btn_tag = btn_tag.replace('>', f' title="{title_ru}">', 1)
-                    changes_made.append(f"Добавлен title='{title_ru}'")
-                else:
-                    cur_title_m = re.search(r'title="([^"]+)"', btn_tag)
-                    if cur_title_m:
-                        title_ru = cur_title_m.group(1)
 
                 if not has_i18n_title:
                     btn_tag = btn_tag.replace('>', f' data-i18n-title="{title_key}">', 1)
@@ -444,6 +458,14 @@ class WebGUIMenuAuditor:
                     cur_key_m = re.search(r'data-i18n-title="([^"]+)"', btn_tag)
                     if cur_key_m:
                         title_key = cur_key_m.group(1)
+
+                if not has_title:
+                    btn_tag = btn_tag.replace('>', f' title="{{{{{title_key}}}}}">', 1)
+                    changes_made.append(f"Добавлен title='{{{{{title_key}}}}}'")
+                else:
+                    cur_title_m = re.search(r'title="([^"]+)"', btn_tag)
+                    if cur_title_m and not cur_title_m.group(1).startswith("{{"):
+                        title_ru = cur_title_m.group(1)
 
                 # Пополняем словари локалей
                 if title_key not in locales["ru"]:
@@ -578,25 +600,25 @@ def main():
         is_fix_mode = (args.command == "fix") or getattr(args, "fix", False)
 
         if is_fix_mode:
-            print("🔧 Запуск режима автоисправления (--fix)...")
+            logger.console("🔧 Запуск режима автоисправления (--fix)...")
             fix_results = auditor.run_fix(args.tab)
             for fr in fix_results:
                 if fr.get("fixed"):
-                    print(f"  ✓ {fr['tab']}: исправлено ({len(fr.get('changes', []))} изменений)")
+                    logger.console(f"  ✓ {fr['tab']}: исправлено ({len(fr.get('changes', []))} изменений)")
                     for ch in fr.get("changes", []):
-                        print(f"      - {ch}")
+                        logger.console(f"      - {ch}")
 
         # Повторно аудируем для финального отчета
         results = auditor.run_audit(args.tab)
 
         if getattr(args, "json", False):
-            print(json.dumps(results, indent=2, ensure_ascii=False))
+            logger.console(json.dumps(results, indent=2, ensure_ascii=False))
             total_issues = sum(len(r["issues"]) for r in results if r["has_menu"])
             sys.exit(1 if total_issues > 0 else 0)
 
-        print("\n" + "=" * 75)
-        print("  📋 ОТЧЁТ АУДИТА МЕНЮ ПАНЕЛЕЙ И ПОДМЕНЮ БЛОКОВ WEBGUI")
-        print("=" * 75)
+        logger.console("\n" + "=" * 75)
+        logger.console("  📋 ОТЧЁТ АУДИТА МЕНЮ ПАНЕЛЕЙ И ПОДМЕНЮ БЛОКОВ WEBGUI")
+        logger.console("=" * 75)
 
         total_menus = sum(1 for r in results if r["has_menu"])
         total_issues = sum(len(r["issues"]) for r in results if r["has_menu"])
@@ -608,31 +630,31 @@ def main():
             issues_cnt = len(r["issues"])
             status_icon = "❌" if issues_cnt > 0 else "✅"
 
-            print(f"\n{status_icon} Вкладка: {tab_name} (Замечаний: {issues_cnt})")
+            logger.console(f"\n{status_icon} Вкладка: {tab_name} (Замечаний: {issues_cnt})")
             for p in r["passed"]:
-                print(f"   ✓ {p}")
+                logger.console(f"   ✓ {p}")
             for iss in r["issues"]:
-                print(f"   ! [WARNING] {iss}")
+                logger.console(f"   ! [WARNING] {iss}")
 
-        print("\n" + "=" * 75)
-        print(f"Итого проверено меню вкладок: {total_menus}. Замечаний: {total_issues}.")
-        print("=" * 75)
+        logger.console("\n" + "=" * 75)
+        logger.console(f"Итого проверено меню вкладок: {total_menus}. Замечаний: {total_issues}.")
+        logger.console("=" * 75)
 
         if total_issues > 0:
-            print("\n❌ Обнаружены замечания! Меню не соответствует стандарту.")
+            logger.console("\n❌ Обнаружены замечания! Меню не соответствует стандарту.")
             sys.exit(1)
         else:
-            print("\n✅ Все проверенные меню строго соответствуют стандарту WebGUI!")
+            logger.console("\n✅ Все проверенные меню строго соответствуют стандарту WebGUI!")
             sys.exit(0)
 
     elif args.command == "scaffold-config":
         tab_dirs = [d for d in auditor.discover_tab_directories() if d.name == args.tab]
         if not tab_dirs:
-            print(f"❌ Директория вкладки '{args.tab}' не найдена")
+            logger.console(f"❌ Директория вкладки '{args.tab}' не найдена")
             sys.exit(1)
         cfg = auditor.scaffold_menu_config(tab_dirs[0])
-        print(f"✅ Успешно создан menu_config.json для {args.tab}:")
-        print(json.dumps(cfg, indent=2, ensure_ascii=False))
+        logger.console(f"✅ Успешно создан menu_config.json для {args.tab}:")
+        logger.console(json.dumps(cfg, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

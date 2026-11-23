@@ -24,7 +24,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-19 22:45:00
+# Updated: 2026-11-20 02:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ from header import __root__
 from logger import logger
 from apps.ai_assistant.core.content_extractor import ContentExtractor
 from apps.ai_assistant.core.git_i18n import get_git_commit_msg
-from apps.ai_assistant.core.obsidian_vault import strip_obsidian_enrichment
+from apps.ai_assistant.core.obsidian_vault import ObsidianVaultBuilder, strip_obsidian_enrichment
 from apps.ai_assistant.core.service_file_authenticator import ServiceFileAuthenticator
 from apps.ai_assistant.core.watchdog_pdf_pipeline import WatchdogPdfPipeline
 from apps.ai_assistant.core.workspace_registry import get_current_host_name
@@ -76,6 +76,13 @@ _IGNORED_DIR_NAMES: Set[str] = {
     "_entities",
     "__pycache__",
     "node_modules",
+}
+
+_IGNORED_RUNTIME_FILE_NAMES: Set[str] = {
+    ".ds_store",
+    "thumbs.db",
+    "ehthumbs.db",
+    "electron_state.json",
 }
 
 _config_lock = threading.RLock()
@@ -133,9 +140,10 @@ def save_watchdog_config(patch: Dict[str, Any], config_path: Optional[Path | str
                 pass
 
         full_cfg["watchdog"] = current
-        tmp_path = cfg_path.with_suffix(".json.tmp")
-        tmp_path.write_text(json.dumps(full_cfg, indent=2, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp_path, cfg_path)
+        ObsidianVaultBuilder._atomic_write_text(
+            cfg_path,
+            json.dumps(full_cfg, indent=2, ensure_ascii=False),
+        )
         return current
 
 
@@ -199,6 +207,7 @@ class WorkspaceWatchdogService:
         self._observer: Optional[Observer] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._lock = threading.RLock()
+        self._ws_async_locks: Dict[Tuple[int, str], asyncio.Lock] = {}
         self._timers: Dict[str, threading.Timer] = {}
         self._ws_suppress_until: Dict[str, float] = {}
         self._targets: List[WatchTarget] = []
@@ -260,9 +269,14 @@ class WorkspaceWatchdogService:
                     return True
 
         name = file_path.name
-        if not name or name.startswith("~") or name.endswith((".tmp", ".lock", ".swp", ".part", ".crdownload")):
+        name_lower = name.lower()
+        if (
+            not name
+            or name.startswith("~")
+            or name_lower.endswith((".tmp", ".lock", ".swp", ".part", ".crdownload", ".db-wal", ".db-shm", ".db-journal"))
+        ):
             return True
-        if name in {".DS_Store", "Thumbs.db", "ehthumbs.db"}:
+        if name_lower in _IGNORED_RUNTIME_FILE_NAMES:
             return True
 
         try:
@@ -291,6 +305,16 @@ class WorkspaceWatchdogService:
         else:
             if name.startswith("."):
                 return True
+            # Исключаем файлы внутри каталога рабочих пространств (data/workspaces), если внешний источник охватывает родительскую папку
+            ws_dir = getattr(self.wm, "workspaces_dir", None)
+            if ws_dir is not None:
+                try:
+                    file_path.resolve().relative_to(Path(ws_dir).resolve())
+                    return True
+                except ValueError:
+                    pass
+                except Exception:
+                    pass
 
         return False
 
@@ -495,17 +519,27 @@ class WorkspaceWatchdogService:
             "detail": detail,
         })
 
+    def _get_workspace_async_lock(self, workspace_id: str) -> asyncio.Lock:
+        """Возвращает асинхронную блокировку для сериализации обработки событий одного рабочего пространства."""
+        loop = asyncio.get_running_loop()
+        key = (id(loop), str(workspace_id))
+        with self._lock:
+            if len(self._ws_async_locks) > 64:
+                current_loop_id = id(loop)
+                self._ws_async_locks = {
+                    k: v for k, v in self._ws_async_locks.items() if k[0] == current_loop_id
+                }
+            lock = self._ws_async_locks.get(key)
+            if lock is None:
+                lock = asyncio.Lock()
+                self._ws_async_locks[key] = lock
+            return lock
+
     async def process_file_event(self, target: WatchTarget, file_path: Path, event_type: str) -> Dict[str, Any]:
-        """Обрабатывает событие файла: автокоммит Git в рабочей области и условную транскрибацию медиа."""
+        """Обрабатывает событие файла с сериализацией по workspace_id (защита SQLite, Git и FAISS от гонок)."""
         cfg = self.get_config()
         if not cfg.get("enabled", True):
             return {"status": "disabled"}
-
-        ws_id = target.workspace_id
-        auto_transcribe = bool(cfg.get("auto_transcribe_media", True))
-        auto_git_commit = bool(cfg.get("auto_git_commit", True))
-        is_media = ContentExtractor.is_media_with_audio_extension(file_path)
-        is_pdf = file_path.suffix.lower() == ".pdf"
 
         try:
             if event_type in {"created", "modified", "moved"}:
@@ -513,109 +547,47 @@ class WorkspaceWatchdogService:
                 if not stable:
                     return {"status": "skipped", "reason": "file_missing_or_unstable"}
 
-            if target.kind == "workspace":
-                ws_path = target.root_path
-                self.suppress_workspace(ws_path, seconds=3.0)
+            async with self._get_workspace_async_lock(target.workspace_id):
+                return await self._process_file_event_locked(target, file_path, event_type, cfg)
+        except Exception as exc:
+            self._stats["errors"] += 1
+            logger.warning(f"[WorkspaceWatchdog] Ошибка обработки события {event_type} для {file_path}: {exc}")
+            self._record_event(target, file_path, event_type, "error", str(exc))
+            return {"status": "error", "error": str(exc)}
 
-                ws_lang = self.wm._get_ws_lang(ws_id) if hasattr(self.wm, "_get_ws_lang") else "ru"
+    async def _process_file_event_locked(
+        self,
+        target: WatchTarget,
+        file_path: Path,
+        event_type: str,
+        cfg: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Выполняет обработку события файла под блокировкой рабочего пространства."""
+        ws_id = target.workspace_id
+        auto_transcribe = bool(cfg.get("auto_transcribe_media", True))
+        auto_git_commit = bool(cfg.get("auto_git_commit", True))
+        is_media = ContentExtractor.is_media_with_audio_extension(file_path)
+        is_pdf = file_path.suffix.lower() == ".pdf"
 
-                if event_type == "deleted":
-                    if auto_git_commit:
-                        del_msg = get_git_commit_msg("watchdog_delete", lang=ws_lang, name=file_path.name)
-                        await asyncio.to_thread(self._commit_workspace_changes, ws_path, del_msg)
-                    self._stats["events_processed"] += 1
-                    self._record_event(target, file_path, event_type, "git_commit_delete")
-                    return {"status": "ok", "action": "git_commit_delete"}
-
-                if is_media:
-                    if not auto_transcribe:
-                        if auto_git_commit:
-                            ch_msg = get_git_commit_msg("watchdog_ws_changes", lang=ws_lang, ws=ws_id)
-                            await asyncio.to_thread(self._commit_workspace_changes, ws_path, ch_msg)
-                        self._stats["media_skipped_by_config"] += 1
-                        self._stats["events_processed"] += 1
-                        self._record_event(target, file_path, event_type, "media_skipped", "auto_transcribe_media=false")
-                        return {"status": "skipped_transcribe", "reason": "auto_transcribe_media=false"}
-
-                    res = await self._transcribe_and_index(
-                        ws_id=ws_id,
-                        ws_path=ws_path,
-                        file_path=file_path,
-                        doc_id=str(file_path.relative_to(ws_path)).replace("\\", "/"),
-                        is_workspace_internal=True,
-                        auto_git_commit=auto_git_commit,
-                    )
-                    self._stats["events_processed"] += 1
-                    self._record_event(target, file_path, event_type, res.get("action", "transcribed"), res.get("detail", ""))
-                    return res
-
-                # PDF внутри рабочей области: Paperless -> .md -> размещение Gemini -> Git commit
-                if is_pdf:
-                    return await self._handle_pdf_event(target, ws_path, file_path, event_type, auto_git_commit)
-
-                # Обычный документ внутри папки рабочей области
-                if self.wm.extractor.is_supported_file(file_path):
-                    rel_id = str(file_path.relative_to(ws_path)).replace("\\", "/")
-                    extracted = await self.wm.extractor.extract(file_path, audio_mode="model" if auto_transcribe else "raw")
-                    text = strip_obsidian_enrichment(extracted.get("text") or "")
-                    await asyncio.to_thread(
-                        self.wm.import_document,
-                        workspace_id=ws_id,
-                        document_id=rel_id,
-                        content=text,
-                        commit_message=f"Watchdog: обновление {rel_id}",
-                    )
-                    self._stats["git_commits"] += 1
-                    self._stats["events_processed"] += 1
-                    self._record_event(target, file_path, event_type, "indexed_and_committed", rel_id)
-                    return {"status": "ok", "action": "indexed_and_committed", "document_id": rel_id}
-
-                # Любой другой неотфильтрованный файл в рабочей области — коммитим изменения в Git
-                if auto_git_commit:
-                    change_msg = get_git_commit_msg("watchdog_change", lang=ws_lang, name=file_path.name)
-                    committed = await asyncio.to_thread(
-                        self._commit_workspace_changes, ws_path, change_msg
-                    )
-                    self._stats["events_processed"] += 1
-                    self._record_event(target, file_path, event_type, "git_commit" if committed else "no_git_diff")
-                    return {"status": "ok", "action": "git_commit" if committed else "no_git_diff"}
-                return {"status": "ignored"}
-
-            # Внешний связанный источник (linked_source)
-            ws = self.wm.registry.get_workspace(ws_id)
-            if not ws:
-                return {"status": "skipped", "reason": "workspace_not_found"}
-            ws_path = Path(ws["path"]).resolve()
+        if target.kind == "workspace":
+            ws_path = target.root_path
             self.suppress_workspace(ws_path, seconds=3.0)
 
+            ws_lang = self.wm._get_ws_lang(ws_id) if hasattr(self.wm, "_get_ws_lang") else "ru"
+
             if event_type == "deleted":
-                try:
-                    rel_doc = (
-                        file_path.name
-                        if target.source_file_only is not None
-                        else str(file_path.relative_to(target.root_path)).replace("\\", "/")
-                    )
-                except ValueError:
-                    rel_doc = file_path.name
-                await asyncio.to_thread(self.wm.store.mark_document_deleted, ws_id, rel_doc)
+                if auto_git_commit:
+                    del_msg = get_git_commit_msg("watchdog_delete", lang=ws_lang, name=file_path.name)
+                    await asyncio.to_thread(self._commit_workspace_changes, ws_path, del_msg)
                 self._stats["events_processed"] += 1
-                self._record_event(target, file_path, event_type, "marked_deleted", rel_doc)
-                return {"status": "ok", "action": "marked_deleted", "document_id": rel_doc}
-
-            if not self.wm.extractor.is_supported_file(file_path):
-                return {"status": "ignored", "reason": "unsupported_extension"}
-
-            try:
-                rel_doc = (
-                    file_path.name
-                    if target.source_file_only is not None
-                    else str(file_path.relative_to(target.root_path)).replace("\\", "/")
-                )
-            except ValueError:
-                rel_doc = file_path.name
+                self._record_event(target, file_path, event_type, "git_commit_delete")
+                return {"status": "ok", "action": "git_commit_delete"}
 
             if is_media:
                 if not auto_transcribe:
+                    if auto_git_commit:
+                        ch_msg = get_git_commit_msg("watchdog_ws_changes", lang=ws_lang, ws=ws_id)
+                        await asyncio.to_thread(self._commit_workspace_changes, ws_path, ch_msg)
                     self._stats["media_skipped_by_config"] += 1
                     self._stats["events_processed"] += 1
                     self._record_event(target, file_path, event_type, "media_skipped", "auto_transcribe_media=false")
@@ -625,37 +597,115 @@ class WorkspaceWatchdogService:
                     ws_id=ws_id,
                     ws_path=ws_path,
                     file_path=file_path,
-                    doc_id=rel_doc,
-                    is_workspace_internal=False,
+                    doc_id=str(file_path.relative_to(ws_path)).replace("\\", "/"),
+                    is_workspace_internal=True,
                     auto_git_commit=auto_git_commit,
                 )
                 self._stats["events_processed"] += 1
-                self._record_event(target, file_path, event_type, res.get("action", "transcribed"), rel_doc)
+                self._record_event(target, file_path, event_type, res.get("action", "transcribed"), res.get("detail", ""))
                 return res
 
-            # PDF во внешнем связанном источнике: Paperless -> .md в подходящую папку -> Git commit
+            # PDF внутри рабочей области: Paperless -> .md -> размещение Gemini -> Git commit
             if is_pdf:
                 return await self._handle_pdf_event(target, ws_path, file_path, event_type, auto_git_commit)
 
-            extracted = await self.wm.extractor.extract(file_path)
-            await asyncio.to_thread(
-                self.wm.index_document_from_source,
-                workspace_id=ws_id,
-                document_id=rel_doc,
-                content=extracted.get("text") or "",
-                file_path=str(file_path),
-                commit_message=f"Watchdog sync: {rel_doc}",
-            )
-            self._stats["git_commits"] += 1
-            self._stats["events_processed"] += 1
-            self._record_event(target, file_path, event_type, "linked_indexed", rel_doc)
-            return {"status": "ok", "action": "linked_indexed", "document_id": rel_doc}
+            # Обычный документ внутри папки рабочей области
+            if self.wm.extractor.is_supported_file(file_path):
+                rel_id = str(file_path.relative_to(ws_path)).replace("\\", "/")
+                extracted = await self.wm.extractor.extract(file_path, audio_mode="model" if auto_transcribe else "raw")
+                text = strip_obsidian_enrichment(extracted.get("text") or "")
+                await asyncio.to_thread(
+                    self.wm.import_document,
+                    workspace_id=ws_id,
+                    document_id=rel_id,
+                    content=text,
+                    commit_message=f"Watchdog: обновление {rel_id}",
+                )
+                self._stats["git_commits"] += 1
+                self._stats["events_processed"] += 1
+                self._record_event(target, file_path, event_type, "indexed_and_committed", rel_id)
+                return {"status": "ok", "action": "indexed_and_committed", "document_id": rel_id}
 
-        except Exception as exc:
-            self._stats["errors"] += 1
-            logger.warning(f"[WorkspaceWatchdog] Ошибка обработки события {event_type} для {file_path}: {exc}")
-            self._record_event(target, file_path, event_type, "error", str(exc))
-            return {"status": "error", "error": str(exc)}
+            # Любой другой неотфильтрованный файл в рабочей области — коммитим изменения в Git
+            if auto_git_commit:
+                change_msg = get_git_commit_msg("watchdog_change", lang=ws_lang, name=file_path.name)
+                committed = await asyncio.to_thread(
+                    self._commit_workspace_changes, ws_path, change_msg
+                )
+                self._stats["events_processed"] += 1
+                self._record_event(target, file_path, event_type, "git_commit" if committed else "no_git_diff")
+                return {"status": "ok", "action": "git_commit" if committed else "no_git_diff"}
+            return {"status": "ignored"}
+
+        # Внешний связанный источник (linked_source)
+        ws = self.wm.registry.get_workspace(ws_id)
+        if not ws:
+            return {"status": "skipped", "reason": "workspace_not_found"}
+        ws_path = Path(ws["path"]).resolve()
+        self.suppress_workspace(ws_path, seconds=3.0)
+
+        if event_type == "deleted":
+            try:
+                rel_doc = (
+                    file_path.name
+                    if target.source_file_only is not None
+                    else str(file_path.relative_to(target.root_path)).replace("\\", "/")
+                )
+            except ValueError:
+                rel_doc = file_path.name
+            await asyncio.to_thread(self.wm.store.mark_document_deleted, ws_id, rel_doc)
+            self._stats["events_processed"] += 1
+            self._record_event(target, file_path, event_type, "marked_deleted", rel_doc)
+            return {"status": "ok", "action": "marked_deleted", "document_id": rel_doc}
+
+        if not self.wm.extractor.is_supported_file(file_path):
+            return {"status": "ignored", "reason": "unsupported_extension"}
+
+        try:
+            rel_doc = (
+                file_path.name
+                if target.source_file_only is not None
+                else str(file_path.relative_to(target.root_path)).replace("\\", "/")
+            )
+        except ValueError:
+            rel_doc = file_path.name
+
+        if is_media:
+            if not auto_transcribe:
+                self._stats["media_skipped_by_config"] += 1
+                self._stats["events_processed"] += 1
+                self._record_event(target, file_path, event_type, "media_skipped", "auto_transcribe_media=false")
+                return {"status": "skipped_transcribe", "reason": "auto_transcribe_media=false"}
+
+            res = await self._transcribe_and_index(
+                ws_id=ws_id,
+                ws_path=ws_path,
+                file_path=file_path,
+                doc_id=rel_doc,
+                is_workspace_internal=False,
+                auto_git_commit=auto_git_commit,
+            )
+            self._stats["events_processed"] += 1
+            self._record_event(target, file_path, event_type, res.get("action", "transcribed"), rel_doc)
+            return res
+
+        # PDF во внешнем связанном источнике: Paperless -> .md в подходящую папку -> Git commit
+        if is_pdf:
+            return await self._handle_pdf_event(target, ws_path, file_path, event_type, auto_git_commit)
+
+        extracted = await self.wm.extractor.extract(file_path)
+        await asyncio.to_thread(
+            self.wm.index_document_from_source,
+            workspace_id=ws_id,
+            document_id=rel_doc,
+            content=extracted.get("text") or "",
+            file_path=str(file_path),
+            commit_message=f"Watchdog sync: {rel_doc}",
+        )
+        self._stats["git_commits"] += 1
+        self._stats["events_processed"] += 1
+        self._record_event(target, file_path, event_type, "linked_indexed", rel_doc)
+        return {"status": "ok", "action": "linked_indexed", "document_id": rel_doc}
 
     async def _handle_pdf_event(
         self,

@@ -4,14 +4,14 @@ Process Name: AI Assistant WebGUI - RAG Tab
 =============================================================================
 Description:
   Интерфейс 5-этапного гибридного RAG-поиска (NLP + SQLite + FAISS + LLM)
-  по пользовательской базе знаний активной рабочей области (User Space).
+  по изолированной пользовательской базе знаний каждой рабочей области (РО).
   Панель panel-rag-chunks подключена к GET /v1/panel/panel-rag-chunks.
 
 File: index.html
 Package: apps/ai_assistant/api/webgui/tab_rag
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-26 00:05:00
+Updated: 2026-11-16 04:31:00
 =============================================================================
 -->
 <div class="container-fluid p-3">
@@ -20,20 +20,32 @@ Updated: 2026-10-26 00:05:00
 <div>
 <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
 <span class="fs-5">🔍</span>
-<span data-i18n="tabs.rag" id="tab-rag-heading-text">5-этапный поиск RAG &amp; База знаний</span>
+<span data-i18n="tabs.rag" id="tab-rag-heading-text">{{tabs.rag}}</span>
 </h4>
-<div class="small text-muted" data-i18n="ui.rag.txt_1f8df190" id="rag-div-1f8df190">Векторный поиск (FAISS) и фактологический ретривер по документам активного рабочего пространства</div>
+<div class="small text-muted" data-i18n="ui.rag.txt_1f8df190" id="rag-div-1f8df190">{{ui.rag.txt_1f8df190}}</div>
+<div class="d-flex align-items-center gap-2 mt-1">
+<span class="badge bg-secondary-subtle text-secondary border font-monospace small" id="rag-workspace-status-badge">
+<i class="bi bi-database me-1"></i><span data-i18n="ui.rag.status_loading" id="spn-rag-status-badge-text">{{ui.rag.status_loading}}</span>
+</span>
 </div>
-<div class="d-flex align-items-center gap-2">
-<label class="small text-muted text-nowrap" data-i18n="ui.rag.txt_8fe40100" for="rag-workspace-select" id="rag-label-8fe40100">
-<i class="bi bi-folder2-open me-1"></i>Рабочая область:
-      </label>
-<select class="form-select form-select-sm" data-i18n-title="titles.rag.title_1277a504" id="rag-workspace-select" title="Выберите рабочую область">
-<option data-i18n="ui.rag.txt_c21f969b" id="rag-option-c21f969b" value="default">default</option>
+</div>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+<label class="small text-muted text-nowrap" for="rag-workspace-select" id="rag-label-8fe40100">
+<i class="bi bi-folder2-open me-1"></i><span data-i18n="ui.rag.txt_8fe40100" id="spn-ui-rag-txt-8fe40100-text">{{ui.rag.txt_8fe40100}}</span></label>
+<select class="form-select form-select-sm" data-i18n-title="titles.rag.title_1277a504" id="rag-workspace-select" title="{{titles.rag.title_1277a504}}">
+<option data-i18n="ui.rag.txt_c21f969b" id="rag-option-c21f969b" value="default">{{ui.rag.txt_c21f969b}}</option>
 </select>
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 text-nowrap" data-i18n-title="titles.rag.build_btn" id="rag-build-btn" title="{{titles.rag.build_btn}}">
+<i class="bi bi-gear-wide-connected" id="rag-build-icon"></i>
+<span data-i18n="ui.rag.build_btn" id="spn-rag-build-btn-text">{{ui.rag.build_btn}}</span>
+</button>
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 text-nowrap" data-i18n-title="titles.rag.build_all_btn" id="rag-build-all-btn" title="{{titles.rag.build_all_btn}}">
+<i class="bi bi-stack" id="rag-build-all-icon"></i>
+<span data-i18n="ui.rag.build_all_btn" id="spn-rag-build-all-btn-text">{{ui.rag.build_all_btn}}</span>
+</button>
 <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 text-nowrap" id="rag-refresh-btn">
 <i class="bi bi-arrow-clockwise"></i>
-<span data-i18n="common.refresh" id="tab-rag-refresh-btn-text">Обновить</span>
+<span data-i18n="common.refresh" id="tab-rag-refresh-btn-text">{{common.refresh}}</span>
 </button>
 </div>
 </div>
@@ -44,15 +56,15 @@ Updated: 2026-10-26 00:05:00
 <span class="input-group-text bg-body-tertiary">
 <i class="bi bi-search"></i>
 </span>
-<input class="form-control" data-i18n-placeholder="placeholders.rag.ph_378641b1" id="rag-search-input" placeholder="Задайте естественный вопрос по документам рабочей области (например: Кто вымыл раму? Какие факты зафиксированы?)" type="text" value="Кто вымыл раму?"/>
+<input class="form-control" data-i18n-placeholder="placeholders.rag.ph_378641b1" id="rag-search-input" placeholder="{{placeholders.rag.ph_378641b1}}" type="text" value="Кто вымыл раму?"/>
 <button class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-1" id="rag-execute-search-btn">
 <i class="bi bi-send"></i>
-<span data-i18n="ui.rag.txt_c85e2184" id="rag-span-c85e2184">Найти ответ</span>
+<span data-i18n="ui.rag.txt_c85e2184" id="rag-span-c85e2184">{{ui.rag.txt_c85e2184}}</span>
 </button>
 </div>
 <div class="d-flex flex-wrap align-items-center justify-content-between text-muted small gap-2">
-<span data-i18n="ui.rag.txt_cd718897" id="rag-span-cd718897">Конвейер RAG: Намерение (NLP) → Поиск фактов (SQLite) → Векторный RAG (FAISS) → Верификация → Синтез ответа (LLM)</span>
-<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.rag.txt_62036d92" id="rag-search-status-text">Готов к поиску</span>
+<span data-i18n="ui.rag.txt_cd718897" id="rag-span-cd718897">{{ui.rag.txt_cd718897}}</span>
+<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.rag.txt_62036d92" id="rag-search-status-text">{{ui.rag.txt_62036d92}}</span>
 </div>
 </div>
 </div>
@@ -61,11 +73,11 @@ Updated: 2026-10-26 00:05:00
 <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 px-3">
 <div class="fw-semibold small d-flex align-items-center gap-2">
 <i class="bi bi-robot text-primary"></i>
-<span data-i18n="ui.rag.txt_70e3319d" id="rag-span-70e3319d">Синтезированный ответ и доказательная база</span>
+<span data-i18n="ui.rag.txt_70e3319d" id="rag-span-70e3319d">{{ui.rag.txt_70e3319d}}</span>
 </div>
 <div class="d-flex align-items-center gap-2">
-<span class="badge bg-info-subtle text-info border" data-i18n="ui.rag.txt_8d2e5973" id="rag-latency-badge">0 ms</span>
-<span class="badge bg-primary" data-i18n="ui.rag.txt_093b9203" id="rag-results-count-badge">0 источников</span>
+<span class="badge bg-info-subtle text-info border" data-i18n="ui.rag.txt_8d2e5973" id="rag-latency-badge">{{ui.rag.txt_8d2e5973}}</span>
+<span class="badge bg-primary" data-i18n="ui.rag.txt_093b9203" id="rag-results-count-badge">{{ui.rag.txt_093b9203}}</span>
 </div>
 </div>
 <div class="card-body p-3">
@@ -73,25 +85,22 @@ Updated: 2026-10-26 00:05:00
 <div class="p-3 bg-body-tertiary rounded border mb-3 font-size-92" id="rag-answer-text"></div>
 <!-- Найденный канонический факт -->
 <div class="mb-3 d-none" id="rag-matched-fact-container">
-<div class="fw-semibold small text-muted mb-1" data-i18n="ui.rag.txt_79576c81" id="rag-div-79576c81">
-<i class="bi bi-pin-angle text-warning me-1"></i>Верифицированный структурированный факт:
-        </div>
+<div class="fw-semibold small text-muted mb-1" id="rag-div-79576c81">
+<i class="bi bi-pin-angle text-warning me-1"></i><span data-i18n="ui.rag.txt_79576c81" id="spn-ui-rag-txt-79576c81-text">{{ui.rag.txt_79576c81}}</span></div>
 <div class="p-2 rounded bg-light border font-monospace small" id="rag-matched-fact-text"></div>
 </div>
 <!-- Доказательная база источников документов -->
-<div class="fw-semibold small text-muted mb-2" data-i18n="ui.rag.txt_2a04f278" id="rag-div-2a04f278">
-<i class="bi bi-file-earmark-text text-info me-1"></i>Подтвержденные документы-источники:
-      </div>
+<div class="fw-semibold small text-muted mb-2" id="rag-div-2a04f278">
+<i class="bi bi-file-earmark-text text-info me-1"></i><span data-i18n="ui.rag.txt_2a04f278" id="spn-ui-rag-txt-2a04f278-text">{{ui.rag.txt_2a04f278}}</span></div>
 <div class="d-flex flex-column gap-2 mb-3" id="rag-evidence-list"></div>
 <!-- Семантические совпадения FAISS -->
 <div class="mb-3 d-none" id="rag-faiss-container">
-<div class="fw-semibold small text-muted mb-1" data-i18n="ui.rag.txt_3dc28a07" id="rag-div-3dc28a07">
-<i class="bi bi-diagram-3 text-success me-1"></i>Семантические фрагменты FAISS:
-        </div>
+<div class="fw-semibold small text-muted mb-1" id="rag-div-3dc28a07">
+<i class="bi bi-diagram-3 text-success me-1"></i><span data-i18n="ui.rag.txt_3dc28a07" id="spn-ui-rag-txt-3dc28a07-text">{{ui.rag.txt_3dc28a07}}</span></div>
 <div class="d-flex flex-column gap-1" id="rag-faiss-hits-list"></div>
 </div>
 <!-- Рекомендуемые уточняющие вопросы -->
-<div class="fw-semibold small text-muted mb-1" data-i18n="ui.rag.txt_00e25a13" id="rag-div-00e25a13">Рекомендуемые уточняющие вопросы:</div>
+<div class="fw-semibold small text-muted mb-1" data-i18n="ui.rag.txt_00e25a13" id="rag-div-00e25a13">{{ui.rag.txt_00e25a13}}</div>
 <div class="d-flex flex-wrap gap-2" id="rag-quick-questions"></div>
 </div>
 </div>
@@ -100,28 +109,28 @@ Updated: 2026-10-26 00:05:00
 <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 px-3">
 <div class="fw-semibold small d-flex align-items-center gap-2">
 <i class="bi bi-layers text-info"></i>
-<span data-i18n="ui.rag.txt_636666d6" id="rag-span-636666d6">Индексированные фрагменты документов (REST: /v1/panel/panel-rag-chunks)</span>
+<span data-i18n="ui.rag.txt_636666d6" id="rag-span-636666d6">{{ui.rag.txt_636666d6}}</span>
 </div>
-<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.rag.txt_e9861e70" id="rag-chunks-count-badge">0 чанков</span>
+<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.rag.txt_e9861e70" id="rag-chunks-count-badge">{{ui.rag.txt_e9861e70}}</span>
 </div>
 <div class="card-body p-0">
 <div class="table-responsive">
 <table class="table table-hover align-middle mb-0 font-size-82">
 <thead class="table-light">
 <tr>
-<th class="col-w-120" data-i18n="ui.rag.txt_0ac070cc" id="rag-th-0ac070cc" scope="col">Chunk ID</th>
-<th class="col-w-180" data-i18n="ui.rag.txt_38313512" id="rag-th-38313512" scope="col">Документ</th>
-<th class="col-w-100" data-i18n="ui.rag.txt_b65a62dc" id="rag-th-b65a62dc" scope="col">Предл. №</th>
-<th class="col-w-80" data-i18n="ui.rag.txt_0577df9a" id="rag-th-0577df9a" scope="col">Язык</th>
-<th class="col-w-110" data-i18n="ui.rag.txt_b505df5a" id="rag-th-b505df5a" scope="col">SHA256</th>
-<th data-i18n="ui.rag.txt_680472e0" id="rag-th-680472e0" scope="col">Фрагмент текста документа</th>
+<th class="col-w-120" data-i18n="ui.rag.txt_0ac070cc" id="rag-th-0ac070cc" scope="col">{{ui.rag.txt_0ac070cc}}</th>
+<th class="col-w-180" data-i18n="ui.rag.txt_38313512" id="rag-th-38313512" scope="col">{{ui.rag.txt_38313512}}</th>
+<th class="col-w-100" data-i18n="ui.rag.txt_b65a62dc" id="rag-th-b65a62dc" scope="col">{{ui.rag.txt_b65a62dc}}</th>
+<th class="col-w-80" data-i18n="ui.rag.txt_0577df9a" id="rag-th-0577df9a" scope="col">{{ui.rag.txt_0577df9a}}</th>
+<th class="col-w-110" data-i18n="ui.rag.txt_b505df5a" id="rag-th-b505df5a" scope="col">{{ui.rag.txt_b505df5a}}</th>
+<th data-i18n="ui.rag.txt_680472e0" id="rag-th-680472e0" scope="col">{{ui.rag.txt_680472e0}}</th>
 </tr>
 </thead>
 <tbody id="rag-chunks-table-body">
 <tr>
 <td class="text-center py-4 text-muted" colspan="6">
 <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-<div data-i18n="ui.rag.txt_7a41c828" id="rag-div-7a41c828">Загрузка чанков базы знаний через универсальный загрузчик панелей...</div>
+<div data-i18n="ui.rag.txt_7a41c828" id="rag-div-7a41c828">{{ui.rag.txt_7a41c828}}</div>
 </td>
 </tr>
 </tbody>

@@ -17,7 +17,7 @@
  * Package: apps.windows.api.webgui.js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-10 18:18:00
+ * Updated: 2026-11-19 18:43:00
  * =============================================================================
  */
 
@@ -273,6 +273,7 @@ export const BUILTIN_THEMES = [
       '--ui-text-primary': '#18181b',
       '--ui-text-secondary': '#3f3f46',
       '--ui-text-muted': '#52525b',
+      '--text-silver': '#e2e8f0',
       '--nav-text': '#27272a',
       '--nav-active': '#1d4ed8',
       '--ui-accent': '#1d4ed8',
@@ -608,12 +609,12 @@ export class ThemeEngine {
   }
 
   /**
-   * Асинхронно запрашивает актуальный каталог тем с бэкенда (/api/themes) или статического JSON.
+   * Асинхронно запрашивает актуальный каталог тем с бэкенда (/api/v1/themes) или статического JSON.
    */
   async fetchThemesCatalog() {
     if (typeof window === 'undefined' || typeof fetch !== 'function') return;
     try {
-      let res = await fetch('/api/themes').catch(() => null);
+      let res = await fetch('/api/v1/themes').catch(() => null);
       if (!res || !res.ok) {
         res = await fetch('/html/themes/themes_catalog.json').catch(() => null);
       }
@@ -704,7 +705,23 @@ export class ThemeEngine {
   }
 
   /**
-   * Создает новую дочернюю тему на базе указанной родительской стандартной темы.
+   * Определяет, является ли цвет в формате HEX светлым.
+   * @private
+   * @param {string} hex
+   * @returns {boolean|null}
+   */
+  _isLightHex(hex) {
+    if (!hex || typeof hex !== 'string') return null;
+    const clean = hex.replace('#', '').trim();
+    if (clean.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 >= 128;
+  }
+
+  /**
+   * Создает новую дочернюю тему на базе указанной существующей темы (стандартной или пользовательской).
    * @param {Object} params
    * @param {string} params.name - Название дочерней темы
    * @param {string} params.parentId - Идентификатор родительской темы
@@ -723,10 +740,17 @@ export class ThemeEngine {
     }
 
     const cleanSlug = name.toLowerCase().replace(/[^a-z0-9а-яё]/gi, '-').replace(/-+/g, '-').slice(0, 24);
-    const id = `child-${parentId.replace(/^theme-/, '')}-${cleanSlug || 'theme'}-${Date.now().toString(36)}`;
+    const id = `child-${parentId.replace(/^theme-/, '').replace(/^child-/, '')}-${cleanSlug || 'theme'}-${Date.now().toString(36)}`;
 
-    const baseType = parent.baseType || (parent.category === 'light' ? 'light' : 'dark');
-    const category = parent.category || baseType;
+    const mergedTokens = {
+      ...(parent.tokens || {}),
+      ...tokens,
+    };
+    const detectedLight = this._isLightHex(mergedTokens['--bg-color'] || mergedTokens['--ui-bg-base']);
+    const baseType = detectedLight !== null
+      ? (detectedLight ? 'light' : 'dark')
+      : (parent.baseType || (parent.category === 'light' ? 'light' : 'dark'));
+    const category = baseType;
     const now = new Date().toISOString();
 
     const childDef = {
@@ -740,14 +764,11 @@ export class ThemeEngine {
       baseType,
       icon: 'bi-palette2',
       iconColor: parent.iconColor || 'text-info',
-      description: description || `Дочерняя тема на базе "${parent.name}"`,
+      description: description || `Пользовательская тема на базе "${parent.name}"`,
       createdAt: now,
       updatedAt: now,
       settings: { ...settings },
-      tokens: {
-        ...(parent.tokens || {}),
-        ...tokens,
-      },
+      tokens: mergedTokens,
     };
 
     this.registry.set(id, childDef);
@@ -788,6 +809,11 @@ export class ThemeEngine {
         ...(existing.tokens || {}),
         ...tokens,
       };
+      const detectedLight = this._isLightHex(existing.tokens['--bg-color'] || existing.tokens['--ui-bg-base']);
+      if (detectedLight !== null) {
+        existing.baseType = detectedLight ? 'light' : 'dark';
+        existing.category = existing.baseType;
+      }
     }
     existing.updatedAt = new Date().toISOString();
 
@@ -1078,19 +1104,6 @@ export class ThemeEngine {
         document.body.className = document.body.className.replace(/\bchild-theme\S*/g, '').trim();
       }
 
-      let baseClass = parentTheme ? parentTheme.id : resolved;
-      if (baseClass === 'dark') baseClass = 'theme-dark-slate';
-      if (baseClass === 'light') baseClass = 'theme-light-enterprise';
-      if (baseClass === 'nightview') baseClass = 'theme-nightview';
-
-      if (themeClasses.includes(baseClass)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
-        if (document.body?.classList?.add) document.body.classList.add(baseClass);
-      } else if (themeClasses.includes(mode)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
-        if (document.body?.classList?.add) document.body.classList.add(mode);
-      }
-
       if (themeDef?.isChild) {
         if (document.documentElement?.classList?.add) {
           document.documentElement.classList.add('child-theme');
@@ -1099,6 +1112,19 @@ export class ThemeEngine {
         if (document.body?.classList?.add) {
           document.body.classList.add('child-theme');
           document.body.classList.add(`child-theme-${themeDef.id}`);
+        }
+      } else {
+        let baseClass = resolved;
+        if (baseClass === 'dark') baseClass = 'theme-dark-slate';
+        if (baseClass === 'light') baseClass = 'theme-light-enterprise';
+        if (baseClass === 'nightview') baseClass = 'theme-nightview';
+
+        if (themeClasses.includes(baseClass)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
+          if (document.body?.classList?.add) document.body.classList.add(baseClass);
+        } else if (themeClasses.includes(mode)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
+          if (document.body?.classList?.add) document.body.classList.add(mode);
         }
       }
 
@@ -1170,19 +1196,6 @@ export class ThemeEngine {
         document.body.className = document.body.className.replace(/\bchild-theme\S*/g, '').trim();
       }
 
-      let baseClass = parentTheme ? parentTheme.id : resolved;
-      if (baseClass === 'dark') baseClass = 'theme-dark-slate';
-      if (baseClass === 'light') baseClass = 'theme-light-enterprise';
-      if (baseClass === 'nightview') baseClass = 'theme-nightview';
-
-      if (themeClasses.includes(baseClass)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
-        if (document.body?.classList?.add) document.body.classList.add(baseClass);
-      } else if (themeClasses.includes(mode)) {
-        if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
-        if (document.body?.classList?.add) document.body.classList.add(mode);
-      }
-
       if (themeDef?.isChild) {
         if (document.documentElement?.classList?.add) {
           document.documentElement.classList.add('child-theme');
@@ -1191,6 +1204,19 @@ export class ThemeEngine {
         if (document.body?.classList?.add) {
           document.body.classList.add('child-theme');
           document.body.classList.add(`child-theme-${themeDef.id}`);
+        }
+      } else {
+        let baseClass = resolved;
+        if (baseClass === 'dark') baseClass = 'theme-dark-slate';
+        if (baseClass === 'light') baseClass = 'theme-light-enterprise';
+        if (baseClass === 'nightview') baseClass = 'theme-nightview';
+
+        if (themeClasses.includes(baseClass)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(baseClass);
+          if (document.body?.classList?.add) document.body.classList.add(baseClass);
+        } else if (themeClasses.includes(mode)) {
+          if (document.documentElement?.classList?.add) document.documentElement.classList.add(mode);
+          if (document.body?.classList?.add) document.body.classList.add(mode);
         }
       }
     }
@@ -1313,6 +1339,7 @@ export class ThemeEngine {
    * Инициализирует менеджер тем, регистрирует обработчики событий и применяет начальную тему.
    */
   init() {
+    this._applyDynamicTokens();
     const currentMode = this.getSavedMode();
     this.applyTheme(currentMode);
     this._applyStoredOverrides();
@@ -1443,16 +1470,41 @@ export class ThemeEngine {
     for (const [id, def] of this.registry.entries()) {
       if (def.tokens && typeof def.tokens === 'object') {
         const tokens = def.tokens;
-        css += `:root[data-theme="${id}"], [data-theme="${id}"] {\n`;
+        const imp = def.isChild ? ' !important' : '';
+        css += `:root[data-theme="${id}"], html[data-theme="${id}"], html[data-theme="${id}"] body {\n`;
         for (const [prop, val] of Object.entries(tokens)) {
           if (val !== undefined && val !== null && String(val).trim() !== '') {
-            css += `  ${prop}: ${val};\n`;
+            css += `  ${prop}: ${val}${imp};\n`;
           }
         }
         css += '}\n';
 
         // Индивидуальные стили компонентов для дочерних тем
         if (def.isChild) {
+          if (tokens['--bg-color']) {
+            css += `html[data-theme="${id}"], html[data-theme="${id}"] body { background-color: ${tokens['--bg-color']} !important; color: ${tokens['--text-color'] || 'inherit'} !important; }\n`;
+          }
+          if (tokens['--surface-1']) {
+            css += `[data-theme="${id}"] .card, [data-theme="${id}"] .modal-content, [data-theme="${id}"] .bg-body { background-color: ${tokens['--surface-1']} !important; }\n`;
+          }
+          if (tokens['--surface-2']) {
+            css += `[data-theme="${id}"] .bg-body-tertiary, [data-theme="${id}"] .bg-body-secondary { background-color: ${tokens['--surface-2']} !important; }\n`;
+          }
+          if (tokens['--alert-light-bg'] || tokens['--alert-light-border'] || tokens['--alert-light-text']) {
+            css += `[data-theme="${id}"] .alert-light { background-color: ${tokens['--alert-light-bg'] || tokens['--surface-1']} !important; border-color: ${tokens['--alert-light-border'] || tokens['--border-color']} !important; color: ${tokens['--alert-light-text'] || tokens['--text-color']} !important; }\n`;
+          }
+          if (tokens['--input-bg'] || tokens['--input-text'] || tokens['--input-border']) {
+            css += `[data-theme="${id}"] .form-control:not(.bg-dark):not(.uai-cmd-input), [data-theme="${id}"] .form-select:not(.bg-dark) { background-color: ${tokens['--input-bg'] || tokens['--surface-1']} !important; color: ${tokens['--input-text'] || tokens['--text-color']} !important; border-color: ${tokens['--input-border'] || tokens['--border-color']} !important; }\n`;
+          }
+          if (tokens['--ui-accent']) {
+            css += `[data-theme="${id}"] .btn-primary { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+            css += `[data-theme="${id}"] .btn-outline-primary { color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+            css += `[data-theme="${id}"] .btn-outline-primary:hover, [data-theme="${id}"] .btn-outline-primary.active { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
+          }
+          if (tokens['--ui-success']) {
+            css += `[data-theme="${id}"] .btn-outline-success { color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; }\n`;
+            css += `[data-theme="${id}"] .btn-outline-success:hover, [data-theme="${id}"] .btn-outline-success.active { background-color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
+          }
           if (tokens['--radius-md']) {
             css += `[data-theme="${id}"] .card, [data-theme="${id}"] .modal-content, [data-theme="${id}"] .ui-card { border-radius: ${tokens['--radius-md']} !important; }\n`;
           }
@@ -1589,6 +1641,27 @@ export class ThemeEngine {
 
     if (tokens['--bg-color']) {
       css += `body { background-color: ${tokens['--bg-color']} !important; color: ${tokens['--text-color'] || 'inherit'} !important; }\n`;
+    }
+    if (tokens['--surface-1']) {
+      css += `.card, .modal-content, .bg-body { background-color: ${tokens['--surface-1']} !important; }\n`;
+    }
+    if (tokens['--surface-2']) {
+      css += `.bg-body-tertiary, .bg-body-secondary { background-color: ${tokens['--surface-2']} !important; }\n`;
+    }
+    if (tokens['--alert-light-bg'] || tokens['--alert-light-border'] || tokens['--alert-light-text']) {
+      css += `.alert-light { background-color: ${tokens['--alert-light-bg'] || tokens['--surface-1']} !important; border-color: ${tokens['--alert-light-border'] || tokens['--border-color']} !important; color: ${tokens['--alert-light-text'] || tokens['--text-color']} !important; }\n`;
+    }
+    if (tokens['--input-bg'] || tokens['--input-text'] || tokens['--input-border']) {
+      css += `.form-control:not(.bg-dark):not(.uai-cmd-input), .form-select:not(.bg-dark) { background-color: ${tokens['--input-bg'] || tokens['--surface-1']} !important; color: ${tokens['--input-text'] || tokens['--text-color']} !important; border-color: ${tokens['--input-border'] || tokens['--border-color']} !important; }\n`;
+    }
+    if (tokens['--ui-accent']) {
+      css += `.btn-primary { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+      css += `.btn-outline-primary { color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; }\n`;
+      css += `.btn-outline-primary:hover, .btn-outline-primary.active { background-color: ${tokens['--ui-accent']} !important; border-color: ${tokens['--ui-accent']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
+    }
+    if (tokens['--ui-success']) {
+      css += `.btn-outline-success { color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; }\n`;
+      css += `.btn-outline-success:hover, .btn-outline-success.active { background-color: ${tokens['--ui-success']} !important; border-color: ${tokens['--ui-success']} !important; color: ${tokens['--surface-1'] || '#ffffff'} !important; }\n`;
     }
 
     if (tokens['--radius-md']) {

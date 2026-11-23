@@ -1,0 +1,55 @@
+{
+  "$schema": "webgui-menu-v1",
+  "tab_id": "tab-issues",
+  "draggable": true,
+  "subtabs": {
+    "nav_id": "issues-nav-pills",
+    "storage_key": "tab-issues_subtabs_order",
+    "items": [
+      {
+        "id": "issues-list",
+        "button_id": "pill-issues-list-tab",
+        "pane_id": "panel-issues-list",
+        "panel_id": "panel-issues-list",
+        "icon": "bi bi-card-checklist",
+        "label_i18n": "ui.issues.txt_18529cea",
+        "title_i18n": "issues.subtabs.listTitle",
+        "default_title": "{{issues.subtabs.listTitle}}",
+        "order": 0
+      },
+      {
+        "id": "new-issue",
+        "button_id": "pill-new-issue-tab",
+        "pane_id": "panel-new-issue",
+        "panel_id": "panel-new-issue",
+        "icon": "bi bi-plus-circle",
+        "label_i18n": "ui.issues.txt_b0081592",
+        "title_i18n": "issues.subtabs.newTitle",
+        "default_title": "{{issues.subtabs.newTitle}}",
+        "order": 1
+      },
+      {
+        "id": "milestones",
+        "button_id": "pill-milestones-tab",
+        "pane_id": "panel-milestones",
+        "panel_id": "panel-milestones",
+        "icon": "bi bi-signpost-split",
+        "label_i18n": "ui.issues.txt_b3a8887d",
+        "title_i18n": "issues.subtabs.milestonesTitle",
+        "default_title": "{{issues.subtabs.milestonesTitle}}",
+        "order": 2
+      },
+      {
+        "id": "labels",
+        "button_id": "pill-labels-tab",
+        "pane_id": "panel-labels",
+        "panel_id": "panel-labels",
+        "icon": "bi bi-tags",
+        "label_i18n": "ui.issues.txt_a4a53413",
+        "title_i18n": "issues.subtabs.labelsTitle",
+        "default_title": "{{issues.subtabs.labelsTitle}}",
+        "order": 3
+      }
+    ]
+  }
+}

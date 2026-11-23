@@ -11,12 +11,13 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 21:30:00
+# Updated: 2026-11-20 02:04:00
 # =============================================================================
 
 from __future__ import annotations
 """Операции с файлами и директориями рабочих пространств с интеграцией Git."""
 
+import contextlib
 import hashlib
 import json
 from pathlib import Path
@@ -25,6 +26,8 @@ import time
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 from logger import logger
+from apps.ai_assistant.core.git_i18n import get_git_commit_msg
+from apps.ai_assistant.core.obsidian_vault import ObsidianVaultBuilder
 from apps.ai_assistant.core.workspace_registry import format_host_qualified_path, get_current_host_name
 
 if TYPE_CHECKING:
@@ -87,6 +90,7 @@ class WorkspaceFileOps:
         wm._ensure_git_repo(ws_path)
         clean_rel, target = cls._normalize_and_resolve(ws_path, rel_path)
 
+        ws_lang = wm._get_ws_lang(workspace_id) if hasattr(wm, "_get_ws_lang") else "ru"
         if is_dir:
             target.mkdir(parents=True, exist_ok=True)
             # Добавляем .gitkeep, если каталог пустой, чтобы Git мог отслеживать структуру
@@ -94,7 +98,7 @@ class WorkspaceFileOps:
             if not any(target.iterdir()):
                 gitkeep.write_text("", encoding="utf-8")
                 wm._run_git(ws_path, ["add", str(gitkeep.relative_to(ws_path)).replace("\\", "/")])
-                wm._run_git(ws_path, ["commit", "-m", f"Создана папка: {clean_rel}"])
+                wm._run_git(ws_path, ["commit", "-m", get_git_commit_msg("folder_create", lang=ws_lang, name=clean_rel)])
             logger.info(f"[WorkspaceFileOps] Создана директория: {clean_rel} в {workspace_id}")
             return {
                 "status": "ok",
@@ -106,8 +110,9 @@ class WorkspaceFileOps:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
 
+        file_msg = get_git_commit_msg("file_create", lang=ws_lang, name=clean_rel)
         wm._run_git(ws_path, ["add", clean_rel])
-        wm._run_git(ws_path, ["commit", "-m", f"Создан файл: {clean_rel}"])
+        wm._run_git(ws_path, ["commit", "-m", file_msg])
 
         # Индексируем в базе знаний
         try:
@@ -115,7 +120,7 @@ class WorkspaceFileOps:
                 workspace_id=workspace_id,
                 document_id=clean_rel,
                 content=content,
-                commit_message=f"Создан файл: {clean_rel}",
+                commit_message=file_msg,
             )
         except Exception as exc:
             logger.warning(f"[WorkspaceFileOps] Ошибка индексации нового файла {clean_rel}: {exc}")
@@ -165,17 +170,18 @@ class WorkspaceFileOps:
 
         if not is_external:
             # Локальный файл или каталог внутри репозитория рабочей области
+            ws_lang = wm._get_ws_lang(workspace_id) if hasattr(wm, "_get_ws_lang") else "ru"
             git_rel = str(target.resolve().relative_to(ws_resolved)).replace("\\", "/")
             if is_directory:
                 wm._run_git(ws_path, ["rm", "-r", "-f", git_rel])
                 if target.exists():
                     shutil.rmtree(target, ignore_errors=True)
-                wm._run_git(ws_path, ["commit", "-m", f"Удален каталог: {git_rel}"])
+                wm._run_git(ws_path, ["commit", "-m", get_git_commit_msg("folder_delete", lang=ws_lang, name=git_rel)])
             else:
                 wm._run_git(ws_path, ["rm", "-f", git_rel])
                 if target.exists():
                     target.unlink(missing_ok=True)
-                wm._run_git(ws_path, ["commit", "-m", f"Удален файл: {git_rel}"])
+                wm._run_git(ws_path, ["commit", "-m", get_git_commit_msg("file_delete", lang=ws_lang, name=git_rel)])
             deleted_name = git_rel
         else:
             # Внешний файл или внешний источник
@@ -205,18 +211,23 @@ class WorkspaceFileOps:
         # Очистка реестра .tracked_sources.json
         manifest_file = ws_path / ".tracked_sources.json"
         if manifest_file.exists():
+            lock_ctx = wm.get_manifest_lock(ws_path) if hasattr(wm, "get_manifest_lock") else contextlib.nullcontext()
             try:
-                m_data = json.loads(manifest_file.read_text(encoding="utf-8"))
-                target_str_lower = str(target.resolve()).lower()
-                keys_to_remove = [
-                    k for k, v in m_data.items()
-                    if k in (rel_path, resolved_rel, target.name, target.stem)
-                    or str(v.get("file_path", "")).lower() == target_str_lower
-                ]
-                if keys_to_remove:
-                    for k in keys_to_remove:
-                        m_data.pop(k, None)
-                    manifest_file.write_text(json.dumps(m_data, indent=2, ensure_ascii=False), encoding="utf-8")
+                with lock_ctx:
+                    m_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+                    target_str_lower = str(target.resolve()).lower()
+                    keys_to_remove = [
+                        k for k, v in m_data.items()
+                        if k in (rel_path, resolved_rel, target.name, target.stem)
+                        or str(v.get("file_path", "")).lower() == target_str_lower
+                    ]
+                    if keys_to_remove:
+                        for k in keys_to_remove:
+                            m_data.pop(k, None)
+                        ObsidianVaultBuilder._atomic_write_text(
+                            manifest_file,
+                            json.dumps(m_data, indent=2, ensure_ascii=False),
+                        )
             except Exception as man_exc:
                 logger.warning(f"[WorkspaceFileOps] Ошибка очистки .tracked_sources.json: {man_exc}")
 
@@ -302,6 +313,7 @@ class WorkspaceFileOps:
         file_stem_lower = file_stem.lower()
 
         # 1. Попытка прямого разрешения внутри каталога рабочей области
+        is_traversal = False
         try:
             local_target = (ws_path / clean_rel).resolve()
             local_target.relative_to(ws_resolved)
@@ -312,7 +324,7 @@ class WorkspaceFileOps:
             if assets_target.exists():
                 return f"assets/{clean_rel}", assets_target, {"source_mode": "local", "is_external": False, "is_snapshot": False}
         except ValueError:
-            pass
+            is_traversal = True
 
         # 1.1 Поиск с расширениями в корне ws_path и assets (если clean_rel без расширения)
         try:
@@ -477,6 +489,8 @@ class WorkspaceFileOps:
             except ValueError:
                 raise ValueError(f"Путь '{rel_path}' выходит за пределы каталога рабочей области.")
 
+        if is_traversal:
+            raise ValueError(f"Путь '{rel_path}' выходит за пределы каталога рабочей области.")
         raise FileNotFoundError(f"Файл '{clean_rel}' не найден в рабочей области '{workspace_id}'.")
 
     @classmethod
@@ -526,12 +540,13 @@ class WorkspaceFileOps:
         raw_bytes = target.read_bytes()
         text = raw_bytes.decode("utf-8", errors="replace")
 
-        # Определение типа файла по содержимому при отсутствии суффикса/расширения
+        # Определение типа файла и направления текста (RTL для иврита, иначе LTR)
+        from apps.common.file_editor.catalog import SupportedFileCatalog
         detected_type = None
         ext = target.suffix.lstrip(".").lower()
         if not ext and text:
-            from apps.common.file_editor.catalog import SupportedFileCatalog
             detected_type = SupportedFileCatalog.detect_type_from_content(text, target.name)
+        direction = SupportedFileCatalog.detect_text_direction(text, clean_rel)
 
         return {
             "status": "ok",
@@ -542,6 +557,7 @@ class WorkspaceFileOps:
             "size": len(raw_bytes),
             "lines_count": len(text.splitlines()),
             "detected_type": detected_type,
+            "direction": direction,
             "is_external": meta.get("is_external", False),
         }
 
@@ -609,7 +625,12 @@ class WorkspaceFileOps:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
 
-        msg = commit_message.strip() if commit_message and commit_message.strip() else f"Обновлен: {clean_rel}"
+        ws_lang = wm._get_ws_lang(workspace_id) if hasattr(wm, "_get_ws_lang") else "ru"
+        msg = (
+            commit_message.strip()
+            if commit_message and commit_message.strip()
+            else get_git_commit_msg("file_update", lang=ws_lang, name=clean_rel)
+        )
 
         if meta.get("is_external"):
             # Для внешнего отслеживаемого файла обновляем снимок и .tracked_sources.json в Git рабочей области
@@ -618,41 +639,46 @@ class WorkspaceFileOps:
             mtime = target.stat().st_mtime
 
             manifest_file = ws_path / ".tracked_sources.json"
-            manifest_data: Dict[str, Any] = {}
-            if manifest_file.exists():
-                try:
-                    manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
-                except Exception:
-                    manifest_data = {}
+            lock_ctx = wm.get_manifest_lock(ws_path) if hasattr(wm, "get_manifest_lock") else contextlib.nullcontext()
+            with lock_ctx:
+                manifest_data: Dict[str, Any] = {}
+                if manifest_file.exists():
+                    try:
+                        manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+                    except Exception:
+                        manifest_data = {}
 
-            m_key = meta.get("manifest_key") or Path(clean_rel).name
-            cur_host = get_current_host_name()
-            entry = manifest_data.get(m_key) or {}
-            snap_rel = entry.get("snapshot")
-            if not snap_rel:
-                safe_snap = "".join(c if c.isalnum() or c in ("_", "-", ".") else "_" for c in f"{cur_host}_{Path(clean_rel).name}") + ".snapshot"
-                snap_rel = f".extracted_snapshots/{safe_snap}"
+                m_key = meta.get("manifest_key") or Path(clean_rel).name
+                cur_host = get_current_host_name()
+                entry = manifest_data.get(m_key) or {}
+                snap_rel = entry.get("snapshot")
+                if not snap_rel:
+                    safe_snap = "".join(c if c.isalnum() or c in ("_", "-", ".") else "_" for c in f"{cur_host}_{Path(clean_rel).name}") + ".snapshot"
+                    snap_rel = f".extracted_snapshots/{safe_snap}"
 
-            snap_path = ws_path / snap_rel
-            snap_path.parent.mkdir(parents=True, exist_ok=True)
-            snap_path.write_text(content, encoding="utf-8")
+                snap_path = ws_path / snap_rel
+                snap_path.parent.mkdir(parents=True, exist_ok=True)
+                ObsidianVaultBuilder._atomic_write_text(snap_path, content)
 
-            entry.update({
-                "host_name": cur_host,
-                "file_path": str(target.resolve()),
-                "qualified_path": format_host_qualified_path(target, cur_host),
-                "snapshot": str(snap_rel).replace("\\", "/"),
-                "updated_at": time.time(),
-                "content_length": len(content),
-                "content_hash": content_hash,
-                "source_mtime": mtime,
-                "source_size": len(raw_bytes),
-            })
-            manifest_data[m_key] = entry
-            manifest_file.write_text(json.dumps(manifest_data, indent=2, ensure_ascii=False), encoding="utf-8")
+                entry.update({
+                    "host_name": cur_host,
+                    "file_path": str(target.resolve()),
+                    "qualified_path": format_host_qualified_path(target, cur_host),
+                    "snapshot": str(snap_rel).replace("\\", "/"),
+                    "updated_at": time.time(),
+                    "content_length": len(content),
+                    "content_hash": content_hash,
+                    "source_mtime": mtime,
+                    "source_size": len(raw_bytes),
+                })
+                manifest_data[m_key] = entry
+                ObsidianVaultBuilder._atomic_write_text(
+                    manifest_file,
+                    json.dumps(manifest_data, indent=2, ensure_ascii=False),
+                )
 
-            wm._run_git(ws_path, ["add", "-A", ".tracked_sources.json", str(snap_rel).replace("\\", "/")])
-            wm._run_git(ws_path, ["commit", "-m", msg])
+                wm._run_git(ws_path, ["add", "-A", ".tracked_sources.json", str(snap_rel).replace("\\", "/")])
+                wm._run_git(ws_path, ["commit", "-m", msg])
         else:
             wm._run_git(ws_path, ["add", clean_rel])
             wm._run_git(ws_path, ["commit", "-m", msg])
@@ -703,10 +729,11 @@ class WorkspaceFileOps:
             shutil.move(str(old_target), str(new_target))
             wm._run_git(ws_path, ["add", "-A", clean_old, clean_new])
 
+        ws_lang = wm._get_ws_lang(workspace_id) if hasattr(wm, "_get_ws_lang") else "ru"
         msg = (
             commit_message.strip()
             if commit_message and commit_message.strip()
-            else f"Перемещён без изменений: {clean_old} -> {clean_new}"
+            else get_git_commit_msg("file_rename", lang=ws_lang, src=clean_old, dst=clean_new)
         )
         wm._run_git(ws_path, ["commit", "-m", msg])
         commit_hash = wm._run_git(ws_path, ["rev-parse", "HEAD"])
@@ -787,10 +814,11 @@ class WorkspaceFileOps:
         dest_target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(str(src_target), str(dest_target))
 
+        ws_lang = wm._get_ws_lang(workspace_id) if hasattr(wm, "_get_ws_lang") else "ru"
         msg = (
             commit_message.strip()
             if commit_message and commit_message.strip()
-            else f"Копия файла: {clean_src} -> {clean_dest}"
+            else get_git_commit_msg("file_copy", lang=ws_lang, src=clean_src, dst=clean_dest)
         )
         wm._run_git(ws_path, ["add", clean_dest])
         wm._run_git(ws_path, ["commit", "-m", msg])

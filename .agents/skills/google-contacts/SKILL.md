@@ -14,6 +14,7 @@ description_i18n:
 - Поиск контактов по имени, фамилии, компании, номеру телефона или email-адресу.
 - Получение подробной карточки контакта (телефоны, email, организации, заметки).
 - Добавление новых контактов в адресную книгу.
+- Редактирование существующих контактов (имена, телефоны, email, должности, заметки).
 - Удаление устаревших или ошибочных контактов по идентификатору `resourceName`.
 
 Интеграция опирается на авторизованный Google OAuth токен (`src/ai/google_accounts_state.py`).
@@ -26,7 +27,8 @@ description_i18n:
 1. Найти контакт человека («Какой номер телефона у Иванова?», «Найди email бухгалтера»).
 2. Просмотреть адресную книгу или список контактов.
 3. Сохранить новый контакт («Добавь в контакты Сергея, телефон +79991234567»).
-4. Отредактировать или удалить контакт из адресной книги.
+4. Отредактировать существующий контакт («Обнови номер телефона у Сергея на +972...», «Измени должность у Марка»).
+5. Отредактировать или удалить контакт из адресной книги.
 
 ---
 
@@ -54,21 +56,54 @@ python .agents/skills/google-contacts/scripts/create_contact.py \
   --json
 ```
 
-### 3. Удаление контакта
+### 3. Редактирование контакта
+```bash
+python .agents/skills/google-contacts/scripts/update_contact.py \
+  -r "people/c1234567890123456789" \
+  -n "Алексей" \
+  --family-name "Сидоров" \
+  -p "+972501112233" \
+  --title "Ведущий Архитектор" \
+  --json
+```
+
+### 4. Удаление контакта
 ```bash
 python .agents/skills/google-contacts/scripts/delete_contact.py \
   -r "people/c1234567890123456789" \
   --json
 ```
 
+### 5. Экспорт контактов (CSV / JSON)
+```bash
+# Экспорт в assets/contacts.csv по умолчанию:
+python .agents/skills/google-contacts/scripts/export_contacts.py
+
+# Экспорт в JSON с фильтром:
+python .agents/skills/google-contacts/scripts/export_contacts.py -o "assets/contacts.json" -f json -q "דוד"
+```
+
+### 6. Импорт контактов (CSV / JSON)
+```bash
+# Тестовый прогон (dry-run без записи в Google):
+python .agents/skills/google-contacts/scripts/import_contacts.py -i "assets/contacts.csv" --dry-run --json
+
+# Импорт контактов из CSV файла:
+python .agents/skills/google-contacts/scripts/import_contacts.py -i "assets/contacts.csv"
+```
+
 ---
 
 ## 🛠️ Состав скриптов (`scripts/`)
 
-- **`contacts_client.py`**: Ядро `GoogleContactsClient` (работа с `people.connections.list`, `searchContacts`, `createContact`, `deleteContact`).
+- **`contacts_client.py`**: Ядро `GoogleContactsClient` (работа с `people.connections.list`, `searchContacts`, `createContact`, `updateContact`, `deleteContact`).
 - **`list_contacts.py`**: CLI поиск и выборка контактов телефонной книги.
 - **`create_contact.py`**: CLI создание карточки контакта с телефонами, адресами и заметками.
+- **`update_contact.py`**: CLI редактирование существующего контакта.
 - **`delete_contact.py`**: CLI удаление контакта по `resourceName`.
+- **`export_contacts.py`**: Экспорт контактов в CSV (UTF-8 BOM) или JSON.
+- **`import_contacts.py`**: Пакетный импорт контактов из CSV или JSON в адресную книгу с поддержкой `--dry-run`.
+- **`test_contacts_import_export.py`**: Набор модульных тестов для валидации импорта и экспорта.
 
 ---
 

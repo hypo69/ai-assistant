@@ -18,7 +18,7 @@
 # Package: src.ai.orchestration
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-15 11:27:00
+# Updated: 2026-11-21 11:46:00
 # =============================================================================
 
 """Transparent routing wrapper across all configured AI providers."""
@@ -280,11 +280,16 @@ class UnifiedChatModel:
 
     async def chat(self, q: str, history: Optional[List[Dict[str, Any]]]=None, system_instruction: Optional[str]='', attempts: int=15, model_name: Optional[str]='', temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> Optional[str]:
         model_instance, active_name = self._get_active_model(model_name)
+        is_gemini_native = active_name.startswith('gemini:') or hasattr(model_instance, '_log_request_details')
+        if not is_gemini_native:
+            logger.console(f"[UnifiedChatModel] -> Запрос к модели '{active_name}':\n{q}")
         logger.info(f'[UnifiedChatModel] chat: prompt={repr(q[:100])}... using model={active_name}')
         sig = inspect.signature(model_instance.chat)
         call_kwargs = self._build_call_kwargs(sig=sig, model_instance=model_instance, active_name=active_name, base_kwargs={'q': q, 'history': history, 'system_instruction': system_instruction, 'attempts': attempts}, optional_kwargs={'temperature': temperature, 'max_tokens': max_tokens}, extra_kwargs=kwargs)
         try:
             res = await model_instance.chat(**call_kwargs)
+            if not is_gemini_native:
+                logger.console(f"[UnifiedChatModel] <- Ответ от модели '{active_name}':\n{res}")
             logger.info(f"[UnifiedChatModel] chat success: response={(repr(res[:100]) if res else 'None')}...")
             if res and any(res.startswith(p) for p in ('Model error:', 'Error:', 'Chat error:', 'Error Antigravity SDK', 'Ошибка провайдера agy', 'Harness process exited')):
                 raise RuntimeError(f'[UnifiedChatModel] Ошибка в ответе модели {active_name}: {res}')
@@ -295,11 +300,16 @@ class UnifiedChatModel:
 
     async def ask(self, q: str, attempts: int=15, generation_config: Optional[Dict[str, Any]]=None, model_name: Optional[str]='', temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> Optional[str]:
         model_instance, active_name = self._get_active_model(model_name)
+        is_gemini_native = active_name.startswith('gemini:') or hasattr(model_instance, '_log_request_details')
+        if not is_gemini_native:
+            logger.console(f"[UnifiedChatModel] -> Запрос к модели '{active_name}':\n{q}")
         logger.info(f'[UnifiedChatModel] ask: prompt={repr(q[:100])}... using model={active_name}')
         sig = inspect.signature(model_instance.ask)
         call_kwargs = self._build_call_kwargs(sig=sig, model_instance=model_instance, active_name=active_name, base_kwargs={'q': q, 'attempts': attempts}, optional_kwargs={'generation_config': generation_config, 'temperature': temperature, 'max_tokens': max_tokens}, extra_kwargs=kwargs)
         try:
             res = await model_instance.ask(**call_kwargs)
+            if not is_gemini_native:
+                logger.console(f"[UnifiedChatModel] <- Ответ от модели '{active_name}':\n{res}")
             logger.info(f"[UnifiedChatModel] ask success: response={(repr(res[:100]) if res else 'None')}...")
             if res and any(res.startswith(p) for p in ('Model error:', 'Error:', 'Chat error:', 'Error Antigravity SDK', 'Ошибка провайдера agy', 'Harness process exited')):
                 raise RuntimeError(f'[UnifiedChatModel] Ошибка в ответе модели {active_name}: {res}')

@@ -11,7 +11,7 @@
  * Package: apps/common/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 15:05:00
+ * Updated: 2026-11-19 18:43:00
  * =============================================================================
  */
 
@@ -443,7 +443,7 @@ body.theme-nightview-70 {
   --bs-secondary-color-rgb: 63, 63, 70;
   --text-color: #18181b;
   --text-muted: #3f3f46;
-  --text-silver: #27272a;
+  --text-silver: #e2e8f0; /* светло-серебряный для контрастного текста на зелёных и тёмных бейджах */
   --badge-info-solid-bg: #1d4ed8;
   --badge-info-solid-text: #f6f1e8;
 

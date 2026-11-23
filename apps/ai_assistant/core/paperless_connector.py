@@ -19,7 +19,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-12 00:10:00
+# Updated: 2026-11-12 00:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -116,7 +116,7 @@ class PaperlessConnector:
         if not section:
             raise PaperlessError(f"В {path} отсутствует секция 'paperless'")
         return cls(
-            base_url=section["base_url"],
+            base_url=os.environ.get("PAPERLESS_BASE_URL") or section["base_url"],  # в контейнере — http://webserver:8000
             token=os.environ.get(TOKEN_ENV_VAR, ""),
             api_version=int(section["api_version"]),
             connect_timeout=float(section["connect_timeout_sec"]),

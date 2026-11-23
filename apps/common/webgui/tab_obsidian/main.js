@@ -18,7 +18,7 @@
  * Package: apps.common.webgui.tab_obsidian
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-30 16:45:00
+ * Updated: 2026-11-19 20:55:00
  * =============================================================================
  */
 
@@ -30,6 +30,103 @@ let activeNotePath = null;
 let activeTagFilter = null;
 let currentMode = 'split';
 let notesList = [];
+
+const HEBREW_CHAR_RE = /[\u0590-\u05FF]/;
+const HEBREW_CHAR_GLOBAL_RE = /[\u0590-\u05FF]/g;
+const CYRILLIC_CHAR_GLOBAL_RE = /[\u0400-\u04FF]/g;
+const LATIN_CHAR_GLOBAL_RE = /[a-zA-Z]/g;
+const FRONTMATTER_BLOCK_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
+const LANG_DIRECTIVE_RE = /^\s*(?:<!--\s*)?(?:lang\s*=|language\s*:)\s*['"]?([a-zA-Z\-_]+)['"]?(?:\s*-->)?\s*$/im;
+const LANG_TAG_RE = /^\s*-\s*lang\/([a-zA-Z\-_]+)\s*$/im;
+
+/**
+ * Автоматически определяет направление текста заметки ('rtl' для иврита, иначе 'ltr').
+ * @param {string} content - Текстовое содержимое заметки
+ * @param {string} [fileName=''] - Относительный путь или заголовок заметки
+ * @param {string|null} [explicitDirection=null] - Явное направление ('rtl'|'ltr')
+ * @returns {'rtl'|'ltr'}
+ */
+export function detectNoteDirection(content, fileName = '', explicitDirection = null) {
+  if (typeof window !== 'undefined' && typeof window.detectDocumentDirection === 'function') {
+    return window.detectDocumentDirection(content, fileName, explicitDirection);
+  }
+  if (explicitDirection === 'rtl') return 'rtl';
+
+  const text = typeof content === 'string' ? content.slice(0, 32768) : '';
+  if (text) {
+    const head = text.slice(0, 2048);
+    const mDir = head.match(LANG_DIRECTIVE_RE);
+    if (mDir) {
+      const dirLang = mDir[1].trim().toLowerCase().split(/[-_]/)[0];
+      if (['he', 'heb', 'iw'].includes(dirLang)) return 'rtl';
+      if (['ru', 'en', 'uk', 'ua'].includes(dirLang)) return 'ltr';
+    }
+
+    const mTag = head.match(LANG_TAG_RE);
+    if (mTag) {
+      const tagLang = mTag[1].trim().toLowerCase().split(/[-_]/)[0];
+      if (['he', 'heb', 'iw'].includes(tagLang)) return 'rtl';
+    }
+
+    let body = text;
+    const fmMatch = text.match(FRONTMATTER_BLOCK_RE);
+    if (fmMatch) {
+      body = text.slice(fmMatch[0].length);
+    }
+
+    const sample = body.trim() ? body : text;
+    const heCount = (sample.match(HEBREW_CHAR_GLOBAL_RE) || []).length;
+    if (heCount > 0) {
+      const cyrCount = (sample.match(CYRILLIC_CHAR_GLOBAL_RE) || []).length;
+      const latCount = (sample.match(LATIN_CHAR_GLOBAL_RE) || []).length;
+      const totalLetters = heCount + cyrCount + latCount;
+      if (heCount >= cyrCount && (heCount >= latCount || (totalLetters > 0 && heCount / totalLetters >= 0.2))) {
+        return 'rtl';
+      }
+      for (const line of sample.split(/\r?\n/)) {
+        const cleanLine = line.trim().replace(/^[#>\-*+0-9.\s[\]()]+/, '');
+        if (cleanLine) {
+          if (HEBREW_CHAR_RE.test(cleanLine)) return 'rtl';
+          break;
+        }
+      }
+    }
+  }
+
+  if (fileName && HEBREW_CHAR_RE.test(String(fileName))) {
+    if (!text || (!CYRILLIC_CHAR_GLOBAL_RE.test(text) && !LATIN_CHAR_GLOBAL_RE.test(text))) {
+      return 'rtl';
+    }
+  }
+
+  return 'ltr';
+}
+
+/**
+ * Применяет направление текста (RTL/LTR) к текстовому редактору и предпросмотру Obsidian.
+ * @param {'rtl'|'ltr'} dir
+ */
+function applyNoteDirection(dir) {
+  const validDir = dir === 'rtl' ? 'rtl' : 'ltr';
+  const align = validDir === 'rtl' ? 'right' : 'left';
+  const textarea = document.getElementById('obs-markdown-textarea');
+  const preview = document.getElementById('obs-rendered-markdown-content');
+  const titleEl = document.getElementById('obs-active-note-title');
+
+  if (textarea) {
+    textarea.setAttribute('dir', validDir);
+    textarea.style.direction = validDir;
+    textarea.style.textAlign = align;
+  }
+  if (preview) {
+    preview.setAttribute('dir', validDir);
+    preview.style.direction = validDir;
+    preview.style.textAlign = align;
+  }
+  if (titleEl) {
+    titleEl.setAttribute('dir', 'auto');
+  }
+}
 
 function t(key, fallback = '') {
   if (typeof window !== 'undefined' && window.i18n && typeof window.i18n.t === 'function') {
@@ -362,6 +459,9 @@ export async function openNote(relPath) {
     const textarea = document.getElementById('obs-markdown-textarea');
     if (textarea) textarea.value = data.raw_content;
 
+    const noteDir = detectNoteDirection(data.raw_content, data.rel_path || data.title, data.direction);
+    applyNoteDirection(noteDir);
+
     renderMarkdownHTML(data.rendered_html);
     await fetchBacklinksData(data.rel_path, (p) => openNote(p), notesList);
 
@@ -412,6 +512,10 @@ function renderMarkdownHTML(htmlContent) {
       toggleTaskCheckboxInEditor(idx, checkbox.checked);
     });
   });
+
+  if (typeof window !== 'undefined' && typeof window.renderMermaidDiagramsInContainer === 'function') {
+    window.renderMermaidDiagramsInContainer(container);
+  }
 }
 
 function toggleTaskCheckboxInEditor(taskIndex, isChecked) {
@@ -445,6 +549,11 @@ function updateLivePreviewFromEditor() {
   if (saveMsg) saveMsg.textContent = 'Есть несохраненные изменения...';
 
   let raw = textarea.value;
+  applyNoteDirection(detectNoteDirection(raw, activeNotePath || ''));
+  if (typeof window !== 'undefined' && typeof window.parseMarkdownToHtml === 'function') {
+    renderMarkdownHTML(window.parseMarkdownToHtml(raw));
+    return;
+  }
   let parsed = raw
     .replace(/^### (.*$)/gim, '<h3 class="mt-3 mb-2">$1</h3>')
     .replace(/^## (.*$)/gim, '<h2 class="mt-3 mb-2">$1</h2>')

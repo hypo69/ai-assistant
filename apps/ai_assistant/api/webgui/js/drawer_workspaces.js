@@ -15,7 +15,7 @@
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-06 21:28:00
+ * Updated: 2026-11-20 02:16:00
  * =============================================================================
  */
 
@@ -90,6 +90,19 @@ function escapeHtml(str) {
 }
 
 /**
+ * Закрывает открытый верхний выпадающий список рабочих областей.
+ */
+export function closeTopWorkspaceDropdown() {
+  const btn = document.getElementById('top-workspace-dropdown-btn');
+  if (btn && window.bootstrap && window.bootstrap.Dropdown) {
+    try {
+      const dd = window.bootstrap.Dropdown.getInstance(btn);
+      if (dd) dd.hide();
+    } catch (_) {}
+  }
+}
+
+/**
  * Закрывает открытые боковые меню Offcanvas и снимает оверлеи.
  */
 export function closeOffcanvasDrawer() {
@@ -109,92 +122,140 @@ export function closeOffcanvasDrawer() {
 }
 
 /**
- * Подсвечивает активное рабочее пространство в левом меню.
+ * Подсвечивает активное рабочее пространство в выпадающем списке и меню.
  * @param {string} wsId 
  */
 export function highlightActiveDrawerWorkspace(wsId) {
   currentDrawerActiveId = wsId || '';
-  const container = document.getElementById('drawer-workspaces-dynamic-items');
-  if (!container) return;
+  const containers = [
+    document.getElementById('top-workspaces-dynamic-items'),
+    document.getElementById('drawer-workspaces-dynamic-items'),
+  ].filter(Boolean);
+  if (containers.length === 0) return;
 
   const matched = findWorkspaceMatch(cachedWorkspaces, wsId);
   const matchedId = matched ? matched.workspace_id : wsId;
+  const matchedTitle = matched ? (matched.name || matched.workspace_id) : wsId;
 
-  container.querySelectorAll('.drawer-ws-item').forEach((btn) => {
-    const btnWsId = btn.getAttribute('data-ws-id');
-    const isTarget = btnWsId === matchedId;
-    btn.classList.toggle('active', isTarget);
+  // Обновляем текст на кнопке верхней навигационной панели
+  const titleEl = document.getElementById('app-title');
+  if (titleEl) {
+    if (matched && matchedTitle) {
+      titleEl.textContent = String(matchedTitle).replace(/^Workspace:\s*/i, '');
+      titleEl.removeAttribute('data-i18n');
+    } else if (!cachedWorkspaces || cachedWorkspaces.length === 0) {
+      titleEl.textContent = 'Нет рабочих пространств';
+      titleEl.setAttribute('data-i18n', 'workspace.noWorkspaces');
+    }
+  }
 
-    const icon = btn.querySelector('.drawer-ws-icon');
-    if (icon) {
-      if (isTarget) {
-        icon.className = 'bi bi-folder-check text-success fs-6 flex-shrink-0 drawer-ws-icon';
-      } else {
-        icon.className = 'bi bi-folder text-muted fs-6 flex-shrink-0 drawer-ws-icon';
+  containers.forEach((container) => {
+    container.querySelectorAll('.drawer-ws-item, .top-ws-item').forEach((btn) => {
+      const btnWsId = btn.getAttribute('data-ws-id');
+      const isTarget = btnWsId === matchedId;
+      btn.classList.toggle('active', isTarget);
+
+      const icon = btn.querySelector('.drawer-ws-icon');
+      if (icon) {
+        if (isTarget) {
+          icon.className = 'bi bi-folder-check text-success fs-6 flex-shrink-0 drawer-ws-icon';
+        } else {
+          icon.className = 'bi bi-folder text-muted fs-6 flex-shrink-0 drawer-ws-icon';
+        }
       }
-    }
 
-    const badge = btn.querySelector('.drawer-ws-status-badge');
-    if (badge && isTarget) {
-      badge.className = 'badge bg-success-subtle text-success border font-size-75 drawer-ws-status-badge';
-      badge.textContent = 'активно';
-    }
+      const badge = btn.querySelector('.drawer-ws-status-badge');
+      if (badge && isTarget) {
+        badge.className = 'badge bg-success-subtle text-success border font-size-75 drawer-ws-status-badge';
+        badge.textContent = 'активно';
+      }
+    });
   });
 }
 
 /**
- * Отрисовывает динамический список рабочих пространств в боковом меню.
+ * Отрисовывает динамический список рабочих пространств в выпадающем списке и боковом меню.
  * @param {Array} workspaces - Список рабочих пространств
  * @param {string} [activeWsId] - Идентификатор текущей активной области
  */
 export function renderDrawerWorkspaces(workspaces, activeWsId = '') {
-  const container = document.getElementById('drawer-workspaces-dynamic-items');
-  const countBadge = document.getElementById('drawer-ws-count-badge');
-  if (!container) return;
+  const containers = [
+    document.getElementById('top-workspaces-dynamic-items'),
+    document.getElementById('drawer-workspaces-dynamic-items'),
+  ].filter(Boolean);
+  const countBadges = [
+    document.getElementById('top-ws-count-badge'),
+    document.getElementById('drawer-ws-count-badge'),
+  ].filter(Boolean);
 
   const list = Array.isArray(workspaces) ? workspaces : [];
   cachedWorkspaces = list;
 
-  if (countBadge) {
-    countBadge.textContent = String(list.length);
-  }
+  countBadges.forEach((b) => {
+    b.textContent = String(list.length);
+  });
 
   const effectiveActive = activeWsId || currentDrawerActiveId || (list[0]?.workspace_id || '');
   const matchedActive = findWorkspaceMatch(list, effectiveActive);
   const activeId = matchedActive ? matchedActive.workspace_id : effectiveActive;
   currentDrawerActiveId = activeId;
 
+  // Обновляем текст на кнопке верхней навигационной панели
+  const titleEl = document.getElementById('app-title');
+  if (titleEl && matchedActive) {
+    const cleanTitle = (matchedActive.name || matchedActive.workspace_id).replace(/^Workspace:\s*/i, '');
+    titleEl.textContent = cleanTitle;
+    titleEl.removeAttribute('data-i18n');
+  }
+
+  if (containers.length === 0) return;
+
   if (list.length === 0) {
-    container.innerHTML = `
+    currentDrawerActiveId = '';
+    const titleEl = document.getElementById('app-title');
+    if (titleEl) {
+      let fallback = 'Нет рабочих пространств';
+      if (window.i18n && typeof window.i18n.t === 'function') {
+        const trans = window.i18n.t('workspace.noWorkspaces');
+        if (trans && trans !== 'workspace.noWorkspaces') {
+          fallback = trans;
+        }
+      }
+      titleEl.textContent = fallback;
+      titleEl.setAttribute('data-i18n', 'workspace.noWorkspaces');
+    }
+    const emptyHtml = `
       <div class="p-3 text-center text-muted small">
         <i class="bi bi-folder2-open d-block mb-1 fs-5"></i>
-        <span>Нет рабочих областей</span>
+        <span data-i18n="workspace.noWorkspaces">Нет рабочих областей</span>
       </div>
     `;
+    containers.forEach((c) => {
+      c.innerHTML = emptyHtml;
+    });
     return;
   }
 
-  container.innerHTML = list
+  const itemsHtml = list
     .map((ws) => {
       const isTarget = ws.workspace_id === activeId;
       const docsCount = ws.documents_count || 0;
       const factsCount = ws.active_facts_count || 0;
       const title = escapeHtml(ws.name || ws.workspace_id);
-      const subInfo = `${docsCount} док. | ${factsCount} факт.`;
 
       return `
-        <button class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2 px-3 drawer-ws-item ${
+        <button class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2 px-3 top-ws-item drawer-ws-item ${
           isTarget ? 'active' : ''
         }" data-ws-id="${escapeHtml(ws.workspace_id)}" type="button" title="Рабочее пространство: ${title}">
-          <div class="d-flex align-items-center gap-2 overflow-hidden text-truncate">
+          <div class="d-flex align-items-center gap-2.5 overflow-hidden text-truncate">
             <i class="bi ${
               isTarget ? 'bi-folder-check text-success' : 'bi-folder text-muted'
-            } fs-6 flex-shrink-0 drawer-ws-icon"></i>
+            } fs-5 flex-shrink-0 drawer-ws-icon"></i>
             <div class="text-truncate text-start">
-              <div class="fw-medium text-truncate">${title}</div>
-              <div class="small text-muted text-truncate font-size-75 d-flex align-items-center gap-1 mt-0.5" dir="ltr">
-                <span class="badge bg-body-secondary text-body border px-1 py-0.5 drawer-ws-quick-link" data-panel="panel-documents" title="Открыть панель документов: ${docsCount}">📄 ${docsCount} док.</span>
-                <span class="badge bg-body-secondary text-body border px-1 py-0.5 drawer-ws-quick-link" data-panel="panel-facts" title="Открыть панель фактов: ${factsCount}">💡 ${factsCount} факт.</span>
+              <div class="fw-semibold text-truncate fs-6">${title}</div>
+              <div class="small text-muted text-truncate font-size-75 d-flex align-items-center gap-1.5 mt-0.5" dir="ltr">
+                <span class="badge bg-body-secondary text-body border px-1.5 py-0.5 drawer-ws-quick-link" data-panel="panel-documents" title="Открыть панель документов: ${docsCount}">📄 ${docsCount} док.</span>
+                <span class="badge bg-body-secondary text-body border px-1.5 py-0.5 drawer-ws-quick-link" data-panel="panel-facts" title="Открыть панель фактов: ${factsCount}">💡 ${factsCount} факт.</span>
               </div>
             </div>
           </div>
@@ -202,13 +263,17 @@ export function renderDrawerWorkspaces(workspaces, activeWsId = '') {
             isTarget
               ? 'bg-success-subtle text-success border'
               : 'bg-secondary-subtle text-secondary border'
-          } font-size-75 flex-shrink-0 ms-2 drawer-ws-status-badge">
+          } font-size-75 flex-shrink-0 ms-3 drawer-ws-status-badge">
             ${isTarget ? 'активно' : `${docsCount} док.`}
           </span>
         </button>
       `;
     })
     .join('');
+
+  containers.forEach((c) => {
+    c.innerHTML = itemsHtml;
+  });
 }
 
 /**
@@ -222,6 +287,10 @@ export async function switchToWorkspace(workspaceId, panelId = 'panel-files') {
 
   const matched = findWorkspaceMatch(cachedWorkspaces, workspaceId);
   const finalWsId = matched ? matched.workspace_id : workspaceId;
+
+  if (typeof window.setActiveWorkspaceId === 'function') {
+    window.setActiveWorkspaceId(finalWsId);
+  }
 
   // 1. Формирование канонического URL стандарта workspace-url-routing
   const targetHash = `#tab-workspace#${panelId}#workspace=${encodeURIComponent(finalWsId)}`;
@@ -238,7 +307,7 @@ export async function switchToWorkspace(workspaceId, panelId = 'panel-files') {
 
   // 3. Выбор рабочей области на вкладке Workspace
   if (typeof window.selectWorkspaceInTab === 'function') {
-    await window.selectWorkspaceInTab(finalWsId);
+    await window.selectWorkspaceInTab(finalWsId, true);
   }
 
   // 4. Переключение на суб-панель файлов/документов
@@ -251,10 +320,19 @@ export async function switchToWorkspace(workspaceId, panelId = 'panel-files') {
     await window.updateTopWorkspaceDropdown(finalWsId);
   }
 
-  // 6. Подсветка в боковом меню
+  // 6. Подсветка в выпадающем списке и меню
   highlightActiveDrawerWorkspace(finalWsId);
 
-  // 7. Закрытие оффканвас панели
+  // 7. Синхронизируем файловый менеджер и оповещаем систему
+  if (typeof window.refreshFileTree === 'function') {
+    await window.refreshFileTree(finalWsId);
+  }
+  document.dispatchEvent(new CustomEvent('workspace:changed', {
+    detail: { workspaceId: finalWsId }
+  }));
+
+  // 8. Закрытие оффканвас панели и верхнего выпадающего списка
+  closeTopWorkspaceDropdown();
   closeOffcanvasDrawer();
 }
 
@@ -290,10 +368,38 @@ export async function fetchAndRenderDrawerWorkspaces(activeWsId = '', retries = 
 }
 
 /**
- * Инициализирует модуль навигации по рабочим областям бокового меню.
+ * Инициализирует модуль навигации по рабочим областям верхнего выпадающего списка.
  */
 export async function initDrawerWorkspaces() {
-  // 1. Делегированный слушатель кликов по элементам рабочих пространств в левом меню
+  // 1. Делегированный слушатель кликов по элементам рабочих пространств в верхнем меню
+  const topWrapper = document.getElementById('top-workspace-dropdown-wrapper');
+  if (topWrapper) {
+    topWrapper.addEventListener('click', (e) => {
+      const createBtn = e.target.closest('#top-btn-nav-create-workspace, #menu-btn-nav-create-workspace');
+      if (createBtn) {
+        e.preventDefault();
+        closeTopWorkspaceDropdown();
+        // Если у кнопки нет data-tab (который уже обрабатывается в setupTabClicks), переключаем вкладку здесь
+        if (!createBtn.dataset.tab && typeof window.switchTab === 'function') {
+          window.switchTab('tab-create-workspace');
+        }
+        return;
+      }
+      const quickLink = e.target.closest('.drawer-ws-quick-link, [data-panel]');
+      const wsBtn = e.target.closest('.drawer-ws-item, .top-ws-item, [data-ws-id]');
+      if (wsBtn) {
+        const wsId = wsBtn.getAttribute('data-ws-id');
+        if (wsId) {
+          e.preventDefault();
+          const targetPanel = quickLink ? quickLink.getAttribute('data-panel') : 'panel-files';
+          switchToWorkspace(wsId, targetPanel || 'panel-files');
+          closeTopWorkspaceDropdown();
+        }
+      }
+    });
+  }
+
+  // 1.1 Делегированный слушатель для бокового меню (если присутствует)
   const group = document.getElementById('drawer-workspaces-group');
   if (group) {
     group.addEventListener('click', (e) => {
@@ -331,4 +437,5 @@ if (typeof window !== 'undefined') {
   window.highlightActiveDrawerWorkspace = highlightActiveDrawerWorkspace;
   window.findWorkspaceMatch = findWorkspaceMatch;
   window.initDrawerWorkspaces = initDrawerWorkspaces;
+  window.closeTopWorkspaceDropdown = closeTopWorkspaceDropdown;
 }

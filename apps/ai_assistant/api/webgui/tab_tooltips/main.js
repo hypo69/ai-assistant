@@ -11,7 +11,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_tooltips
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-07 00:33:00
+ * Updated: 2026-11-12 02:40:00
  * =============================================================================
  */
 
@@ -400,25 +400,45 @@
   }
 
   /**
-   * Переключает субпанель с синхронизацией URL.
+   * Переключает субпанель и опциональный блок с синхронизацией URL.
    */
-  function switchToSubtab(panelId) {
+  function switchToSubtab(panelId, blockId = null, updateHash = true) {
     if (!elements.subtabsNav) return;
-    const btn = elements.subtabsNav.querySelector(`[data-panel-id="${panelId}"]`);
+    const cleanPanel = String(panelId).replace(/^#/, '');
+    const canonicalPanel = cleanPanel.startsWith('panel-') ? cleanPanel : `panel-${cleanPanel}`;
+    const btn = elements.subtabsNav.querySelector(`[data-panel-id="${canonicalPanel}"]`) ||
+                elements.subtabsNav.querySelector(`[data-panel-id="${cleanPanel}"]`);
     if (btn) {
       if (window.bootstrap && window.bootstrap.Tab) {
-        const tab = new window.bootstrap.Tab(btn);
+        const tab = (window.bootstrap.Tab.getInstance?.(btn) || window.bootstrap.Tab.getOrCreateInstance?.(btn) || new window.bootstrap.Tab(btn));
         tab.show();
       } else {
         btn.click();
       }
     }
+
+    if (blockId) {
+      const cleanBlock = String(blockId).replace(/^#/, '');
+      const normBlock = cleanBlock.startsWith('block-') ? cleanBlock : `block-${cleanBlock}`;
+      const langBlockBtn = document.querySelector(`#editor-lang-tabs button[data-block-id="${normBlock}"]`) ||
+                           document.querySelector(`#editor-lang-tabs button[data-block-id="${cleanBlock}"]`) ||
+                           document.querySelector(`#editor-lang-tabs button[data-bs-target="#editor-lang-${cleanBlock.replace('block-', '')}"]`);
+      if (langBlockBtn) {
+        if (window.bootstrap && window.bootstrap.Tab) {
+          (window.bootstrap.Tab.getInstance?.(langBlockBtn) || window.bootstrap.Tab.getOrCreateInstance?.(langBlockBtn) || new window.bootstrap.Tab(langBlockBtn)).show();
+        } else {
+          langBlockBtn.click();
+        }
+      }
+    }
+
     // Обновляем хэш URL
-    try {
-      const curHash = window.location.hash || '';
-      const baseTab = curHash.split('#')[1] || 'tab-tooltips';
-      history.replaceState(null, '', `#${baseTab}#${panelId}`);
-    } catch (_) {}
+    if (updateHash) {
+      try {
+        const blockSuffix = blockId ? (String(blockId).startsWith('#block-') ? String(blockId) : (String(blockId).startsWith('block-') ? `#${blockId}` : `#block-${blockId}`)) : '';
+        history.replaceState(null, '', `#tab-tooltips#${canonicalPanel}${blockSuffix}`);
+      } catch (_) {}
+    }
   }
 
   function escapeHtml(str) {
@@ -477,16 +497,56 @@
       });
     }
 
-    // Обработка переключения субвкладок
+    // Обработка переключения субвкладок (панелей)
     if (elements.subtabsNav) {
       elements.subtabsNav.querySelectorAll('button[data-panel-id]').forEach((btn) => {
-        btn.addEventListener('shown.bs.tab', (e) => {
-          const panelId = btn.getAttribute('data-panel-id');
+        btn.addEventListener('shown.bs.tab', () => {
+          const rawPanel = btn.getAttribute('data-panel-id');
+          const canonicalPanel = rawPanel.startsWith('panel-') ? rawPanel : `panel-${rawPanel}`;
+          let hash = `#tab-tooltips#${canonicalPanel}`;
+          if (canonicalPanel === 'panel-editor') {
+            const activeLangBtn = document.querySelector('#editor-lang-tabs button.active');
+            if (activeLangBtn) {
+              const bId = activeLangBtn.getAttribute('data-block-id');
+              if (bId) hash += `#${bId}`;
+            }
+          }
           try {
-            history.replaceState(null, '', `#tab-tooltips#${panelId}`);
+            history.replaceState(null, '', hash);
           } catch (_) {}
         });
       });
+    }
+
+    // Обработка переключения вложенных языковых блоков внутри панели редактора
+    const langTabs = document.getElementById('editor-lang-tabs');
+    if (langTabs) {
+      langTabs.querySelectorAll('button[data-block-id]').forEach((btn) => {
+        btn.addEventListener('shown.bs.tab', () => {
+          const bId = btn.getAttribute('data-block-id');
+          const normBlock = bId.startsWith('block-') ? bId : `block-${bId}`;
+          try {
+            history.replaceState(null, '', `#tab-tooltips#panel-editor#${normBlock}`);
+          } catch (_) {}
+        });
+      });
+    }
+  }
+
+  // Маршрутизация из URL хэша
+  function syncFromHash() {
+    const raw = window.location.hash || '';
+    if (!raw.includes('tab-tooltips')) return;
+    const parts = raw.replace(/^#/, '').split('#');
+    let panelPart = parts.find((p) => p.startsWith('panel-'));
+    if (!panelPart) {
+      const fallback = parts.find((p) => ['catalog', 'editor', 'kb', 'audit'].includes(p.toLowerCase()));
+      if (fallback) panelPart = `panel-${fallback.toLowerCase()}`;
+    }
+    const blockPart = parts.find((p) => p.startsWith('block-'));
+
+    if (panelPart) {
+      switchToSubtab(panelPart, blockPart, false);
     }
   }
 
@@ -494,14 +554,6 @@
   initEvents();
   loadTooltips();
 
-  // Маршрутизация из URL хэша
-  try {
-    const hash = window.location.hash || '';
-    if (hash.includes('#panel-')) {
-      const match = hash.match(/#(panel-[a-zA-Z0-9_\-]+)/);
-      if (match && match[1]) {
-        switchToSubtab(match[1]);
-      }
-    }
-  } catch (_) {}
+  window.addEventListener('hashchange', syncFromHash);
+  syncFromHash();
 })();

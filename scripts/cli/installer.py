@@ -18,7 +18,7 @@
 # Package: scripts.cli
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-28 16:32:00
+# Updated: 2026-11-15 18:31:00
 # =============================================================================
 
 """Cross-platform installation system for AI Windows Admin.
@@ -255,18 +255,9 @@ class Installer:
     def setup_initial_user(self) -> bool:
         """Configure initial default administrator user"""
         logger.console(self.msg('step_user'))
-        try:
-            python_exe = self.venv_dir / ('Scripts/python.exe' if sys.platform == 'win32' else 'bin/python')
-            user_script = self.install_dir / 'scripts' / 'create_initial_user.py'
-            if user_script.exists():
-                subprocess.run([str(python_exe), str(user_script), '--non-interactive'], capture_output=True, text=True, timeout=30)
-                logger.console('  Administrator account initialized [OK]')
-            logger.console()
-            return True
-        except Exception as e:
-            logger.console(f'  [WARN] Failed to setup initial user: {e}')
-            logger.console()
-            return True
+        logger.console('  Single-user desktop mode initialized [OK]')
+        logger.console()
+        return True
 
     def run(self, skip_models: bool=False, skip_venv: bool=False, skip_deps: bool=False, skip_certs: bool=False) -> int:
         """Run installation"""

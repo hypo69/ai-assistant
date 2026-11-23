@@ -11,7 +11,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-13 18:36:00
+ * Updated: 2026-11-19 20:24:00
  * =============================================================================
  */
 
@@ -89,22 +89,22 @@ class WikiLLMEditorComponent {
 
                                     <div class="mb-2">
                                         <label class="form-label form-label-sm fw-semibold mb-1">Заголовок статьи</label>
-                                        <input type="text" id="wikillm-title" class="form-control form-control-sm" placeholder="Успешный вход в систему (Event 4624)" required>
+                                        <input type="text" dir="auto" id="wikillm-title" class="form-control form-control-sm" placeholder="Успешный вход в систему (Event 4624)" required>
                                     </div>
 
                                     <div class="mb-2">
                                         <label class="form-label form-label-sm fw-semibold mb-1">Описание / Подробное руководство (Markdown)</label>
-                                        <textarea id="wikillm-description" class="form-control form-control-sm font-monospace" rows="6" placeholder="Описание события, риски и контекст..."></textarea>
+                                        <textarea dir="auto" id="wikillm-description" class="form-control form-control-sm font-monospace" rows="6" placeholder="Описание события, риски и контекст..."></textarea>
                                     </div>
 
                                     <div class="row g-2 mb-2">
                                         <div class="col-md-6">
                                             <label class="form-label form-label-sm fw-semibold mb-1">Утверждения (Claims JSON array)</label>
-                                            <textarea id="wikillm-claims" class="form-control form-control-sm font-monospace" rows="3" placeholder='["Вход успешный", "Фиксирует SID"]'></textarea>
+                                            <textarea dir="auto" id="wikillm-claims" class="form-control form-control-sm font-monospace" rows="3" placeholder='["Вход успешный", "Фиксирует SID"]'></textarea>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label form-label-sm fw-semibold mb-1">Рекомендации (Remediation JSON array)</label>
-                                            <textarea id="wikillm-remediation" class="form-control form-control-sm font-monospace" rows="3" placeholder='["Проверить IP", "Сверить Logon Type"]'></textarea>
+                                            <textarea dir="auto" id="wikillm-remediation" class="form-control form-control-sm font-monospace" rows="3" placeholder='["Проверить IP", "Сверить Logon Type"]'></textarea>
                                         </div>
                                     </div>
 
@@ -186,7 +186,12 @@ class WikiLLMEditorComponent {
         document.getElementById('wikillm-key').readOnly = true;
         document.getElementById('wikillm-title').value = entity.title;
         document.getElementById('wikillm-category').value = entity.category;
-        document.getElementById('wikillm-description').value = entity.description;
+        const descEl = document.getElementById('wikillm-description');
+        descEl.value = entity.description;
+        const isHeb = /[\u0590-\u05FF]/.test(String(entity.description || entity.title || ''));
+        descEl.setAttribute('dir', isHeb ? 'rtl' : 'ltr');
+        descEl.style.direction = isHeb ? 'rtl' : 'ltr';
+        descEl.style.textAlign = isHeb ? 'right' : 'left';
         document.getElementById('wikillm-claims').value = JSON.stringify(entity.claims || []);
         document.getElementById('wikillm-remediation').value = JSON.stringify(entity.remediation || []);
         document.getElementById('wikillm-verified').checked = entity.is_verified;

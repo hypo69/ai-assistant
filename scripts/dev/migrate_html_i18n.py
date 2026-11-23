@@ -6,31 +6,34 @@
 #   Инструмент аудита и миграции HTML-шаблонов WebGUI на строгий стандарт
 #   i18n-плейсхолдеров {{key}} без захардкоженного текста по умолчанию:
 #   - Проверяет наличие ключей в словарях locales/*.json (ru, en, he, uk)
-#   - Проверяет наличие атрибута id у всех элементов с data-i18n*
+#   - Проверяет и автоматически генерирует уникальные id для data-i18n* элементов
 #   - Заменяет текст внутри тегов и атрибуты placeholder / title / label / aria-label
 #     на токены вида {{key}} (при условии существования ключа в ru.json)
+#   - Корректно выносит иконки <i> / <svg> наружу, оборачивая текст в <span data-i18n="...">
+#   - Обновляет метку времени изменения в шапке файла (Updated: YYYY-MM-DD HH:MM:SS)
 #   - Поддерживает безопасный режим --dry-run и точечную миграцию --target.
 #
 # Usage Examples:
 #   py scripts/dev/migrate_html_i18n.py --dry-run
-#   py scripts/dev/migrate_html_i18n.py --apply --target apps/ai_assistant/api/webgui/tab_create_workspace/index.html
+#   py scripts/dev/migrate_html_i18n.py --apply --target apps/ai_assistant/api/webgui/tab_calendar/index.html
 #
 # File: migrate_html_i18n.py
 # Package: scripts.dev
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 19:58:00
+# Updated: 2026-11-12 02:00:00
 # =============================================================================
 
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
-from bs4 import BeautifulSoup, Comment, Tag
+from typing import Any, Dict, List, Set, Tuple
+from bs4 import BeautifulSoup, Comment, NavigableString, Tag
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
@@ -38,6 +41,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from logger import logger
 from apps.common.webgui.i18n_renderer import resolve_translation
+
 _DEFAULT_SCAN_DIRS = (
     _PROJECT_ROOT / "apps" / "ai_assistant" / "api" / "webgui",
     _PROJECT_ROOT / "apps" / "common" / "webgui",
@@ -52,6 +56,52 @@ _ATTR_MAP: Tuple[Tuple[str, str], ...] = (
     ("data-i18n-aria-label", "aria-label"),
 )
 
+_TAG_PREFIXES = {
+    "button": "btn",
+    "input": "inp",
+    "select": "sel",
+    "textarea": "txt",
+    "label": "lbl",
+    "span": "spn",
+    "p": "p",
+    "div": "blk",
+    "a": "link",
+    "h1": "h1",
+    "h2": "h2",
+    "h3": "h3",
+    "h4": "h4",
+    "h5": "h5",
+    "h6": "h6",
+    "th": "th",
+    "td": "td",
+    "li": "li",
+    "option": "opt",
+}
+
+
+def _camel_to_kebab(s: str) -> str:
+    """Преобразует строку вида userSettings.connHostingerTitle в user-settings-conn-hostinger-title."""
+    s = s.replace(".", "-").replace("_", "-")
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", s)
+    s = re.sub(r"-+", "-", s).lower().strip("-")
+    return s
+
+
+def _generate_element_id(tag_name: str, key: str, existing_ids: Set[str]) -> str:
+    """Генерирует детерминированный и уникальный id для элемента интерфейса."""
+    prefix = _TAG_PREFIXES.get(tag_name.lower(), tag_name.lower())
+    clean_k = _camel_to_kebab(key) if key else "elem"
+    base_id = f"{prefix}-{clean_k}"
+    if base_id not in existing_ids:
+        existing_ids.add(base_id)
+        return base_id
+    idx = 2
+    while f"{base_id}-{idx}" in existing_ids:
+        idx += 1
+    new_id = f"{base_id}-{idx}"
+    existing_ids.add(new_id)
+    return new_id
+
 
 def _load_ru_dict(webgui_dir: Path) -> Dict[str, Any]:
     """Загружает объединённый словарь ru.json для проверки существования ключей."""
@@ -64,7 +114,7 @@ def _load_ru_dict(webgui_dir: Path) -> Dict[str, Any]:
             data = json.loads(candidate.read_text(encoding="utf-8"))
             if isinstance(data, dict):
                 merged.update(data)
-                for section in ("ui", "titles", "placeholders", "workspace", "common"):
+                for section in ("ui", "titles", "placeholders", "workspace", "common", "userSettings"):
                     if isinstance(data.get(section), dict) and isinstance(merged.get(section), dict):
                         merged[section] = {**merged[section], **data[section]}
     return merged
@@ -78,6 +128,15 @@ def _has_nested_icon_or_i18n(el: Tag) -> bool:
     return False
 
 
+def _update_file_header_date(raw_html: str) -> str:
+    """Обновляет метку Updated: YYYY-MM-DD HH:MM:SS в начале файла."""
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    header_pattern = re.compile(r"(Updated:\s*)\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}")
+    if header_pattern.search(raw_html):
+        return header_pattern.sub(rf"\g<1>{now_str}", raw_html, count=1)
+    return raw_html
+
+
 def process_html_file(
     html_path: Path,
     ru_dict: Dict[str, Any],
@@ -87,8 +146,10 @@ def process_html_file(
     raw = html_path.read_text(encoding="utf-8")
     soup = BeautifulSoup(raw, "html.parser")
 
+    existing_ids: Set[str] = {el["id"] for el in soup.find_all(True) if el.get("id")}
+
     report: Dict[str, Any] = {
-        "file": str(html_path.relative_to(_PROJECT_ROOT)),
+        "file": str(html_path.resolve().relative_to(_PROJECT_ROOT)),
         "hardcoded_i18n_elements": 0,
         "migrated_fields": 0,
         "skipped_missing_keys": [],
@@ -100,8 +161,13 @@ def process_html_file(
     changed = False
 
     for el in soup.find_all(lambda t: any(a.startswith("data-i18n") for a in t.attrs)):
+        # Присвоение ID при отсутствии
         if not el.get("id"):
-            report["missing_ids"].append(el.get("data-i18n") or el.get("data-i18n-title") or el.name)
+            main_key = el.get("data-i18n") or el.get("data-i18n-title") or el.get("data-i18n-placeholder") or ""
+            report["missing_ids"].append(main_key or el.name)
+            if apply_changes:
+                el["id"] = _generate_element_id(el.name, main_key, existing_ids)
+                changed = True
 
         # 1. Атрибуты (placeholder, title, label, aria-label)
         for i18n_attr, target_attr in _ATTR_MAP:
@@ -127,10 +193,23 @@ def process_html_file(
             cur_inner = el.decode_contents().strip()
             if cur_inner != expected_token:
                 report["hardcoded_i18n_elements"] += 1
-                if _has_nested_icon_or_i18n(el):
-                    report["skipped_nested_markup"].append(f"{el.get('id') or el.name}:{body_key}")
-                elif resolve_translation(ru_dict, body_key) is None:
+                if resolve_translation(ru_dict, body_key) is None:
                     report["skipped_missing_keys"].append(body_key)
+                elif _has_nested_icon_or_i18n(el):
+                    # Если внутри иконка или маркер, пытаемся безопасно вынести текст в дочерний <span>
+                    text_nodes = [c for c in el.contents if isinstance(c, NavigableString) and c.strip()]
+                    if len(text_nodes) == 1 and apply_changes:
+                        target_text_node = text_nodes[0]
+                        span = soup.new_tag("span")
+                        span["id"] = _generate_element_id("span", f"{body_key}-text", existing_ids)
+                        span["data-i18n"] = body_key
+                        span.append(expected_token)
+                        target_text_node.replace_with(span)
+                        del el["data-i18n"]
+                        report["migrated_fields"] += 1
+                        changed = True
+                    else:
+                        report["skipped_nested_markup"].append(f"{el.get('id') or el.name}:{body_key}")
                 elif apply_changes:
                     el.clear()
                     el.append(expected_token)
@@ -157,7 +236,9 @@ def process_html_file(
                 report["unmarked_cyrillic_count"] += 1
 
     if apply_changes and changed:
-        html_path.write_text(str(soup), encoding="utf-8")
+        rendered = str(soup)
+        rendered = _update_file_header_date(rendered)
+        html_path.write_text(rendered, encoding="utf-8")
 
     return report
 

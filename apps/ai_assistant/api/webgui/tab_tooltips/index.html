@@ -11,406 +11,349 @@ File: index.html
 Package: apps/ai_assistant/api/webgui/tab_tooltips
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-07 00:32:00
+Updated: 2026-11-15 19:40:00
 =============================================================================
 -->
 <div class="container-fluid p-3" id="tab-tooltips-container">
-  <!-- Верхняя строка заголовка и глобальных действий -->
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-    <div>
-      <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
-        <span class="fs-4 text-primary"><i class="bi bi-chat-square-quote"></i></span>
-        <span data-i18n="tooltips.editor.title" id="tooltips-heading-title">Редактор всплывающих подсказок</span>
-        <span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25" id="tooltips-counter-badge">0</span>
-      </h4>
-      <div class="small text-muted" data-i18n="tooltips.editor.subtitle" id="tooltips-heading-subtitle">
-        Управление статическими подсказками интерфейса, одноразовый перевод на 4 языка и валидация i18n
-      </div>
-    </div>
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 shadow-sm" id="btn-tooltips-refresh" data-i18n-title="common.refresh" title="Обновить список подсказок" type="button">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span data-i18n="common.refresh">Обновить</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Карточки ключевых метрик -->
-  <div class="row g-2 mb-3">
-    <div class="col-12 col-sm-4">
-      <div class="card shadow-sm border h-100">
-        <div class="card-body p-2.5 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="small text-muted" data-i18n="tooltips.editor.statTotal">Всего подсказок</div>
-            <div class="fs-4 fw-bold text-body" id="tooltips-stat-total">0</div>
-          </div>
-          <div class="fs-2 text-primary opacity-50"><i class="bi bi-chat-text"></i></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-4">
-      <div class="card shadow-sm border h-100">
-        <div class="card-body p-2.5 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="small text-muted" data-i18n="tooltips.editor.statTranslated">Переведено на 4 языка</div>
-            <div class="fs-4 fw-bold text-success" id="tooltips-stat-complete">0</div>
-          </div>
-          <div class="fs-2 text-success opacity-50"><i class="bi bi-check-all"></i></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-4">
-      <div class="card shadow-sm border h-100">
-        <div class="card-body p-2.5 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="small text-muted" data-i18n="tooltips.editor.statMissing">Требуют перевода</div>
-            <div class="fs-4 fw-bold text-warning" id="tooltips-stat-missing">0</div>
-          </div>
-          <div class="fs-2 text-warning opacity-50"><i class="bi bi-translate"></i></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Меню панелей субвкладок (Уровень 1) по стандарту SUBTABS_AND_BLOCKS_MENU.md -->
-  <div class="d-flex align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap gap-2">
-    <!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->
-    <div class="d-flex align-items-center gap-1 flex-wrap" id="tooltips-subtabs-nav" role="tablist">
-      <button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-catalog"
-              data-panel-id="panel-catalog"
-              data-bs-toggle="pill"
-              data-bs-target="#subpane-tooltips-catalog"
-              type="button"
-              role="tab"
-              data-i18n-title="tooltips.subtabs.catalogTitle"
-              title="Просмотр полного реестра подсказок интерфейса">
-        <i class="bi bi-list-ul"></i>
-        <span data-i18n="tooltips.subtabs.catalog">Каталог подсказок</span>
-      </button>
-
-      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-editor"
-              data-panel-id="panel-editor"
-              data-bs-toggle="pill"
-              data-bs-target="#subpane-tooltips-editor"
-              type="button"
-              role="tab"
-              data-i18n-title="tooltips.subtabs.editorTitle"
-              title="Редактирование текстов и предпросмотр карточки">
-        <i class="bi bi-pencil-square"></i>
-        <span data-i18n="tooltips.subtabs.editor">Редактор подсказки</span>
-      </button>
-
-      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-kb"
-              data-panel-id="panel-kb"
-              data-bs-toggle="pill"
-              data-bs-target="#subpane-tooltips-kb"
-              type="button"
-              role="tab"
-              data-i18n-title="tooltips.subtabs.kbTitle"
-              title="Термины и понятия базы знаний интерфейса">
-        <i class="bi bi-book"></i>
-        <span data-i18n="tooltips.subtabs.kb">База знаний (WikiLLM)</span>
-      </button>
-
-      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-audit"
-              data-panel-id="panel-audit"
-              data-bs-toggle="pill"
-              data-bs-target="#subpane-tooltips-audit"
-              type="button"
-              role="tab"
-              data-i18n-title="tooltips.subtabs.auditTitle"
-              title="Проверка непереведенных заголовков и атрибутов">
-        <i class="bi bi-shield-check"></i>
-        <span data-i18n="tooltips.subtabs.audit">Аудит и валидация</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Содержимое панелей субвкладок -->
-  <div class="tab-content" id="tooltips-tab-content">
-    
-    <!-- Панель 1: Каталог подсказок -->
-    <div class="tab-pane fade show active" id="subpane-tooltips-catalog" role="tabpanel">
-      <div class="card shadow-sm border mb-3">
-        <div class="card-body p-2.5">
-          <div class="row g-2 align-items-center">
-            <div class="col-12 col-md-5">
-              <div class="input-group input-group-sm">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" id="tooltips-search-input" data-i18n-placeholder="tooltips.editor.searchPlaceholder" placeholder="Поиск по ключу, заголовку или тексту...">
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <select class="form-select form-select-sm" id="tooltips-filter-category">
-                <option value="all">Все категории</option>
-              </select>
-            </div>
-            <div class="col-6 col-md-4">
-              <select class="form-select form-select-sm" id="tooltips-filter-status">
-                <option value="all">Все статусы перевода</option>
-                <option value="complete">100% переведено (RU, EN, HE, UK)</option>
-                <option value="partial">Требует доперевода</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Таблица подсказок -->
-      <div class="card shadow-sm border">
-        <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
-          <table class="table table-hover table-sm align-middle mb-0" id="tooltips-table">
-            <thead class="table-light sticky-top">
-              <tr>
-                <th style="width: 40px; text-align: center;">#</th>
-                <th style="width: 200px;">Ключ / ID</th>
-                <th>Заголовок (RU)</th>
-                <th>Заголовок (EN)</th>
-                <th style="width: 140px; text-align: center;">Локали</th>
-                <th style="width: 140px;">Категория</th>
-                <th style="width: 90px; text-align: center;">Действие</th>
-              </tr>
-            </thead>
-            <tbody id="tooltips-tbody">
-              <tr>
-                <td colspan="7" class="text-center py-4 text-muted">Загрузка каталога подсказок...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Панель 2: Редактор подсказки -->
-    <div class="tab-pane fade" id="subpane-tooltips-editor" role="tabpanel">
-      <div class="row g-3">
-        <!-- Левая колонка: форма редактирования -->
-        <div class="col-12 col-lg-7">
-          <div class="card shadow-sm border">
-            <div class="card-header bg-body py-2 px-3 fw-bold small d-flex align-items-center justify-content-between">
-              <div class="d-flex align-items-center gap-1.5">
-                <i class="bi bi-pencil-square text-primary"></i>
-                <span id="editor-card-title">Редактирование подсказки</span>
-              </div>
-              <button class="btn btn-xs btn-outline-primary" id="btn-editor-auto-translate" type="button" data-i18n-title="tooltips.editor.btnAutoTranslate" title="Выполнить одноразовый перевод на другие языки">
-                <i class="bi bi-translate me-1"></i>
-                <span data-i18n="tooltips.editor.btnAutoTranslate">Одноразовый автоперевод</span>
-              </button>
-            </div>
-            <div class="card-body p-3">
-              <div class="row g-2 mb-3">
-                <div class="col-8">
-                  <label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.keyLabel">Ключ подсказки (ID)</label>
-                  <input type="text" class="form-control form-control-sm font-monospace" id="editor-field-key" readonly>
-                </div>
-                <div class="col-4">
-                  <label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.iconLabel">Иконка</label>
-                  <input type="text" class="form-control form-control-sm" id="editor-field-icon" value="💡">
-                </div>
-                <div class="col-12">
-                  <label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.categoryLabel">Категория</label>
-                  <input type="text" class="form-control form-control-sm" id="editor-field-category" value="Навигация">
-                </div>
-              </div>
-
-              <!-- Вкладки 4 языков (RU, EN, HE, UK) -->
-              <ul class="nav nav-tabs nav-tabs-sm mb-2" id="editor-lang-tabs" role="tablist">
-                <li class="nav-item">
-                  <button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-toggle="pill" data-bs-target="#editor-lang-ru" type="button" data-panel-id="panel-editor-lang-ru" title="Раздел: Русский (RU)" data-i18n-title="tooltips.subtabs.panel-editor-lang-ruTitle">Русский (RU)</button>
-                </li>
-                <li class="nav-item">
-                  <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-toggle="pill" data-bs-target="#editor-lang-en" type="button" data-panel-id="panel-editor-lang-en" title="Раздел: English (EN)" data-i18n-title="tooltips.subtabs.panel-editor-lang-enTitle">English (EN)</button>
-                </li>
-                <li class="nav-item">
-                  <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-toggle="pill" data-bs-target="#editor-lang-he" type="button" data-panel-id="panel-editor-lang-he" title="Раздел: עברית (HE)" data-i18n-title="tooltips.subtabs.panel-editor-lang-heTitle">עברית (HE)</button>
-                </li>
-                <li class="nav-item">
-                  <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-toggle="pill" data-bs-target="#editor-lang-uk" type="button" data-panel-id="panel-editor-lang-uk" title="Раздел: Українська (UK)" data-i18n-title="tooltips.subtabs.panel-editor-lang-ukTitle">Українська (UK)</button>
-                </li>
-              </ul>
-
-              <div class="tab-content mb-3">
-                <!-- RU -->
-                <div class="tab-pane fade show active" id="editor-lang-ru">
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">Заголовок (RU)</label>
-                    <input type="text" class="form-control form-control-sm" id="editor-title-ru">
-                  </div>
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">Пояснение / Описание (RU)</label>
-                    <textarea class="form-control form-control-sm" id="editor-summary-ru" rows="3"></textarea>
-                  </div>
-                </div>
-
-                <!-- EN -->
-                <div class="tab-pane fade" id="editor-lang-en">
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">Title (EN)</label>
-                    <input type="text" class="form-control form-control-sm" id="editor-title-en">
-                  </div>
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">Description (EN)</label>
-                    <textarea class="form-control form-control-sm" id="editor-summary-en" rows="3"></textarea>
-                  </div>
-                </div>
-
-                <!-- HE -->
-                <div class="tab-pane fade" id="editor-lang-he" dir="rtl">
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">כותרת (HE)</label>
-                    <input type="text" class="form-control form-control-sm text-end" id="editor-title-he">
-                  </div>
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">תיאור (HE)</label>
-                    <textarea class="form-control form-control-sm text-end" id="editor-summary-he" rows="3"></textarea>
-                  </div>
-                </div>
-
-                <!-- UK -->
-                <div class="tab-pane fade" id="editor-lang-uk">
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">Заголовок (UK)</label>
-                    <input type="text" class="form-control form-control-sm" id="editor-title-uk">
-                  </div>
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">Пояснення / Опис (UK)</label>
-                    <textarea class="form-control form-control-sm" id="editor-summary-uk" rows="3"></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <div class="d-flex justify-content-end gap-2">
-                <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 shadow-sm" id="btn-editor-save" type="button">
-                  <i class="bi bi-check-lg"></i>
-                  <span data-i18n="tooltips.editor.btnSave">Сохранить подсказку</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Правая колонка: интерактивный предпросмотр (Live Preview) БЕЗ кнопки модели -->
-        <div class="col-12 col-lg-5">
-          <div class="card shadow-sm border h-100">
-            <div class="card-header bg-body py-2 px-3 fw-bold small d-flex align-items-center justify-content-between">
-              <div class="d-flex align-items-center gap-1.5">
-                <i class="bi bi-eye text-info"></i>
-                <span data-i18n="tooltips.editor.livePreview">Интерактивный предпросмотр (Live Preview)</span>
-              </div>
-              <div class="btn-group btn-group-xs" role="group" id="preview-lang-switch">
-                <button type="button" class="btn btn-outline-secondary active btn-preview-lang" data-lang="ru">RU</button>
-                <button type="button" class="btn btn-outline-secondary btn-preview-lang" data-lang="en">EN</button>
-                <button type="button" class="btn btn-outline-secondary btn-preview-lang" data-lang="he">HE</button>
-                <button type="button" class="btn btn-outline-secondary btn-preview-lang" data-lang="uk">UK</button>
-              </div>
-            </div>
-            <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center bg-body-tertiary">
-              <div class="text-muted small mb-2 text-center">Визуализация подсказки при наведении курсора (строго без кнопок вызова модели):</div>
-
-              <!-- Визуальная карточка тултипа -->
-              <div class="ai-smart-tooltip-box shadow-lg p-2.5 rounded border" style="max-width: 340px; width: 100%; background: var(--bs-body-bg, #1e1e2e);">
-                <div class="ai-smart-tooltip-header d-flex align-items-center justify-content-between pb-1.5 mb-1.5 border-bottom border-secondary border-opacity-25">
-                  <div class="ai-smart-tooltip-title d-flex align-items-center gap-1.5 fw-semibold small">
-                    <span id="preview-icon">💡</span>
-                    <span id="preview-title" class="text-primary">Заголовок подсказки</span>
-                  </div>
-                  <span class="badge bg-secondary-subtle text-secondary border small" id="preview-badge">WikiLLM</span>
-                </div>
-                <div class="ai-smart-tooltip-body small text-secondary" id="preview-body" style="line-height: 1.45;">
-                  Здесь отображается готовый краткий текст подсказки для выбранного языка.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Панель 3: База знаний WikiLLM -->
-    <div class="tab-pane fade" id="subpane-tooltips-kb" role="tabpanel">
-      <div class="card shadow-sm border">
-        <div class="card-header bg-body py-2 px-3 fw-bold small d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-book text-warning"></i>
-            <span>Термины базы знаний WikiLLM и системные сущности</span>
-          </div>
-        </div>
-        <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
-          <table class="table table-hover table-sm align-middle mb-0">
-            <thead class="table-light sticky-top">
-              <tr>
-                <th style="width: 40px; text-align: center;">#</th>
-                <th style="width: 180px;">Идентификатор</th>
-                <th style="width: 220px;">Заголовок (RU)</th>
-                <th>Краткое описание (WikiLLM)</th>
-                <th style="width: 140px;">Категория</th>
-                <th style="width: 80px; text-align: center;">Действие</th>
-              </tr>
-            </thead>
-            <tbody id="tooltips-kb-tbody">
-              <tr>
-                <td colspan="6" class="text-center py-4 text-muted">Загрузка базы знаний...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Панель 4: Аудит и валидация -->
-    <div class="tab-pane fade" id="subpane-tooltips-audit" role="tabpanel">
-      <div class="row g-3">
-        <div class="col-12 col-md-6">
-          <div class="card shadow-sm border h-100">
-            <div class="card-header bg-body py-2 px-3 fw-bold small text-success d-flex align-items-center gap-1.5">
-              <i class="bi bi-check-circle"></i>
-              <span>Соответствие стандартам i18n</span>
-            </div>
-            <div class="card-body p-3">
-              <ul class="list-group list-group-flush small">
-                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <span>Статические тултипы без вызова модели:</span>
-                  <span class="badge bg-success">Соблюдается (100%)</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <span>Отсутствие сырых ключей перевода:</span>
-                  <span class="badge bg-success">Проверено</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <span>Синхронизация с адресной строкой URL:</span>
-                  <span class="badge bg-success">Активно</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <span>Динамический callback title в Bootstrap:</span>
-                  <span class="badge bg-success">Активно</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-          <div class="card shadow-sm border h-100">
-            <div class="card-header bg-body py-2 px-3 fw-bold small text-primary d-flex align-items-center gap-1.5">
-              <i class="bi bi-info-circle"></i>
-              <span>Справка по стандарту подсказок</span>
-            </div>
-            <div class="card-body p-3 small text-secondary">
-              <p class="mb-2">В соответствии со стандартом <strong>SUBTABS_AND_BLOCKS_MENU.md</strong>:</p>
-              <ul class="ps-3 mb-0">
-                <li class="mb-1">Все подсказки меню формулируются <em>сразу, без обращения к LLM</em>.</li>
-                <li class="mb-1">Каждый элемент с <code>title</code> обязан иметь парный атрибут <code>data-i18n-title</code>.</li>
-                <li>Все подсказки хранятся в словарях локализации для 4 языков (RU, EN, HE, UK).</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+<!-- Верхняя строка заголовка и глобальных действий -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+<div>
+<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+<span class="fs-4 text-primary"><i class="bi bi-chat-square-quote"></i></span>
+<span data-i18n="tooltips.editor.title" id="tooltips-heading-title">{{tooltips.editor.title}}</span>
+<span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25" id="tooltips-counter-badge">0</span>
+</h4>
+<div class="small text-muted" data-i18n="tooltips.editor.subtitle" id="tooltips-heading-subtitle">{{tooltips.editor.subtitle}}</div>
+</div>
+<div class="d-flex flex-wrap align-items-center gap-2">
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="common.refresh" id="btn-tooltips-refresh" title="{{common.refresh}}" type="button">
+<i class="bi bi-arrow-clockwise"></i>
+<span data-i18n="common.refresh" id="spn-common-refresh">{{common.refresh}}</span>
+</button>
+</div>
+</div>
+<!-- Карточки ключевых метрик -->
+<div class="row g-2 mb-3">
+<div class="col-12 col-sm-4">
+<div class="card shadow-sm border h-100">
+<div class="card-body p-2.5 d-flex align-items-center justify-content-between">
+<div>
+<div class="small text-muted" data-i18n="tooltips.editor.statTotal" id="blk-tooltips-editor-stat-total">{{tooltips.editor.statTotal}}</div>
+<div class="fs-4 fw-bold text-body" id="tooltips-stat-total">0</div>
+</div>
+<div class="fs-2 text-primary opacity-50"><i class="bi bi-chat-text"></i></div>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-4">
+<div class="card shadow-sm border h-100">
+<div class="card-body p-2.5 d-flex align-items-center justify-content-between">
+<div>
+<div class="small text-muted" data-i18n="tooltips.editor.statTranslated" id="blk-tooltips-editor-stat-translated">{{tooltips.editor.statTranslated}}</div>
+<div class="fs-4 fw-bold text-success" id="tooltips-stat-complete">0</div>
+</div>
+<div class="fs-2 text-success opacity-50"><i class="bi bi-check-all"></i></div>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-4">
+<div class="card shadow-sm border h-100">
+<div class="card-body p-2.5 d-flex align-items-center justify-content-between">
+<div>
+<div class="small text-muted" data-i18n="tooltips.editor.statMissing" id="blk-tooltips-editor-stat-missing">{{tooltips.editor.statMissing}}</div>
+<div class="fs-4 fw-bold text-warning" id="tooltips-stat-missing">0</div>
+</div>
+<div class="fs-2 text-warning opacity-50"><i class="bi bi-translate"></i></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Меню панелей субвкладок (Уровень 1) по стандарту SUBTABS_AND_BLOCKS_MENU.md -->
+<div class="d-flex align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap gap-2">
+<!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->
+<div class="d-flex align-items-center gap-1 flex-wrap" id="tooltips-subtabs-nav" role="tablist">
+<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-tooltips-catalog" data-bs-toggle="pill" data-i18n-title="tooltips.subtabs.catalogTitle" data-panel-id="panel-catalog" id="btn-subtab-catalog" role="tab" title="{{tooltips.subtabs.catalogTitle}}" type="button">
+<i class="bi bi-list-ul"></i>
+<span data-i18n="tooltips.subtabs.catalog" id="spn-tooltips-subtabs-catalog">{{tooltips.subtabs.catalog}}</span>
+</button>
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-tooltips-editor" data-bs-toggle="pill" data-i18n-title="tooltips.subtabs.editorTitle" data-panel-id="panel-editor" id="btn-subtab-editor" role="tab" title="{{tooltips.subtabs.editorTitle}}" type="button">
+<i class="bi bi-pencil-square"></i>
+<span data-i18n="tooltips.subtabs.editor" id="spn-tooltips-subtabs-editor">{{tooltips.subtabs.editor}}</span>
+</button>
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-tooltips-kb" data-bs-toggle="pill" data-i18n-title="tooltips.subtabs.kbTitle" data-panel-id="panel-kb" id="btn-subtab-kb" role="tab" title="{{tooltips.subtabs.kbTitle}}" type="button">
+<i class="bi bi-book"></i>
+<span data-i18n="tooltips.subtabs.kb" id="spn-tooltips-subtabs-kb">{{tooltips.subtabs.kb}}</span>
+</button>
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#subpane-tooltips-audit" data-bs-toggle="pill" data-i18n-title="tooltips.subtabs.auditTitle" data-panel-id="panel-audit" id="btn-subtab-audit" role="tab" title="{{tooltips.subtabs.auditTitle}}" type="button">
+<i class="bi bi-shield-check"></i>
+<span data-i18n="tooltips.subtabs.audit" id="spn-tooltips-subtabs-audit">{{tooltips.subtabs.audit}}</span>
+</button>
+</div>
+</div>
+<!-- Содержимое панелей субвкладок -->
+<div class="tab-content" id="tooltips-tab-content">
+<!-- Панель 1: Каталог подсказок -->
+<div class="tab-pane fade show active" id="subpane-tooltips-catalog" role="tabpanel">
+<div class="card shadow-sm border mb-3">
+<div class="card-body p-2.5">
+<div class="row g-2 align-items-center">
+<div class="col-12 col-md-5">
+<div class="input-group input-group-sm">
+<span class="input-group-text"><i class="bi bi-search"></i></span>
+<input class="form-control" data-i18n-placeholder="tooltips.editor.searchPlaceholder" id="tooltips-search-input" placeholder="{{tooltips.editor.searchPlaceholder}}" type="text"/>
+</div>
+</div>
+<div class="col-6 col-md-3">
+<select class="form-select form-select-sm" id="tooltips-filter-category">
+<option data-i18n="ui.tooltips.txt_53660e08" id="opt-ui-tooltips-txt-53660e08" value="all">{{ui.tooltips.txt_53660e08}}</option>
+</select>
+</div>
+<div class="col-6 col-md-4">
+<select class="form-select form-select-sm" id="tooltips-filter-status">
+<option data-i18n="ui.tooltips.txt_de92d1b9" id="opt-ui-tooltips-txt-de92d1b9" value="all">{{ui.tooltips.txt_de92d1b9}}</option>
+<option data-i18n="ui.tooltips.txt_e4b7258a" id="opt-ui-tooltips-txt-e4b7258a" value="complete">{{ui.tooltips.txt_e4b7258a}}</option>
+<option data-i18n="ui.tooltips.txt_b8727d4f" id="opt-ui-tooltips-txt-b8727d4f" value="partial">{{ui.tooltips.txt_b8727d4f}}</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<!-- Таблица подсказок -->
+<div class="card shadow-sm border">
+<div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
+<table class="table table-hover table-sm align-middle mb-0" id="tooltips-table">
+<thead class="table-light sticky-top">
+<tr>
+<th style="width: 40px; text-align: center;">#</th>
+<th data-i18n="ui.tooltips.txt_4f9bbe7b" id="th-ui-tooltips-txt-4f9bbe7b" style="width: 200px;">{{ui.tooltips.txt_4f9bbe7b}}</th>
+<th data-i18n="ui.tooltips.txt_7bc258a4" id="th-ui-tooltips-txt-7bc258a4">{{ui.tooltips.txt_7bc258a4}}</th>
+<th data-i18n="ui.tooltips.txt_9469cc39" id="th-ui-tooltips-txt-9469cc39">{{ui.tooltips.txt_9469cc39}}</th>
+<th data-i18n="ui.tooltips.txt_c98fc857" id="th-ui-tooltips-txt-c98fc857" style="width: 140px; text-align: center;">{{ui.tooltips.txt_c98fc857}}</th>
+<th data-i18n="tooltips.editor.categoryLabel" id="th-tooltips-editor-category-label" style="width: 140px;">{{tooltips.editor.categoryLabel}}</th>
+<th data-i18n="ui.graph.txt_50a761a1" id="th-ui-graph-txt-50a761a1" style="width: 90px; text-align: center;">{{ui.graph.txt_50a761a1}}</th>
+</tr>
+</thead>
+<tbody id="tooltips-tbody">
+<tr>
+<td class="text-center py-4 text-muted" colspan="7" data-i18n="ui.tooltips.txt_875a3beb" id="td-ui-tooltips-txt-875a3beb">{{ui.tooltips.txt_875a3beb}}</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Панель 2: Редактор подсказки -->
+<div class="tab-pane fade" id="subpane-tooltips-editor" role="tabpanel">
+<div class="row g-3">
+<!-- Левая колонка: форма редактирования -->
+<div class="col-12 col-lg-7">
+<div class="card shadow-sm border">
+<div class="card-header bg-body py-2 px-3 fw-bold small d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center gap-1.5">
+<i class="bi bi-pencil-square text-primary"></i>
+<span data-i18n="ui.tooltips.txt_06780e24" id="editor-card-title">{{ui.tooltips.txt_06780e24}}</span>
+</div>
+<button class="btn btn-xs btn-outline-primary" data-i18n-title="tooltips.editor.btnAutoTranslate" id="btn-editor-auto-translate" title="{{tooltips.editor.btnAutoTranslate}}" type="button">
+<i class="bi bi-translate me-1"></i>
+<span data-i18n="tooltips.editor.btnAutoTranslate" id="spn-tooltips-editor-btn-auto-translate">{{tooltips.editor.btnAutoTranslate}}</span>
+</button>
+</div>
+<div class="card-body p-3">
+<div class="row g-2 mb-3">
+<div class="col-8">
+<label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.keyLabel" id="lbl-tooltips-editor-key-label">{{tooltips.editor.keyLabel}}</label>
+<input class="form-control form-control-sm font-monospace" id="editor-field-key" readonly="" type="text"/>
+</div>
+<div class="col-4">
+<label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.iconLabel" id="lbl-tooltips-editor-icon-label">{{tooltips.editor.iconLabel}}</label>
+<input class="form-control form-control-sm" id="editor-field-icon" type="text" value="💡"/>
+</div>
+<div class="col-12">
+<label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.categoryLabel" id="lbl-tooltips-editor-category-label">{{tooltips.editor.categoryLabel}}</label>
+<input class="form-control form-control-sm" data-i18n-placeholder="tooltips.editor.categoryPlaceholder" id="editor-field-category" placeholder="{{tooltips.editor.categoryPlaceholder}}" type="text"/>
+</div>
+</div>
+<!-- Вкладки 4 языков (RU, EN, HE, UK) -->
+<ul class="nav nav-tabs nav-tabs-sm mb-2" id="editor-lang-tabs" role="tablist">
+<li class="nav-item">
+<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-ru" data-bs-target="#editor-lang-ru" data-bs-toggle="pill" data-i18n="languages.ru" data-i18n-title="tooltips.subtabs.panel-editor-lang-ruTitle" data-panel-id="panel-editor-lang-ru" id="btn-tooltips-subtabs-panel-editor-lang-ru-title" title="{{tooltips.subtabs.panel-editor-lang-ruTitle}}" type="button">{{languages.ru}}</button>
+</li>
+<li class="nav-item">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-en" data-bs-target="#editor-lang-en" data-bs-toggle="pill" data-i18n="languages.en" data-i18n-title="tooltips.subtabs.panel-editor-lang-enTitle" data-panel-id="panel-editor-lang-en" id="btn-tooltips-subtabs-panel-editor-lang-en-title" title="{{tooltips.subtabs.panel-editor-lang-enTitle}}" type="button">{{languages.en}}</button>
+</li>
+<li class="nav-item">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-he" data-bs-target="#editor-lang-he" data-bs-toggle="pill" data-i18n="languages.he" data-i18n-title="tooltips.subtabs.panel-editor-lang-heTitle" data-panel-id="panel-editor-lang-he" id="btn-tooltips-subtabs-panel-editor-lang-he-title" title="{{tooltips.subtabs.panel-editor-lang-heTitle}}" type="button">{{languages.he}}</button>
+</li>
+<li class="nav-item">
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-block-id="block-uk" data-bs-target="#editor-lang-uk" data-bs-toggle="pill" data-i18n="languages.uk" data-i18n-title="tooltips.subtabs.panel-editor-lang-ukTitle" data-panel-id="panel-editor-lang-uk" id="btn-tooltips-subtabs-panel-editor-lang-uk-title" title="{{tooltips.subtabs.panel-editor-lang-ukTitle}}" type="button">{{languages.uk}}</button>
+</li>
+</ul>
+<div class="tab-content mb-3">
+<!-- RU -->
+<div class="tab-pane fade show active" id="editor-lang-ru">
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="ui.tooltips.txt_7bc258a4" id="lbl-ui-tooltips-txt-7bc258a4">{{ui.tooltips.txt_7bc258a4}}</label>
+<input class="form-control form-control-sm" id="editor-title-ru" type="text"/>
+</div>
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="ui.tooltips.txt_7f0ab4f9" id="lbl-ui-tooltips-txt-7f0ab4f9">{{ui.tooltips.txt_7f0ab4f9}}</label>
+<textarea class="form-control form-control-sm" id="editor-summary-ru" rows="3"></textarea>
+</div>
+</div>
+<!-- EN -->
+<div class="tab-pane fade" id="editor-lang-en">
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.titleEnLabel" id="lbl-tooltips-editor-title-en">{{tooltips.editor.titleEnLabel}}</label>
+<input class="form-control form-control-sm" id="editor-title-en" type="text"/>
+</div>
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.descEnLabel" id="lbl-tooltips-editor-desc-en">{{tooltips.editor.descEnLabel}}</label>
+<textarea class="form-control form-control-sm" id="editor-summary-en" rows="3"></textarea>
+</div>
+</div>
+<!-- HE -->
+<div class="tab-pane fade" dir="rtl" id="editor-lang-he">
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.titleHeLabel" id="lbl-tooltips-editor-title-he">{{tooltips.editor.titleHeLabel}}</label>
+<input class="form-control form-control-sm text-end" id="editor-title-he" type="text"/>
+</div>
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="tooltips.editor.descHeLabel" id="lbl-tooltips-editor-desc-he">{{tooltips.editor.descHeLabel}}</label>
+<textarea class="form-control form-control-sm text-end" id="editor-summary-he" rows="3"></textarea>
+</div>
+</div>
+<!-- UK -->
+<div class="tab-pane fade" id="editor-lang-uk">
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="ui.tooltips.txt_ab1e8fa8" id="lbl-ui-tooltips-txt-ab1e8fa8">{{ui.tooltips.txt_ab1e8fa8}}</label>
+<input class="form-control form-control-sm" id="editor-title-uk" type="text"/>
+</div>
+<div class="mb-2">
+<label class="form-label small fw-semibold mb-1" data-i18n="ui.tooltips.txt_3dc32e22" id="lbl-ui-tooltips-txt-3dc32e22">{{ui.tooltips.txt_3dc32e22}}</label>
+<textarea class="form-control form-control-sm" id="editor-summary-uk" rows="3"></textarea>
+</div>
+</div>
+</div>
+<div class="d-flex justify-content-end gap-2">
+<button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 shadow-sm" id="btn-editor-save" type="button">
+<i class="bi bi-check-lg"></i>
+<span data-i18n="tooltips.editor.btnSave" id="spn-tooltips-editor-btn-save">{{tooltips.editor.btnSave}}</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Правая колонка: интерактивный предпросмотр (Live Preview) БЕЗ кнопки модели -->
+<div class="col-12 col-lg-5">
+<div class="card shadow-sm border h-100">
+<div class="card-header bg-body py-2 px-3 fw-bold small d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center gap-1.5">
+<i class="bi bi-eye text-info"></i>
+<span data-i18n="tooltips.editor.livePreview" id="spn-tooltips-editor-live-preview">{{tooltips.editor.livePreview}}</span>
+</div>
+<div class="btn-group btn-group-xs" id="preview-lang-switch" role="group">
+<button class="btn btn-outline-secondary active btn-preview-lang" data-lang="ru" type="button">RU</button>
+<button class="btn btn-outline-secondary btn-preview-lang" data-lang="en" type="button">EN</button>
+<button class="btn btn-outline-secondary btn-preview-lang" data-lang="he" type="button">HE</button>
+<button class="btn btn-outline-secondary btn-preview-lang" data-lang="uk" type="button">UK</button>
+</div>
+</div>
+<div class="card-body p-3 d-flex flex-column align-items-center justify-content-center bg-body-tertiary">
+<div class="text-muted small mb-2 text-center"><span data-i18n="ui.tooltips.txt_087f4531" id="spn-ui-tooltips-txt-087f4531">{{ui.tooltips.txt_087f4531}}</span></div>
+<!-- Визуальная карточка тултипа -->
+<div class="ai-smart-tooltip-box shadow-lg p-2.5 rounded border" style="max-width: 340px; width: 100%; background: var(--bs-body-bg, #1e1e2e);">
+<div class="ai-smart-tooltip-header d-flex align-items-center justify-content-between pb-1.5 mb-1.5 border-bottom border-secondary border-opacity-25">
+<div class="ai-smart-tooltip-title d-flex align-items-center gap-1.5 fw-semibold small">
+<span id="preview-icon">💡</span>
+<span class="text-primary" data-i18n="ui.tooltips.txt_2c0ee5ae" id="preview-title">{{ui.tooltips.txt_2c0ee5ae}}</span>
+</div>
+<span class="badge bg-secondary-subtle text-secondary border small" id="preview-badge">WikiLLM</span>
+</div>
+<div class="ai-smart-tooltip-body small text-secondary" id="preview-body" style="line-height: 1.45;"><span data-i18n="ui.tooltips.txt_759dedb6" id="spn-ui-tooltips-txt-759dedb6">{{ui.tooltips.txt_759dedb6}}</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Панель 3: База знаний WikiLLM -->
+<div class="tab-pane fade" id="subpane-tooltips-kb" role="tabpanel">
+<div class="card shadow-sm border">
+<div class="card-header bg-body py-2 px-3 fw-bold small d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center gap-1.5">
+<i class="bi bi-book text-warning"></i>
+<span data-i18n="ui.tooltips.txt_c359fe4b" id="spn-ui-tooltips-txt-c359fe4b">{{ui.tooltips.txt_c359fe4b}}</span>
+</div>
+</div>
+<div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
+<table class="table table-hover table-sm align-middle mb-0">
+<thead class="table-light sticky-top">
+<tr>
+<th style="width: 40px; text-align: center;">#</th>
+<th data-i18n="ui.tooltips.txt_65420c5c" id="th-ui-tooltips-txt-65420c5c" style="width: 180px;">{{ui.tooltips.txt_65420c5c}}</th>
+<th data-i18n="ui.tooltips.txt_7bc258a4" id="th-ui-tooltips-txt-7bc258a4-2" style="width: 220px;">{{ui.tooltips.txt_7bc258a4}}</th>
+<th data-i18n="ui.tooltips.txt_19c8ce1c" id="th-ui-tooltips-txt-19c8ce1c">{{ui.tooltips.txt_19c8ce1c}}</th>
+<th data-i18n="tooltips.editor.categoryLabel" id="th-tooltips-editor-category-label-2" style="width: 140px;">{{tooltips.editor.categoryLabel}}</th>
+<th data-i18n="ui.graph.txt_50a761a1" id="th-ui-graph-txt-50a761a1-2" style="width: 80px; text-align: center;">{{ui.graph.txt_50a761a1}}</th>
+</tr>
+</thead>
+<tbody id="tooltips-kb-tbody">
+<tr>
+<td class="text-center py-4 text-muted" colspan="6" data-i18n="ui.tooltips.txt_79c9df8f" id="td-ui-tooltips-txt-79c9df8f">{{ui.tooltips.txt_79c9df8f}}</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Панель 4: Аудит и валидация -->
+<div class="tab-pane fade" id="subpane-tooltips-audit" role="tabpanel">
+<div class="row g-3">
+<div class="col-12 col-md-6">
+<div class="card shadow-sm border h-100">
+<div class="card-header bg-body py-2 px-3 fw-bold small text-success d-flex align-items-center gap-1.5">
+<i class="bi bi-check-circle"></i>
+<span data-i18n="ui.tooltips.txt_307e3aaa" id="spn-ui-tooltips-txt-307e3aaa">{{ui.tooltips.txt_307e3aaa}}</span>
+</div>
+<div class="card-body p-3">
+<ul class="list-group list-group-flush small">
+<li class="list-group-item d-flex justify-content-between align-items-center px-0">
+<span data-i18n="ui.tooltips.txt_5ff35a66" id="spn-ui-tooltips-txt-5ff35a66">{{ui.tooltips.txt_5ff35a66}}</span>
+<span class="badge bg-success" data-i18n="ui.tooltips.txt_5145e6dd" id="spn-ui-tooltips-txt-5145e6dd">{{ui.tooltips.txt_5145e6dd}}</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center px-0">
+<span data-i18n="ui.tooltips.txt_fb87a97c" id="spn-ui-tooltips-txt-fb87a97c">{{ui.tooltips.txt_fb87a97c}}</span>
+<span class="badge bg-success" data-i18n="ui.tooltips.txt_a0b11865" id="spn-ui-tooltips-txt-a0b11865">{{ui.tooltips.txt_a0b11865}}</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center px-0">
+<span data-i18n="ui.tooltips.txt_bdd45760" id="spn-ui-tooltips-txt-bdd45760">{{ui.tooltips.txt_bdd45760}}</span>
+<span class="badge bg-success" data-i18n="ui.ide.txt_87a4286b" id="spn-ui-ide-txt-87a4286b">{{ui.ide.txt_87a4286b}}</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center px-0">
+<span data-i18n="ui.tooltips.txt_464a1470" id="spn-ui-tooltips-txt-464a1470">{{ui.tooltips.txt_464a1470}}</span>
+<span class="badge bg-success" data-i18n="ui.ide.txt_87a4286b" id="spn-ui-ide-txt-87a4286b-2">{{ui.ide.txt_87a4286b}}</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="col-12 col-md-6">
+<div class="card shadow-sm border h-100">
+<div class="card-header bg-body py-2 px-3 fw-bold small text-primary d-flex align-items-center gap-1.5">
+<i class="bi bi-info-circle"></i>
+<span data-i18n="ui.tooltips.txt_5f8eab1d" id="spn-ui-tooltips-txt-5f8eab1d">{{ui.tooltips.txt_5f8eab1d}}</span>
+</div>
+<div class="card-body p-3 small text-secondary">
+<p class="mb-2"><span data-i18n="ui.tooltips.txt_9f67dcdd" id="spn-ui-tooltips-txt-9f67dcdd">{{ui.tooltips.txt_9f67dcdd}}</span><strong>SUBTABS_AND_BLOCKS_MENU.md</strong>:</p>
+<ul class="ps-3 mb-0">
+<li class="mb-1"><span data-i18n="ui.tooltips.txt_7e1c498f" id="spn-ui-tooltips-txt-7e1c498f">{{ui.tooltips.txt_7e1c498f}}</span><em data-i18n="ui.tooltips.txt_72183e88" id="em-ui-tooltips-txt-72183e88">{{ui.tooltips.txt_72183e88}}</em>.</li>
+<li class="mb-1"><span data-i18n="ui.tooltips.txt_c3cdd2c0" id="spn-ui-tooltips-txt-c3cdd2c0">{{ui.tooltips.txt_c3cdd2c0}}</span><code>title</code><span data-i18n="ui.tooltips.txt_80486196" id="spn-ui-tooltips-txt-80486196">{{ui.tooltips.txt_80486196}}</span><code>data-i18n-title</code>.</li>
+<li><span data-i18n="ui.tooltips.txt_d51910de" id="spn-ui-tooltips-txt-d51910de">{{ui.tooltips.txt_d51910de}}</span></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>

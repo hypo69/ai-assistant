@@ -17,7 +17,7 @@
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-07 00:56:00
+ * Updated: 2026-11-20 02:16:00
  * =============================================================================
  */
 
@@ -159,18 +159,27 @@ export function isPanelActive(tabId, panelId = null, defaultPanel = null) {
 }
 
 /**
- * Устанавливает активную панель в URL hash (#tab_id#panel_id).
+ * Устанавливает активную панель и опциональный блок в URL hash (#tab_<tab>#panel-<panel>[#block-<block>]).
  * @param {string} tabId 
  * @param {string} panelId 
+ * @param {string|null} [blockId=null]
  */
-export function setPanelHash(tabId, panelId) {
+export function setPanelHash(tabId, panelId, blockId = null) {
   if (!tabId || !panelId) return;
   const normTab = normalizeTabId(tabId);
-  const newHash = `#${normTab}#${panelId}`;
+  const cleanPanel = String(panelId).replace(/^#/, '');
+  const normPanel = cleanPanel.startsWith('panel-') ? cleanPanel : `panel-${cleanPanel}`;
+  let blockSuffix = '';
+  if (blockId) {
+    const cleanBlock = String(blockId).replace(/^#/, '');
+    const normBlock = cleanBlock.startsWith('block-') ? cleanBlock : `block-${cleanBlock}`;
+    blockSuffix = `#${normBlock}`;
+  }
+  const newHash = `#${normTab}#${normPanel}${blockSuffix}`;
   if (typeof location !== 'undefined' && location.hash !== newHash) {
     try {
       history.replaceState(null, null, newHash);
-      document.dispatchEvent(new CustomEvent('panel:activated', { detail: { tabId: normTab, panelId } }));
+      document.dispatchEvent(new CustomEvent('panel:activated', { detail: { tabId: normTab, panelId: normPanel, blockId } }));
     } catch (_) {}
   }
 }
@@ -500,6 +509,9 @@ export async function loadTab(tabName, htmlUrl, jsUrl) {
  * Устанавливает единый слушатель кликов по элементам с data-tab.
  */
 export function setupTabClicks() {
+  if (typeof window !== 'undefined' && window.__tabCoreClicksBound) return;
+  if (typeof window !== 'undefined') window.__tabCoreClicksBound = true;
+
   document.addEventListener('click', e => {
     // 1. Делегирование клика по элементам рабочих пространств [data-ws-id]
     const wsBtn = e.target.closest('[data-ws-id]');
@@ -521,6 +533,16 @@ export function setupTabClicks() {
     const btn = e.target.closest('button[data-tab], a[data-tab]');
     if (btn && btn.dataset.tab) {
       e.preventDefault();
+      // Закрываем открытый родительский dropdown (например, меню рабочих областей)
+      const parentDropdown = btn.closest('.dropdown');
+      if (parentDropdown && window.bootstrap && window.bootstrap.Dropdown) {
+        const toggleEl = parentDropdown.querySelector('[data-bs-toggle="dropdown"]');
+        if (toggleEl) {
+          try {
+            window.bootstrap.Dropdown.getInstance(toggleEl)?.hide();
+          } catch (_) {}
+        }
+      }
       // Мгновенная очистка оверлеев и снятие блокировок body
       document.querySelectorAll('.offcanvas-backdrop, .modal-backdrop').forEach(b => b.remove());
       document.body.classList.remove('modal-open');
@@ -532,8 +554,13 @@ export function setupTabClicks() {
       } else {
         switchTab(btn.dataset.tab);
       }
-      if (btn.dataset.panel && typeof window.switchWorkspaceSubTab === 'function') {
-        window.switchWorkspaceSubTab(btn.dataset.panel, true);
+      if (btn.dataset.panel) {
+        if (btn.dataset.tab === 'tab-workspace' && typeof window.switchWorkspaceSubTab === 'function') {
+          window.switchWorkspaceSubTab(btn.dataset.panel, true);
+        } else {
+          setPanelHash(btn.dataset.tab, btn.dataset.panel);
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        }
       }
     }
   }, true);

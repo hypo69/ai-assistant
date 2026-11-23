@@ -1,0 +1,259 @@
+<div class="commands-container p-3 d-flex flex-column h-100" id="container-tab-commands">
+  <!-- Верхняя панель заголовка и действий -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom" id="commands-header-bar">
+    <div class="d-flex align-items-center gap-2" id="commands-header-title-box">
+      <i class="bi bi-terminal-fill fs-4 text-primary"></i>
+      <div>
+        <h5 class="mb-0 fw-bold d-flex align-items-center gap-2" id="commands-main-title">
+          <span data-i18n="commands.headerTitle" id="spn-commands-header-title">{{commands.headerTitle}}</span>
+          <span class="badge bg-secondary rounded-pill small" id="commands-badge-count">0</span>
+        </h5>
+        <small class="text-secondary" data-i18n="commands.headerSubtitle" id="small-commands-header-subtitle">{{commands.headerSubtitle}}</small>
+      </div>
+    </div>
+
+    <!-- Кнопки глобальных действий -->
+    <div class="d-flex align-items-center gap-2" id="commands-actions-bar">
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" data-i18n-title="commands.btnRefreshTitle" id="btn-commands-refresh" title="{{commands.btnRefreshTitle}}" type="button">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span data-i18n="commands.btnRefresh" id="spn-commands-btn-refresh">{{commands.btnRefresh}}</span>
+      </button>
+
+      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" data-i18n-title="commands.btnExportMdTitle" id="btn-commands-export-md" title="{{commands.btnExportMdTitle}}" type="button">
+        <i class="bi bi-markdown"></i>
+        <span data-i18n="commands.btnExportMd" id="spn-commands-btn-export-md">{{commands.btnExportMd}}</span>
+      </button>
+
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" data-i18n-title="commands.btnCreateTitle" id="btn-commands-create" title="{{commands.btnCreateTitle}}" type="button">
+        <i class="bi bi-plus-circle"></i>
+        <span data-i18n="commands.btnCreate" id="spn-commands-btn-create">{{commands.btnCreate}}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->
+  <ul class="nav nav-pills mb-3 border-bottom pb-2 gap-2" id="commands-subtabs-nav" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button aria-selected="true" class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#pill-cmd-cheatsheet" data-bs-toggle="pill" data-i18n-title="commands.subtabs.cheatsheetTitle" data-panel-id="panel-cmd-cheatsheet" id="pill-cmd-cheatsheet-tab" role="tab" title="{{commands.subtabs.cheatsheetTitle}}" type="button">
+        <i class="bi bi-terminal"></i>
+        <span data-i18n="commands.subtabs.cheatsheetLabel" id="spn-commands-subtabs-cheatsheet-label">{{commands.subtabs.cheatsheetLabel}}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button aria-selected="false" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-bs-target="#pill-cmd-markdown" data-bs-toggle="pill" data-i18n-title="commands.subtabs.markdownTitle" data-panel-id="panel-cmd-markdown" id="pill-cmd-markdown-tab" role="tab" title="{{commands.subtabs.markdownTitle}}" type="button">
+        <i class="bi bi-markdown"></i>
+        <span data-i18n="commands.subtabs.markdownLabel" id="spn-commands-subtabs-markdown-label">{{commands.subtabs.markdownLabel}}</span>
+      </button>
+    </li>
+  </ul>
+
+  <!-- Содержимое субвкладок -->
+  <div class="tab-content flex-grow-1 overflow-hidden d-flex flex-column" id="commands-subtabs-content">
+    
+    <!-- Субпанель 1: Интерактивный каталог / CheatSheet -->
+    <div aria-labelledby="pill-cmd-cheatsheet-tab" class="tab-pane fade show active h-100 d-flex flex-column" id="pill-cmd-cheatsheet" role="tabpanel">
+      
+      <!-- Панель фильтров и поиска -->
+      <div class="card mb-3 p-2 bg-body-tertiary border" id="commands-filters-card">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-5 col-sm-12">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input class="form-control" data-i18n-placeholder="placeholders.commands.search" id="cmd-filter-search" placeholder="{{placeholders.commands.search}}" type="text"/>
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <select class="form-select form-select-sm" id="cmd-filter-category">
+              <option data-i18n="commands.filterAllCategories" id="opt-cmd-cat-all" value="all">{{commands.filterAllCategories}}</option>
+            </select>
+          </div>
+          <div class="col-md-2 col-sm-6">
+            <select class="form-select form-select-sm" id="cmd-filter-shell">
+              <option data-i18n="commands.filterAllShells" id="opt-cmd-shell-all" value="all">{{commands.filterAllShells}}</option>
+              <option value="powershell">PowerShell</option>
+              <option value="cmd">CMD</option>
+              <option value="bash">Bash</option>
+              <option value="python">Python</option>
+            </select>
+          </div>
+          <div class="col-md-2 col-sm-12 d-flex justify-content-end">
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" id="cmd-filter-favorite" type="checkbox"/>
+              <label class="form-check-label small" data-i18n="commands.filterFavoriteOnly" for="cmd-filter-favorite" id="lbl-cmd-filter-favorite">{{commands.filterFavoriteOnly}}</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Список команд (сетка карточек со скроллом) -->
+      <div class="flex-grow-1 overflow-auto pe-1" id="commands-list-container">
+        <div class="row g-3" id="commands-cards-grid">
+          <!-- Карточки команд рендерятся через main.js -->
+        </div>
+        <div class="text-center py-5 text-secondary d-none" id="commands-empty-state">
+          <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+          <span data-i18n="commands.emptyState" id="spn-commands-empty-state">{{commands.emptyState}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Субпанель 2: Markdown шпаргалка -->
+    <div aria-labelledby="pill-cmd-markdown-tab" class="tab-pane fade h-100 d-flex flex-column" id="pill-cmd-markdown" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-secondary" data-i18n="commands.markdownSubtitle" id="spn-commands-markdown-subtitle">{{commands.markdownSubtitle}}</span>
+        <button class="btn btn-sm btn-outline-primary" data-i18n-title="commands.btnCopyAllMarkdown" id="btn-cmd-copy-all-md" title="{{commands.btnCopyAllMarkdown}}" type="button">
+          <i class="bi bi-clipboard"></i>
+          <span data-i18n="commands.btnCopy" id="spn-cmd-copy-all-label">{{commands.btnCopy}}</span>
+        </button>
+      </div>
+      <div class="flex-grow-1 overflow-auto border rounded p-3 bg-body-tertiary">
+        <pre class="font-monospace small mb-0" id="commands-markdown-content" style="white-space: pre-wrap; word-break: break-all;"></pre>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- Модальное окно: Создание / Редактирование команды (90vw)                   -->
+<!-- ========================================================================= -->
+<div aria-hidden="true" class="modal fade" id="modal-command-editor" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2.5">
+        <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="modal-command-editor-title">
+          <i class="bi bi-pencil-square text-primary"></i>
+          <span data-i18n="commands.editorTitle" id="spn-commands-editor-title">{{commands.editorTitle}}</span>
+        </h5>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+      </div>
+      <div class="modal-body p-3">
+        <form class="row g-3" id="command-editor-form">
+          <input id="editor-cmd-id" type="hidden"/>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold" data-i18n="commands.fieldName" id="lbl-cmd-field-name">{{commands.fieldName}}</label>
+            <span class="text-danger">*</span>
+            <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.commands.title" id="editor-cmd-title" placeholder="{{placeholders.commands.title}}" required="" type="text"/>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold" data-i18n="commands.fieldCategory" id="lbl-cmd-field-category">{{commands.fieldCategory}}</label>
+            <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.commands.category" id="editor-cmd-category" list="editor-categories-datalist" placeholder="{{placeholders.commands.category}}" type="text"/>
+            <datalist id="editor-categories-datalist"></datalist>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold" data-i18n="commands.fieldShell" id="lbl-cmd-field-shell">{{commands.fieldShell}}</label>
+            <select class="form-select form-select-sm" id="editor-cmd-shell">
+              <option value="powershell">PowerShell</option>
+              <option value="cmd">CMD</option>
+              <option value="bash">Bash</option>
+              <option value="python">Python</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold" data-i18n="commands.fieldTags" id="lbl-cmd-field-tags">{{commands.fieldTags}}</label>
+            <input class="form-control form-control-sm font-monospace" data-i18n-placeholder="placeholders.commands.tags" id="editor-cmd-tags" placeholder="{{placeholders.commands.tags}}" type="text"/>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold" data-i18n="commands.fieldRisk" id="lbl-cmd-field-risk">{{commands.fieldRisk}}</label>
+            <select class="form-select form-select-sm" id="editor-cmd-risk">
+              <option data-i18n="commands.riskSafe" id="opt-cmd-risk-safe" value="safe">{{commands.riskSafe}}</option>
+              <option data-i18n="commands.riskWarn" id="opt-cmd-risk-warn" value="warn">{{commands.riskWarn}}</option>
+              <option data-i18n="commands.riskDanger" id="opt-cmd-risk-danger" value="danger">{{commands.riskDanger}}</option>
+            </select>
+          </div>
+
+          <div class="col-md-3 d-flex align-items-center pt-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input" id="editor-cmd-favorite" type="checkbox"/>
+              <label class="form-check-label small" data-i18n="commands.fieldFavorite" for="editor-cmd-favorite" id="lbl-cmd-field-favorite">{{commands.fieldFavorite}}</label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-semibold" data-i18n="commands.fieldDescription" id="lbl-cmd-field-desc">{{commands.fieldDescription}}</label>
+            <input class="form-control form-control-sm" data-i18n-placeholder="placeholders.commands.description" id="editor-cmd-desc" placeholder="{{placeholders.commands.description}}" type="text"/>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small fw-semibold mb-0" data-i18n="commands.fieldCommand" id="lbl-cmd-field-command">{{commands.fieldCommand}}</label>
+              <span class="text-danger">*</span>
+              <small class="text-secondary" data-i18n="commands.commandHint" id="small-cmd-hint">{{commands.commandHint}}</small>
+            </div>
+            <textarea class="form-control font-monospace small" data-i18n-placeholder="placeholders.commands.command" id="editor-cmd-code" placeholder="{{placeholders.commands.command}}" required="" rows="8"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer py-2 d-flex justify-content-between">
+        <button class="btn btn-sm btn-outline-danger" data-i18n-title="commands.btnDelete" id="editor-cmd-btn-delete" style="display: none;" title="{{commands.btnDelete}}" type="button">
+          <i class="bi bi-trash"></i>
+          <span data-i18n="commands.btnDeleteLabel" id="spn-cmd-btn-del-lbl">{{commands.btnDeleteLabel}}</span>
+        </button>
+        <div class="d-flex gap-2 ms-auto">
+          <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" data-i18n="commands.btnCancel" id="btn-cmd-cancel" type="button">{{commands.btnCancel}}</button>
+          <button class="btn btn-sm btn-primary" data-i18n-title="commands.btnSave" id="editor-cmd-btn-save" title="{{commands.btnSave}}" type="button">
+            <i class="bi bi-check2"></i>
+            <span data-i18n="commands.btnSaveLabel" id="spn-cmd-btn-save-lbl">{{commands.btnSaveLabel}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- Модальное окно: Интерактивный раннер команды                              -->
+<!-- ========================================================================= -->
+<div aria-hidden="true" class="modal fade" id="modal-command-runner" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2.5">
+        <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="modal-command-runner-title">
+          <i class="bi bi-play-circle text-primary"></i>
+          <span data-i18n="commands.runnerTitle" id="spn-commands-runner-title">{{commands.runnerTitle}}</span>
+        </h5>
+        <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="mb-3">
+          <span class="fw-semibold text-secondary small d-block mb-1" data-i18n="commands.runnerCommandLabel" id="spn-cmd-runner-cmd-lbl">{{commands.runnerCommandLabel}}</span>
+          <div class="cmd-code-box" id="runner-cmd-preview"></div>
+        </div>
+
+        <!-- Поля плейсхолдеров, если обнаружены <PARAM> -->
+        <div class="mb-3 d-none" id="runner-cmd-params-box">
+          <span class="fw-semibold text-secondary small d-block mb-2" data-i18n="commands.runnerParamsTitle" id="spn-cmd-runner-params-title">{{commands.runnerParamsTitle}}</span>
+          <div class="row g-2" id="runner-cmd-params-fields"></div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" id="runner-cmd-as-admin" type="checkbox"/>
+            <label class="form-check-label small" data-i18n="commands.runAsAdmin" for="runner-cmd-as-admin" id="lbl-cmd-run-as-admin">{{commands.runAsAdmin}}</label>
+          </div>
+          <button class="btn btn-sm btn-success d-flex align-items-center gap-1" id="runner-cmd-btn-execute" type="button">
+            <i class="bi bi-play-fill"></i>
+            <span data-i18n="commands.btnRunNow" id="spn-cmd-btn-run-now">{{commands.btnRunNow}}</span>
+          </button>
+        </div>
+
+        <!-- Консольный вывод -->
+        <div class="d-none" id="runner-cmd-output-box">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold text-secondary small" data-i18n="commands.runnerOutputLabel" id="spn-cmd-runner-out-lbl">{{commands.runnerOutputLabel}}</span>
+            <span class="badge bg-secondary" id="runner-cmd-status-badge"></span>
+          </div>
+          <div class="cmd-runner-console" id="runner-cmd-console-output"></div>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal" data-i18n="commands.btnClose" id="btn-cmd-runner-close" type="button">{{commands.btnClose}}</button>
+      </div>
+    </div>
+  </div>
+</div>

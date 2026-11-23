@@ -427,7 +427,7 @@ def _fetch_hf_models_sync(include_unsupported: bool=False) -> List[str]:
     unsupported: Set[str] = load_unsupported_models('hf')
     models: List[str] = []
     try:
-        from src.ai.chat.hf import hf_client
+        from src.ai.providers.huggingface.chat import hf_client
         downloaded: List[Dict[str, Any]] = hf_client.list_downloaded()
         for item in downloaded:
             mid: str = item.get('id', '')
@@ -452,7 +452,7 @@ def _fetch_onnx_models_sync(include_unsupported: bool=False) -> List[str]:
     unsupported: Set[str] = load_unsupported_models('onnx')
     discovered_models: Set[str] = set()
     try:
-        from src.ai.chat.onnx import onnx_client
+        from src.ai.providers.onnx.chat import onnx_client
         loaded: List[Dict[str, Any]] = onnx_client.list_loaded()
         for item in loaded:
             mid: str = item.get('id', '')

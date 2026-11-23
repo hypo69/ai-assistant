@@ -13,7 +13,7 @@
  * Project: ai-assistant
  * Package: windows/api/webgui/css
  * Author: hypo69
- * Updated: 2026-10-25 23:56:00
+ * Updated: 2026-11-20 02:32:00
  * =============================================================================
  */
 
@@ -104,9 +104,9 @@
   --bs-list-group-bg: var(--surface-1);
   --bs-list-group-color: var(--text-color);
   --bs-list-group-border-color: var(--border-color);
-  --bs-list-group-active-bg: var(--nav-active);
-  --bs-list-group-active-color: #ffffff;
-  --bs-list-group-active-border-color: var(--nav-active);
+  --bs-list-group-active-bg: var(--active-item-bg);
+  --bs-list-group-active-color: var(--active-item-color);
+  --bs-list-group-active-border-color: var(--active-item-border);
   --bs-list-group-hover-bg: var(--nav-hover-bg);
 }
 
@@ -129,33 +129,19 @@
 
 .list-group-item-action.active,
 .list-group-item.active {
-  background-color: var(--nav-active) !important;
-  border-color: var(--nav-active) !important;
-  color: #ffffff !important;
+  background-color: var(--active-item-bg) !important;
+  border-color: var(--active-item-border) !important;
+  color: var(--active-item-color) !important;
+}
+
+.list-group-item-action.active:hover,
+.list-group-item.active:hover {
+  background-color: var(--active-item-hover-bg) !important;
 }
 
 .list-group-item-action.active .text-muted,
 .list-group-item.active .text-muted {
-  color: rgba(255, 255, 255, 0.75) !important;
-}
-
-[data-theme="brick"] .list-group-item-action.active,
-[data-theme="brick"] .list-group-item.active {
-  background-color: #b84228 !important;
-  border-color: #b84228 !important;
-  color: #ffffff !important;
-}
-
-[data-theme="terminal"] .list-group-item-action.active,
-[data-theme="terminal"] .list-group-item.active {
-  background-color: #0c3316 !important;
-  border-color: #00ff66 !important;
-  color: #00ff66 !important;
-}
-
-[data-theme="terminal"] .list-group-item-action.active .text-muted,
-[data-theme="terminal"] .list-group-item.active .text-muted {
-  color: rgba(0, 255, 102, 0.75) !important;
+  color: var(--active-item-muted) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -362,14 +348,43 @@ select optgroup,
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   МОДАЛЬНЫЕ ОКНА
+   МОДАЛЬНЫЕ ОКНА (Стандарт геометрии 90vw × 90vh согласно WEBGUI.md § 5.4)
    ═══════════════════════════════════════════════════════════════════════════ */
-.modal-content {
+.modal .modal-dialog,
+#userSettingsModal .modal-dialog {
+  --bs-modal-width: var(--modal-size-w, var(--modal-width, 90vw)) !important;
+  width: var(--modal-size-w, var(--modal-width, 90vw)) !important;
+  max-width: var(--modal-size-w, var(--modal-width, 90vw)) !important;
+  height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  max-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  min-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  margin: calc((100vh - var(--modal-size-h, var(--modal-height, 90vh))) / 2) auto !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.modal .modal-content,
+#userSettingsModal .modal-content {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  min-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
   background-color: var(--modal-bg);
   border: 1px solid var(--modal-border);
   color: var(--modal-text);
-  border-radius: 8px;
+  border-radius: var(--radius-md, 8px);
   box-shadow: var(--shadow-lg);
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.modal .modal-body,
+#userSettingsModal .modal-body {
+  padding: 0.75rem 0.9rem;
+  font-size: 0.85rem;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  max-height: calc(var(--modal-size-h, var(--modal-height, 90vh)) - 110px) !important;
 }
 
 .modal-header {
@@ -1774,7 +1789,7 @@ select optgroup,
 .ai-smart-tooltip-container {
   position: fixed !important;
   z-index: 9999;
-  pointer-events: auto;
+  pointer-events: none !important;
   opacity: 0;
   visibility: hidden;
   transform: translateY(6px);
@@ -1809,6 +1824,7 @@ select optgroup,
   line-height: 1.35;
   position: relative;
   user-select: none;
+  pointer-events: none !important;
 }
 
 /* Треугольная стрелка внизу карточки (указывает вниз на элемент под тултипом) */
@@ -2100,4 +2116,237 @@ select optgroup,
 
 .text-pre-wrap {
   white-space: pre-wrap !important;
+}
+
+/* Гарантированная интерактивность полей ввода вкладки создания рабочего пространства */
+#cws-main-container input,
+#cws-main-container textarea,
+#cws-main-container select {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   USER-FRIENDLY ПРОСМОТР ВЕРСИЙ И СРАВНЕНИЯ ДОКУМЕНТОВ (tab_commits & tab_diff)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.friendly-diff-container {
+  max-height: 560px;
+  overflow-y: auto;
+  background: var(--surface-1);
+}
+
+.friendly-diff-file {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  background: var(--surface-1);
+}
+
+.friendly-diff-file-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  font-size: 0.86rem;
+  color: var(--text-color);
+}
+
+.friendly-diff-lines {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.friendly-diff-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.3rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.friendly-diff-row:last-child {
+  border-bottom: none;
+}
+
+.friendly-diff-sign {
+  flex: 0 0 auto;
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0 0.25rem;
+  font-size: 0.78rem;
+  user-select: none;
+}
+
+.friendly-diff-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.friendly-diff-row.is-added {
+  background: var(--badge-success-bg);
+  color: var(--text-color);
+}
+
+.friendly-diff-row.is-added .friendly-diff-sign {
+  color: var(--badge-success-text);
+  border: 1px solid var(--badge-success-border);
+}
+
+.friendly-diff-row.is-removed {
+  background: var(--badge-danger-bg);
+  color: var(--text-muted);
+}
+
+.friendly-diff-row.is-removed .friendly-diff-text {
+  text-decoration: line-through;
+}
+
+.friendly-diff-row.is-removed .friendly-diff-sign {
+  color: var(--badge-danger-text);
+  border: 1px solid var(--badge-danger-border);
+}
+
+.friendly-diff-row.is-context {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.friendly-diff-row.is-separator {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  justify-content: center;
+  padding: 0.2rem 0.85rem;
+}
+
+.file-diff-chip {
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.file-diff-chip:hover,
+.file-diff-chip.is-active {
+  border-color: var(--nav-active) !important;
+  background: var(--surface-2) !important;
+}
+
+.commits-filter-pill {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.commits-filter-pill.active {
+  background: var(--nav-active) !important;
+  color: var(--surface-1) !important;
+  border-color: var(--nav-active) !important;
+}
+
+.diff-version-select {
+  min-width: 260px;
+  max-width: 440px;
+}
+
+.diff-chip-name {
+  max-width: 220px;
+}
+
+.commits-msg-cell {
+  max-width: 440px;
+}
+
+/* Двухпанельное сравнение версий файла (Закоммиченная ↔ Нынешняя) */
+.commit-row-clickable {
+  cursor: pointer;
+}
+
+.vc-pane-box {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.vc-pane-header {
+  padding: 0.5rem 0.85rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.vc-pane-body {
+  max-height: 58vh;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: var(--surface-1);
+  color: var(--text-color);
+}
+
+.vc-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.2rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.vc-line:last-child {
+  border-bottom: none;
+}
+
+.vc-line-num {
+  flex: 0 0 2.5rem;
+  text-align: end;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.vc-line-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.vc-line.is-added {
+  background: var(--badge-success-bg);
+}
+
+.vc-line.is-removed {
+  background: var(--badge-danger-bg);
+}
+
+.vc-line.is-changed {
+  background: var(--badge-warning-bg);
+}
+
+.vc-file-tab-btn.active {
+  background: var(--nav-active) !important;
+  color: var(--surface-1) !important;
+  border-color: var(--nav-active) !important;
 }

@@ -25,7 +25,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 21:24:00
+# Updated: 2026-11-20 00:22:00
 # =============================================================================
 
 from __future__ import annotations
@@ -390,5 +390,71 @@ def test_hebrew_workspace_obsidian_localization(obsidian_env) -> None:
     assert "Зведена база знань" in kb_uk_text
     assert "Документи робочого простору" in kb_uk_text
     assert "Сводная база знаний" not in kb_uk_text
+
+
+def test_atomic_write_text_retries_on_winerror32_and_cleans_tmp(tmp_path: Path, monkeypatch) -> None:
+    """Проверяет повторные попытки os.replace при временной блокировке WinError 32 и отсутствие .tmp мусора."""
+    import os as _os
+
+    target = tmp_path / ".02_handover_protocol.md"
+    real_replace = _os.replace
+    attempts = {"count": 0}
+
+    def flaky_replace(src, dst):
+        attempts["count"] += 1
+        if attempts["count"] <= 2:
+            err = PermissionError(13, "Процесс не может получить доступ к файлу", str(src), 32, str(dst))
+            raise err
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(_os, "replace", flaky_replace)
+
+    ObsidianVaultBuilder._atomic_write_text(target, "Обновлённый текст", max_retries=5, base_delay=0.001)
+
+    assert attempts["count"] == 3
+    assert target.read_text(encoding="utf-8") == "Обновлённый текст"
+    assert list(tmp_path.glob("*.tmp")) == []
+
+
+def test_atomic_write_text_fallback_when_replace_persistently_locked(tmp_path: Path, monkeypatch) -> None:
+    """Проверяет резервную прямую запись при устойчивой блокировке os.replace и удаление временного .tmp."""
+    import os as _os
+
+    target = tmp_path / ".locked_note.md"
+    target.write_text("Старое содержимое", encoding="utf-8")
+
+    def always_locked_replace(src, dst):
+        raise PermissionError(13, "Файл занят другим процессом", str(src), 32, str(dst))
+
+    monkeypatch.setattr(_os, "replace", always_locked_replace)
+
+    ObsidianVaultBuilder._atomic_write_text(target, "Новое содержимое", max_retries=3, base_delay=0.001)
+
+    assert target.read_text(encoding="utf-8") == "Новое содержимое"
+    assert list(tmp_path.glob("*.tmp")) == []
+
+
+def test_concurrent_build_workspace_vault_is_thread_safe(obsidian_env) -> None:
+    """Проверяет потокобезопасность параллельного вызова build_workspace_vault без конфликтов .tmp."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    wm: WorkspaceManager = obsidian_env["wm"]
+    builder: ObsidianVaultBuilder = obsidian_env["builder"]
+
+    ws = wm.create_or_select_workspace("concurrent_ws", name="Concurrent Vault")
+    ws_id = ws["workspace_id"]
+    ws_path = Path(ws["path"])
+
+    wm.import_document(ws_id, "paperless/02_handover_protocol.txt", "Протокол передачи смены.")
+    wm.import_document(ws_id, "notes.md", "Рабочая заметка.")
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures = [pool.submit(builder.build_workspace_vault, ws_id, False) for _ in range(6)]
+        results = [f.result() for f in futures]
+
+    assert all(r["status"] == "ok" for r in results)
+    assert (ws_path / "paperless" / ".02_handover_protocol.md").exists()
+    assert list(ws_path.rglob("*.tmp")) == []
+
 
 

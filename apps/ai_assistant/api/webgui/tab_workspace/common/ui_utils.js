@@ -11,7 +11,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_workspace/common
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-10 13:15:00
+ * Updated: 2026-11-16 02:48:00
  * =============================================================================
  */
 
@@ -272,6 +272,18 @@ export function updateUrlWithPanel(panelId, workspaceId = null, blockId = null) 
 }
 
 const inFlightRequests = new Map();
+const recentResponseCache = new Map();
+const GET_CACHE_TTL_MS = 1000;
+
+/**
+ * Очищает кратковременный кэш GET-запросов fetchJson.
+ */
+export function clearFetchJsonCache() {
+  recentResponseCache.clear();
+}
+if (typeof window !== 'undefined') {
+  window.clearFetchJsonCache = clearFetchJsonCache;
+}
 
 /**
  * Нормализует идентификатор рабочего пространства:
@@ -318,6 +330,20 @@ if (typeof window !== 'undefined') {
  */
 export async function fetchJson(url, options = {}) {
   const isGet = !options.method || options.method.toUpperCase() === 'GET';
+  const force = Boolean(options.force || options.skipCache);
+
+  if (!isGet || force) {
+    recentResponseCache.delete(url);
+    if (!isGet) {
+      recentResponseCache.clear();
+    }
+  } else {
+    const cached = recentResponseCache.get(url);
+    if (cached && (Date.now() - cached.time < GET_CACHE_TTL_MS)) {
+      return cached.data;
+    }
+  }
+
   if (isGet && inFlightRequests.has(url)) {
     return inFlightRequests.get(url);
   }
@@ -333,7 +359,11 @@ export async function fetchJson(url, options = {}) {
         } catch (_) {}
         throw new Error(detail);
       }
-      return await res.json();
+      const data = await res.json();
+      if (isGet) {
+        recentResponseCache.set(url, { data, time: Date.now() });
+      }
+      return data;
     } finally {
       if (isGet) {
         inFlightRequests.delete(url);

@@ -1,0 +1,17 @@
+{
+  "id": "microsoft",
+  "name": "Microsoft 365 & Office Hub",
+  "version": "1.0.0",
+  "description": "Автономный микросервис интеграции с Microsoft 365 и Desktop Office: почта Outlook, календарь, файлы OneDrive и автоматизация Office.",
+  "author": "hypo69",
+  "enabled": true,
+  "category": "productivity",
+  "entrypoint": "apps.microsoft",
+  "api_prefix": "/api/v1/microsoft",
+  "routes": [
+    "/api/v1/microsoft/outlook/profile",
+    "/api/v1/microsoft/outlook/messages",
+    "/api/v1/microsoft/outlook/send",
+    "/api/v1/microsoft/outlook/status"
+  ]
+}

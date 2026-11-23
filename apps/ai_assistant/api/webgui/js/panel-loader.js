@@ -22,7 +22,7 @@
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-24 22:20:00
+ * Updated: 2026-11-19 20:15:00
  * =============================================================================
  */
 
@@ -74,19 +74,21 @@ export async function loadPanelData(panelId, options = {}) {
   if (activeRepo) queryParams += `&repo_path=${encodeURIComponent(activeRepo)}`;
 
   const url = `/api/v1/panel/${encodeURIComponent(cleanId)}?${queryParams}`;
-  const el = document.getElementById(cleanId) || document.querySelector(`[data-panel-id="${cleanId}"]`);
+  let el = null;
+  const activePane = document.querySelector('#mainTabContent > .tab-pane.active');
+  if (activePane) {
+    el = activePane.querySelector(`#${cleanId}`) || activePane.querySelector(`[data-panel-id="${cleanId}"]`);
+  }
+  if (!el) {
+    el = document.getElementById(cleanId) || document.querySelector(`[data-panel-id="${cleanId}"]`);
+  }
   if (el) {
     el.setAttribute('data-panel-status', 'loading');
   }
 
   const fetchPromise = (async () => {
     try {
-      let res = await fetch(url);
-      if (!res.ok) {
-        // Fallback на альтернативный префикс /v1/panel/
-        const altUrl = `/v1/panel/${encodeURIComponent(cleanId)}?${queryParams}`;
-        res = await fetch(altUrl);
-      }
+      const res = await fetch(url);
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
@@ -200,8 +202,6 @@ export function getActiveTabAndPanelFromUrl(rawHash = null) {
       panelId = 'panel-rag-chunks';
     } else if (tabId === 'tab-verification' || tabId === 'verification') {
       panelId = 'panel-verification-pipeline';
-    } else if (tabId === 'tab-status' || tabId === 'status') {
-      panelId = 'panel-system-status';
     }
   }
 

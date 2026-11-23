@@ -312,3 +312,208 @@ def test_text_rag_concurrent_save_and_hebrew_path(tmp_path: Path) -> None:
 
 
 
+
+
+def test_text_rag_rotates_on_403_permission_denied(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Проверяет, что при ошибке 403 PERMISSION_DENIED ключ деактивируется и выполняется ротация на следующий ключ пула."""
+    from types import SimpleNamespace
+    from src.ai.gemini.embeddings import clear_rpm_state
+
+    clear_rpm_state()
+    exhausted_marked: list[str] = []
+
+    def _mock_load_api_keys(skip_exhausted: bool = True):
+        return (["bad_key_403", "good_key_ok"], ["fmashulia", "masha.florenc"], [])
+
+    def _mock_mark_exhausted(key_name: str) -> None:
+        exhausted_marked.append(key_name)
+
+    class _MockModels:
+        def __init__(self, api_key: str) -> None:
+            self.api_key = api_key
+
+        def embed_content(self, model: str, contents, config):
+            if self.api_key == "bad_key_403":
+                raise RuntimeError("403 PERMISSION_DENIED. {'error': {'code': 403, 'status': 'PERMISSION_DENIED'}}")
+            return SimpleNamespace(
+                embeddings=[SimpleNamespace(values=[0.25] * 64) for _ in contents]
+            )
+
+    class _MockClient:
+        def __init__(self, api_key: str) -> None:
+            self.models = _MockModels(api_key)
+
+    monkeypatch.setattr("src.ai.gemini.embeddings.load_api_keys", _mock_load_api_keys)
+    monkeypatch.setattr("src.ai.gemini.embeddings.mark_exhausted", _mock_mark_exhausted)
+    monkeypatch.setattr("google.genai.Client", _MockClient)
+
+    rag = TextRAG(db_path=tmp_path / "rot_index", dimension=64, provider="gemini")
+    try:
+        vecs = rag._embed(["тест ротации при 403"])
+        assert len(vecs) == 1
+        assert len(vecs[0]) == 64
+        assert vecs[0] == [0.25] * 64
+        assert exhausted_marked == ["fmashulia"]
+    finally:
+        clear_rpm_state()
+
+
+def test_text_rag_rpm_limit_uses_cooldown_without_24h_exhaustion(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Проверяет, что минутный лимит 429 RPM переводит ключ во временный cooldown без 24ч бана mark_exhausted."""
+    from types import SimpleNamespace
+    from src.ai.gemini.embeddings import clear_rpm_state
+
+    clear_rpm_state()
+    exhausted_marked: list[str] = []
+    called_keys: list[str] = []
+
+    def _mock_load_api_keys(skip_exhausted: bool = True):
+        return (["rpm_key_1", "good_key_2"], ["xvuv", "backup_key"], [])
+
+    def _mock_mark_exhausted(key_name: str) -> None:
+        exhausted_marked.append(key_name)
+
+    class _MockModels:
+        def __init__(self, api_key: str) -> None:
+            self.api_key = api_key
+
+        def embed_content(self, model: str, contents, config):
+            called_keys.append(self.api_key)
+            if self.api_key == "rpm_key_1":
+                raise RuntimeError(
+                    "429 RESOURCE_EXHAUSTED. EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier. "
+                    "Please retry in 50.3s. 'retryDelay': '50s'"
+                )
+            return SimpleNamespace(
+                embeddings=[SimpleNamespace(values=[0.5] * 64) for _ in contents]
+            )
+
+    class _MockClient:
+        def __init__(self, api_key: str) -> None:
+            self.models = _MockModels(api_key)
+
+    monkeypatch.setattr("src.ai.gemini.embeddings.load_api_keys", _mock_load_api_keys)
+    monkeypatch.setattr("src.ai.gemini.embeddings.mark_exhausted", _mock_mark_exhausted)
+    monkeypatch.setattr("google.genai.Client", _MockClient)
+
+    rag = TextRAG(db_path=tmp_path / "rpm_index", dimension=64, provider="gemini")
+    try:
+        vecs1 = rag._embed(["первый запрос"])
+        assert len(vecs1) == 1 and vecs1[0] == [0.5] * 64
+        assert exhausted_marked == []
+        assert called_keys == ["rpm_key_1", "good_key_2"]
+
+        vecs2 = rag._embed(["второй запрос"])
+        assert len(vecs2) == 1 and vecs2[0] == [0.5] * 64
+        assert called_keys == ["rpm_key_1", "good_key_2", "good_key_2"]
+    finally:
+        clear_rpm_state()
+
+
+def test_gemini_embeddings_round_robin_and_rpm_window_avoids_429(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Проверяет, что после 100 текстов на ключе №1 следующий пакет сразу уходит на ключ №2 без 429."""
+    from types import SimpleNamespace
+    from src.ai.gemini.embeddings import clear_rpm_state, embed_texts
+
+    clear_rpm_state()
+    called_keys: list[str] = []
+
+    def _mock_load_api_keys(skip_exhausted: bool = True):
+        return (["key_a", "key_b", "key_c"], ["aistros", "benavraham", "masha"], [])
+
+    class _MockModels:
+        def __init__(self, api_key: str) -> None:
+            self.api_key = api_key
+
+        def embed_content(self, model: str, contents, config):
+            called_keys.append(self.api_key)
+            return SimpleNamespace(
+                embeddings=[SimpleNamespace(values=[0.1] * 16) for _ in contents]
+            )
+
+    class _MockClient:
+        def __init__(self, api_key: str) -> None:
+            self.models = _MockModels(api_key)
+
+    monkeypatch.setattr("src.ai.gemini.embeddings.load_api_keys", _mock_load_api_keys)
+    monkeypatch.setattr("google.genai.Client", _MockClient)
+
+    try:
+        v1 = embed_texts(["t"] * 100, dimension=16)
+        v2 = embed_texts(["t"] * 100, dimension=16)
+        v3 = embed_texts(["t"] * 50, dimension=16)
+        assert v1 is not None and len(v1) == 100
+        assert v2 is not None and len(v2) == 100
+        assert v3 is not None and len(v3) == 50
+        assert called_keys == ["key_a", "key_b", "key_c"]
+    finally:
+        clear_rpm_state()
+
+
+def test_text_rag_add_documents_sqlite_batch_and_dimension_adapter(tmp_path: Path) -> None:
+    """Проверяет пакетную запись в SQLite BLOB и адаптацию размерности векторов на лету (128D vs 384D)."""
+    db_base = tmp_path / "batch_index"
+    rag_128 = TextRAG(db_path=db_base, dimension=128, provider="agy")
+    docs = [
+        {
+            "id": f"ws1:doc{i}:c0",
+            "text": f"Документ номер {i} с уникальной константой NODE_PX_{i}",
+            "meta": {
+                "workspace_id": "ws1",
+                "document_id": f"doc{i}.py",
+                "original_path": rf"C:\Users\dev\Projects\Deckor\src\doc{i}.py",
+            },
+        }
+        for i in range(12)
+    ]
+    added = rag_128.add_documents(docs, batch_size=4)
+    assert added == 12
+    assert rag_128.count() == 12
+    assert rag_128.db_file.exists()
+
+    # Открываем ту же базу с другой размерностью (384D) — адаптер не должен падать
+    rag_384 = TextRAG(db_path=db_base, dimension=384, provider="agy")
+    hits = rag_384.search("NODE_PX_7", top_k=3, workspace_id="ws1", path_contains=r"Projects\Deckor\src")
+    assert len(hits) >= 1
+    assert hits[0]["id"] == "ws1:doc7:c0"
+    assert hits[0]["bm25_rank"] is not None
+
+    # Проверка delete_by_prefix и rename_prefix
+    renamed = rag_384.rename_prefix("ws1:doc7:", "ws1:renamed7:", meta_updates={"document_id": "renamed7.py"})
+    assert renamed == 1
+    assert rag_384.delete_by_prefix("ws1:renamed7:") == 1
+    assert rag_384.count() == 11
+
+
+def test_mcp_rag_server_navigator_and_read_file_lines(tmp_path: Path) -> None:
+    """Проверяет инструменты локального MCP-сервера (rag_search, read_file_lines, list_workspaces)."""
+    from apps.ai_assistant.core.workspace_manager import WorkspaceManager
+    from apps.ai_assistant.mcp_rag_server import list_workspaces, rag_search, read_file_lines
+
+    wm = WorkspaceManager(base_dir=tmp_path / "base", workspaces_dir=tmp_path / "workspaces")
+    ws_id = "mcp_ws"
+    wm.create_or_select_workspace(workspace_id=ws_id, name="MCP Test WS")
+
+    empty_res = rag_search("AXIS_PX", workspace_id=ws_id, wm=wm)
+    assert empty_res["reason"] == "out_of_scope"
+
+    wm.import_document(
+        workspace_id=ws_id,
+        document_id="builder.py",
+        content="NODE_PX = 11\nAXIS_PX = 9\ndef snap_node():\n    return NODE_PX + AXIS_PX\n",
+    )
+
+    found = rag_search("AXIS_PX", workspace_id=ws_id, wm=wm)
+    assert found["status"] == "ok"
+    assert found["reason"] == "matched"
+    assert found["hits"][0]["document_id"] == "builder.py"
+
+    workspaces = list_workspaces(wm=wm)
+    assert any(w["workspace_id"] == ws_id and w["vectors_count"] >= 1 for w in workspaces)
+
+    sample_file = tmp_path / "sample.py"
+    sample_file.write_text("line1\nNODE_PX = 11\nAXIS_PX = 9\n", encoding="utf-8")
+    read_res = read_file_lines(str(sample_file), start_line=2, end_line=3)
+    assert read_res["status"] == "ok"
+    assert "2: NODE_PX = 11" in read_res["content"]
+    assert "3: AXIS_PX = 9" in read_res["content"]

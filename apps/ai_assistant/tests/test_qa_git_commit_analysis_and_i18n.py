@@ -15,7 +15,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-03 17:00:00
+# Updated: 2026-11-19 22:14:00
 # =============================================================================
 
 from __future__ import annotations
@@ -103,3 +103,20 @@ async def test_qa_git_resolver_extracts_commit_details(tmp_path: Path):
     assert sources[0]["commit_hash"] == c_hash
     assert short_hash in fallback
     assert "שונו הקבצים: file.txt" in fallback
+
+
+def test_no_russian_hardcode_in_content_extractor_and_chat_sends_language():
+    """Регрессионный тест: PDF/OCR промпты не переводят принудительно на русский, а чат передаёт язык UI."""
+    root = Path(__file__).resolve().parents[1]
+
+    extractor_src = (root / "core" / "content_extractor.py").read_text(encoding="utf-8")
+    assert "на русском языке" not in extractor_src
+    assert "DO NOT translate" in extractor_src
+
+    sys_he, _ = get_qa_prompts(language="he", context="עובדה", question="Вопрос на русском")
+    assert "בעברית בלבד" in sys_he
+
+    tab_chat_js = (root / "api" / "webgui" / "tab_chat" / "main.js").read_text(encoding="utf-8")
+    panel_chat_js = (root / "api" / "webgui" / "tab_workspace" / "panel_chat" / "panel.js").read_text(encoding="utf-8")
+    assert "language: getCurrentLanguage()" in tab_chat_js
+    assert "language: getCurrentLanguage()" in panel_chat_js

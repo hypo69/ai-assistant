@@ -3,7 +3,9 @@
     "title": "AI Assistant — Розумне Версіонування",
     "subtitle": "Smart Version History & WikiLLM",
     "serviceOnline": "Сервіс активний",
-    "pageTitle": "AI Assistant — Розумна історія версій та база знань"
+    "pageTitle": "AI Assistant — Розумна історія версій та база знань",
+    "brandTitle": "Головна сторінка — AI Assistant",
+    "headCommitBadgeTitle": "Статус ядра версіонування"
   },
   "nav": {
     "menu": "Меню",
@@ -26,12 +28,19 @@
     "ideGmail": "Керування поштою Gmail",
     "ideGitMaintenance": "Обслуговування репозиторіїв Git",
     "ideSettings": "Параметри та теми інтерфейсу",
-    "ideToggleSidebar": "Перемкнути бічне меню"
+    "ideToggleSidebar": "Перемкнути бічне меню",
+    "floatingTriggerTitle": "Відкрити меню навігації",
+    "drawerMenuLabel": "МЕНЮ",
+    "appsTitle": "Програми",
+    "switchToTcTitle": "Перейти до застосунку: AI-Assistant (Test Computer)",
+    "tcAppTitle": "AI-Assistant",
+    "currentAppTitle": "Поточний застосунок: Розумна історія файлів (Smart Version History & WikiLLM)",
+    "aiAssistantTitle": "Розумна історія файлів"
   },
   "tabs": {
     "timeline": "⏳ Шкала часу",
-    "commits": "📜 Історія комітів",
-    "diff": "⚖️ Diff & Smart Blame",
+    "commits": "📜 Журнал версій",
+    "diff": "⚖️ Порівняння версій",
     "wikillm": "🧠 База знань WikiLLM",
     "graph": "🕸️ Темпоральний граф",
     "rag": "🔍 5-етапний пошук RAG",
@@ -41,7 +50,7 @@
     "models": "🤖 Каталог моделей",
     "plugins": "🧩 Плагіни та розширення",
     "gmail": "📧 Пошта Gmail",
-    "gitMaintenance": "🧹 Обслуговування Git",
+    "gitMaintenance": "Діагностика Git (GC)",
     "themeEditor": "🎨 Редактор тем",
     "createWorkspace": "➕ Створити робочу область",
     "fileEditor": "💻 Редактор файлов (Rust + Wasm)",
@@ -50,7 +59,8 @@
     "fileTree": "Дерево файлів",
     "obsidian": "Obsidian",
     "tasks": "Розумні завдання та доручення",
-    "instruments": "Інструменти CoT"
+    "instruments": "Інструменти CoT",
+    "commands": "База команд"
   },
   "panels": {
     "timeline": "Шкала часу змін файлу",
@@ -78,7 +88,13 @@
     "message": "Повідомлення",
     "status": "Статус",
     "actions": "Дії",
-    "delete": "Видалити"
+    "delete": "Видалити",
+    "clear": "Очистити",
+    "active": "Активно",
+    "statusReady": "Готовий до роботи",
+    "statusNotChecked": "Не перевірено",
+    "statusChecking": "Перевірка...",
+    "ms": "мс"
   },
   "userSettings": {
     "button": "Налаштування",
@@ -105,6 +121,9 @@
     "themeGroupCustom": "🎨 Користувацькі теми",
     "themeEditorBtn": "Редактор тем оформлення",
     "themeEditorDesc": "Розміри, кольори, скруглення, типографіка та елементи",
+    "systemTourBtn": "Інтерактивний гід-тур",
+    "systemTourBtnTitle": "Запустити інтерактивний тур ключовими можливостями інтерфейсу",
+    "systemTourDesc": "Покроковий огляд панелей, гарячих клавіш та інструментів системи",
     "cacheManagerBtn": "Кеш браузера та сховище даних",
     "cacheManagerDesc": "Керування локальними даними, IndexedDB та дисковою квотою",
     "googleOAuth": "Google OAuth:",
@@ -126,7 +145,115 @@
     "modelPingResponseLabel": "Відповідь моделі:",
     "activeModelBadgeTitle": "Активна модель: натисніть для переходу до каталогу та вибору моделі",
     "userDefault": "Користувач",
-    "close": "Закрити"
+    "close": "Закрити",
+    "watchdogSectionTitle": "Автозахоплення та Watchdog (Git + Транскрибація)",
+    "autoTranscribeLabel": "Автозахоплення транскрибації медіафайлів",
+    "autoTranscribeHint": "Автоматично витягувати аудіодоріжку та транскрибувати нові медіафайли (MP3, MP4, MKV, WAV тощо) через Watchdog",
+    "autoGitCommitLabel": "Авто-коміти Git при змінах у робочій області",
+    "tabGeneral": "Основні налаштування",
+    "tabConnections": "Мережеві підключення та БД",
+    "tabElectron": "Рантайм Electron",
+    "electronStatusTitle": "Статус середовища виконання Electron Shell",
+    "electronRuntimeTitle": "Середовище виконання та оболонка Electron",
+    "electronRuntimeDesc": "Параметри рантайму Electron Shell, Node.js, Chromium та інтеграція з Obsidian Vault",
+    "electronPolling": "Опитування стану Electron Shell та Obsidian Vault...",
+    "connectionsTitle": "Конфігурація баз даних та зовнішніх сервісів",
+    "connectionsDesc": "Керування реквізитами доступу до Hostinger MariaDB, SQLite, FTP, SSH, SMTP та IMAP",
+    "connHostingerTitle": "Hostinger MariaDB & Бази інструментів",
+    "connHostingerDesc": "Віддалена MariaDB на сервері Hostinger та локальний кеш SQLite",
+    "connEngine": "Рушій зберігання",
+    "connEngineDirect": "MariaDB (Hostinger Direct TCP)",
+    "connEngineApi": "Hostinger PHP REST API шлюз",
+    "connEngineSqlite": "Локальний SQLite",
+    "connHost": "Хост сервера",
+    "connPort": "Порт",
+    "connDatabase": "Ім'я бази даних",
+    "connUser": "Користувач / Email",
+    "connPassword": "Пароль додатку",
+    "connApiUrl": "URL PHP API шлюзу",
+    "connSqlitePath": "Шлях до файлу SQLite",
+    "btnTestDb": "Перевірити БД",
+    "connSshTitle": "SSH доступ",
+    "connSshDesc": "Віддалене термінальне керування та безпечні тунелі",
+    "connAuthType": "Тип автентифікації",
+    "connAuthPassword": "За паролем",
+    "connAuthKey": "За приватним ключем",
+    "connKeyPath": "Шлях до ключа (.pem / .ppk)",
+    "btnTestSsh": "Перевірити SSH",
+    "connFtpTitle": "FTP / SFTP підключення",
+    "connFtpDesc": "Файловий доступ для резервного копіювання та синхронізації",
+    "connProtocol": "Протокол",
+    "connRemoteDir": "Віддалений каталог",
+    "btnTestFtp": "Перевірити FTP",
+    "connMailTitle": "Поштові з'єднання (SMTP / IMAP)",
+    "connMailDesc": "Відправка сповіщень та читання поштової кореспонденції",
+    "connSmtpHost": "SMTP хост",
+    "connSmtpPort": "SMTP порт",
+    "connImapHost": "IMAP хост",
+    "connImapPort": "IMAP порт",
+    "btnTestMail": "Перевірити пошту",
+    "connFallbackIp": "Резервний IP",
+    "btnSaveConnections": "Зберегти підключення",
+    "btnResetConnections": "Скинути",
+    "tooltipDelayLabel": "Інтервал затримки підказок",
+    "tooltipDelayHint": "Інтервал затримки перед появою кастомної спливаючої підказки (за замовчуванням 500 мс / 0.5 сек)",
+    "tooltipsEditorBtn": "Редактор підказок",
+    "tooltipsEditorDesc": "Перегляд, редагування та аудит підказок інтерфейсу й бази знань",
+    "profileDetails": "Відомості про користувача",
+    "editProfile": "Змінити",
+    "editProfileTitle": "Редагування профілю",
+    "lblUsername": "Логін:",
+    "lblProvider": "Провайдер авторизації:",
+    "lblUserId": "ID користувача:",
+    "lblLastLogin": "Остання активність:",
+    "lblStorage": "Сховище профілю:",
+    "statusConnected": "Підключено",
+    "lblFullName": "Повне ім'я",
+    "lblAvatarUrl": "URL фото / аватара",
+    "phFullName": "Введіть ваше ім'я",
+    "phAvatarUrl": "https://... або data:image/...",
+    "saveProfile": "Зберегти профіль",
+    "electronModeDesktop": "Electron Desktop (Chromium + Node.js)",
+    "electronModeWeb": "Web Browser GUI",
+    "electronModeDesktopDesc": "Повноцінний нативний десктопний режим з підтримкою IPC та прямого доступу до Obsidian Vault",
+    "electronModeWebDesc": "Інтерфейс запущено у веб-браузері. Доступний запуск у десктопній оболонці Electron",
+    "electronParamsTitle": "Параметри середовища виконання",
+    "electronEngineLabel": "Electron Engine",
+    "electronNodeLabel": "Node.js Runtime",
+    "electronChromeLabel": "Chromium",
+    "electronPriorityLabel": "Пріоритет рушія",
+    "obsidianCardTitle": "Інтерфейс та сховище Obsidian Vault",
+    "obsidianCardDesc": "Кожен робочий простір автоматично зберігає Markdown-документи за стандартом Obsidian Vault з YAML-метаданими та графом [[wikilinks]].",
+    "obsidianOpenBtn": "Відкрити в Obsidian",
+    "obsidianOpenFolderBtn": "Відкрити папку у провіднику",
+    "electronRunCliTitle": "Запуск застосунку як Electron:",
+    "electronInactive": "Не активний",
+    "electronExternalNode": "Зовнішній Node.js",
+    "electronActive": "Active",
+    "electronBadgeActiveTitle": "Electron Shell Active (Node.js + Chromium + Obsidian IPC)",
+    "electronBadgeWebTitle": "Web GUI Mode (Electron Shell Ready)",
+    "obsidianLaunched": "Запущено протокол Obsidian Vault",
+    "obsidianLaunchError": "Помилка запуску Obsidian",
+    "obsidianFolderOpened": "Папка відкрита у провіднику",
+    "tooltipDelayValDefault": "500 мс (0.5 сек)",
+    "subtabDbLabel": "База даних",
+    "subtabDbTitle": "Налаштування та тестування підключення до MariaDB Hostinger та локальної БД SQLite",
+    "subtabFtpLabel": "FTP / SFTP",
+    "subtabFtpTitle": "Параметри віддаленого файлового доступу FTP/FTPS/SFTP та перевірка з'єднання",
+    "subtabSshLabel": "SSH термінал",
+    "subtabSshTitle": "Конфігурація захищеного SSH-доступу, ключів автентифікації та перевірка зв'язку",
+    "subtabMailLabel": "Пошта",
+    "subtabMailTitle": "Налаштування параметрів SMTP для відправки та IMAP для отримання кореспонденції",
+    "subtabProfileLabel": "Профіль та вхід",
+    "subtabProfileTitle": "Керування обліковим записом Google та профілем користувача",
+    "subtabAppearanceLabel": "Зовнішній вигляд та мова",
+    "subtabAppearanceTitle": "Вибір теми оформлення, мови інтерфейсу та редактор тем",
+    "subtabModelLabel": "Модель ШІ",
+    "subtabModelTitle": "Перевірка доступності та статусу активної моделі штучного інтелекту",
+    "subtabSystemLabel": "Система та підказки",
+    "subtabSystemTitle": "Керування кешем браузера, інтерактивний тур та налаштування підказок",
+    "accountSettings": "Налаштування акаунту",
+    "roleAdmin": "Адміністратор"
   },
   "cacheManager": {
     "title": "Керування кешем",
@@ -137,12 +264,26 @@
     "btnRequestPersist": "Зробити постійним",
     "btnExport": "Експорт JSON",
     "btnImport": "Імпорт JSON",
-    "btnClearAll": "Очистити все"
+    "btnClearAll": "Очистити все",
+    "memoryUsage": "Використання пам'яті:"
   },
   "helpModal": {
     "title": "Довідка AI Assistant",
     "close": "Закрити",
-    "button": "Довідка"
+    "button": "Довідка",
+    "openTitle": "Довідка",
+    "moduleLabel": "Модуль",
+    "moduleDescription": "надає інтелектуальну історію змін кодової бази:",
+    "gitAdapterTitle": "Git Adapter:",
+    "gitAdapterDesc": "Точні diff'и, знімки ревізій та коміти без галюцинацій.",
+    "wikiLlmTitle": "WikiLLM:",
+    "wikiLlmDesc": "Архітектурні зв'язки",
+    "ragFaissTitle": "RAG FAISS:",
+    "ragFaissDesc": "Векторний та лексичний пошук за diff-фрагментами з хешуванням SHA-256.",
+    "verificationTitle": "2-Step Verification:",
+    "verificationDesc": "Захист від prompt-ін'єкцій та витоку секретів перед фіксацією зв'язків.",
+    "panelsTitle": "Universal Panels:",
+    "panelsDesc": "Всі панелі завантажуються через"
   },
   "workspace": {
     "headerTitle": "Робоча область, Документи (Git) та Розумний Пошук Знань",
@@ -421,11 +562,167 @@
       "block-trackTitle": "Додавання файлів та папок до відстеження Git",
       "block-obsidianTitle": "База знань та нотатки Obsidian Vault",
       "block-sourcesTitle": "Зовнішні джерела даних та контексту"
-    }
+    },
+    "watchdogAutoTranscribeLabel": "Автозахоплення транскрибації медіафайлів (Watchdog)",
+    "watchdogAutoTranscribeHint": "Автоматично витягує аудіодоріжку та транскрибує нові медіафайли",
+    "chatAddFactBtn": "Додати факт",
+    "chatAddFactTitle": "Додати текст як новий факт у внутрішні файли та базу знань",
+    "chatAddingFactStatus": "Збереження факту...",
+    "chatFactSavedMsg": "Факт збережено у внутрішній файл та базу знань",
+    "chatFactSavedStatus": "Факт додано",
+    "chatFactAddError": "Помилка додавання факту:",
+    "addPathToList": "Додати до списку",
+    "trackedEmptyMsg": "У цій робочій області поки немає файлів і папок на відстеженні.",
+    "trackedItemsCardTitle": "Файли та папки, що знаходяться на Git-відстеженні",
+    "menuTitle": "Робочі простори",
+    "demoTitle": "Робочий простір: demo",
+    "demoName": "demo",
+    "demoDesc": "перший досвід роботи з workspace",
+    "statusReady": "готовий",
+    "commitsCountSuffix": "комітів",
+    "commitsNotFound": "Коміти не знайдені",
+    "authorUnknown": "Невідомо",
+    "chatFactsInFile": "фактів у файлі",
+    "trackSubtabs": {
+      "picker": "Вибір з диска",
+      "pickerTitle": "Вибір файлів і директорій на локальному диску для додавання до стеження",
+      "upload": "Завантаження файлів",
+      "uploadTitle": "Завантаження локальних файлів з комп'ютера та налаштування повідомлення коміту",
+      "staged": "Вибрані та конвертація",
+      "stagedTitle": "Перегляд списку вибраних об'єктів та налаштування опцій конвертації (PDF, OCR, Аудіо)",
+      "tracked": "На стеженні (Git)",
+      "trackedTitle": "Зведена таблиця файлів і директорій, що вже перебувають під Git-стеженням"
+    },
+    "noWorkspaces": "Немає робочих просторів",
+    "chatScenarioTitle": "Сценарій купівлі корови — умови угоди",
+    "chatScenarioToggleTitle": "Згорнути або розгорнути список умов",
+    "chatScenarioCompletedTitle": "Виконані умови",
+    "chatScenarioPlannedTitle": "Заплановані умови",
+    "chatScenarioRunActionBtn": "Виконати в чаті",
+    "chatScenarioMarkDoneTitle": "Позначити як виконане",
+    "chatScenarioMarkPlannedTitle": "Повернути в заплановані",
+    "chatScenarioEmptyCompleted": "Поки немає виконаних умов",
+    "chatScenarioEmptyPlanned": "Усі умови виконано!",
+    "chatUploadFileBtn": "Файл",
+    "chatUploadFileTitle": "Завантажити аудіо або документ прямо з чату (наприклад, דוד משה - שמוליק שיחת טלפון.mp3)",
+    "chatUploadingStatus": "Завантаження та індексація файлу...",
+    "chatUploadSuccessStatus": "Файл завантажено до бази знань",
+    "chatUploadError": "Помилка завантаження файлу:",
+    "chatUploadProcessingHint": "Завантажую файл у assets/, копіюю транскрипт, конвертую PDF у MD та додаю все до бази знань...",
+    "chatSendTitle": "Надіслати повідомлення в чат (Enter)",
+    "chatAddTaskBtn": "Завдання",
+    "chatAddTaskTitle": "Поставити завдання з чату (наприклад: зв'язатися з ветеринаром і страховим агентом та узгодити дату огляду)",
+    "chatTaskDefaultPrompt": "Зв'язатися з ветеринаром і страховим агентом, узгодити з ними дату та час огляду",
+    "chatAddingTaskStatus": "Постановка завдання...",
+    "chatTaskSavedMsg": "Завдання поставлено та збережено в робочій області",
+    "chatTaskSavedStatus": "Завдання поставлено",
+    "chatTaskAddError": "Помилка постановки завдання:",
+    "chatRagBadge": "Локальний RAG",
+    "chatSourcesBadge": "Git і документи",
+    "chatScheduleDefaultBtn": "Занести огляд корови в календар (20.11 о 06:00)",
+    "chatScheduleDateTime": "Дата і час",
+    "chatScheduleAddress": "Адреса",
+    "chatScheduleAttendees": "Учасники (календар + нагадування)",
+    "chatScheduleReminders": "Нагадування",
+    "chatScheduleRemindersValue": "за 12 годин (email) і за 60 хвилин (popup / VALARM)",
+    "chatScheduleIcsFile": "Файл запрошення (.ics з VALARM у Git)",
+    "chatScheduleGcalCreated": "Подію створено, запрошення надіслано учасникам",
+    "actionUnlink": "Відв’язати",
+    "activeFactsSuffix": "активних фактів",
+    "alertDocSaveError": "Помилка збереження документа:",
+    "alertSelectFileOrFolderToTrack": "Будь ласка, виберіть або вкажіть хоча б один файл чи папку для відстеження.",
+    "alertSelectOrCreateWsFirst": "Спочатку виберіть або створіть робочу область.",
+    "alertSpecifyFileNameAndContent": "Вкажіть ім’я файлу та текст документа.",
+    "alertSpecifyTopicName": "Вкажіть назву теми для цілеспрямованої збірки конспекту в Obsidian.",
+    "alertSpecifyWorkspaceId": "Вкажіть ідентифікатор або ім’я нової робочої області.",
+    "alertTrackingAddError": "Помилка додавання в Git:",
+    "badgeModeLinked": "На диску (без копіювання)",
+    "badgeModeRepo": "У репозиторії (Git)",
+    "badgeSystemFile": "системний",
+    "badgeTypeFile": "Файл",
+    "badgeTypeFolder": "Папка",
+    "commitsHistoryEmpty": "Історія комітів порожня.",
+    "createWorkspaceError": "Помилка створення робочої області:",
+    "createWorkspaceFolderBtn": "Створити робочу папку",
+    "dirLoadError": "Помилка завантаження вмісту папки:",
+    "dirRefreshedToast": "Вміст папки оновлено",
+    "docsAbbr": "док",
+    "docsCountSuffix": "документів",
+    "docsReadError": "Помилка читання документів:",
+    "enginePrefix": "Рушій:",
+    "errorLabel": "Помилка:",
+    "errorStatus": "Помилка",
+    "factsAbbr": "фактів",
+    "factsCountSuffix": "фактів",
+    "faissRebuildError": "Помилка перебудови FAISS:",
+    "faissRebuiltSuccess": "Індекс FAISS перебудовано",
+    "fileOpenError": "Помилка відкриття файлу:",
+    "fileOpenFailed": "Не вдалося відкрити файл",
+    "fileOpenedInSystemEditor": "Файл '{path}' відкрито в системному застосунку",
+    "fileOpenedInWasmEditor": "Файл '{path}' відкрито у вбудованому редакторі",
+    "filesCommittedSuffix": "файлів зафіксовано",
+    "filesSuffix": "файлів.",
+    "folderCreateError": "Помилка створення робочої папки:",
+    "folderCreatedBadge": "Папку створено",
+    "folderCreatedSuccess": "Робочу папку створено та ініціалізовано Git",
+    "folderMissingBadge": "Папку не знайдено на диску",
+    "folderNoGitBadge": "Папка є, без Git",
+    "folderStatusUnknown": "Статус невідомий",
+    "gitLogUnavailable": "Журнал Git недоступний:",
+    "hideSystemFilesTitle": "Сховати системні файли та папки",
+    "initGitBtn": "Ініціалізувати Git",
+    "loadErrorPrefix": "Помилка завантаження:",
+    "msUnit": "мс",
+    "noAvailableWorkspaces": "Немає доступних робочих просторів",
+    "noDocsHint": "У цій робочій області ще немає документів. Натисніть «Завантажити демо-приклади» або збережіть файл нижче.",
+    "obsidianBuildError": "Помилка збірки Obsidian Vault:",
+    "obsidianOpenError": "Помилка відкриття в Obsidian:",
+    "obsidianVaultUpdated": "Obsidian Vault оновлено",
+    "openInSystemEditor": "Відкрити в системному застосунку",
+    "openInWasmEditor": "Відкрити у вбудованому редакторі (Rust + Wasm)",
+    "openingObsidianVault": "Відкриття сховища Obsidian",
+    "qaAnalyzingStatus": "Аналіз питання та пошук фактів...",
+    "qaAnswerFormLabel": "Форма відповіді",
+    "qaCanonicalLemmaLabel": "Канонічна сутність (лема)",
+    "qaCloudSrcAi": "Хмара (src/ai)",
+    "qaCompletedIn": "Виконано за",
+    "qaFormLabel": "Форма",
+    "qaGeneralIntent": "загальний",
+    "qaIntentLabel": "Тип питання",
+    "qaLangLabel": "Мова",
+    "qaLocalNlpSqlite": "Локальний NLP + SQLite",
+    "qaNoAnswer": "Немає відповіді",
+    "qaNoSourcesFound": "Підтверджених джерел за цим питанням не знайдено.",
+    "qaProcessing": "Обробка...",
+    "qaSentenceHash": "речення #",
+    "qaSurfaceFormLabel": "Вихідна словоформа в тексті",
+    "qaTargetRoleLabel": "Цільова роль",
+    "removeFromListTitle": "Вилучити зі списку",
+    "showAllFilesTitle": "Показати приховані системні файли та папки",
+    "sourceUnlinkedSuccess": "Джерело відв’язано від відстеження",
+    "stagedCount": "Вибрано: {count} об’єктів",
+    "statusActive": "Активний",
+    "statusError": "Помилка",
+    "topicCompileError": "Помилка збірки тематичного конспекту:",
+    "topicCompiledSuccess": "Зібрано конспект",
+    "topicsPrefix": "Тем:",
+    "topicsSummariesPrefix": "Конспекти (_Topics):",
+    "trackedItemsSuffix": "об’єктів у відстеженні",
+    "trackingProcessingCommit": "Обробка та коміт у Git...",
+    "trackingSuccessAdded": "Успішно додано до Git:",
+    "trackingToastStarted": "Git почав відстеження:",
+    "unlinkSourceConfirm": "Відв’язати «{name}» від відстеження Git у цьому робочому просторі?",
+    "uploadErrorHttp": "Помилка завантаження: HTTP",
+    "vectorsSuffix": "векторів",
+    "workspacePrefix": "Область:"
   },
   "auth": {
     "googleSignIn": "Увійти через Google",
-    "googleSignInTitle": "Авторизація та вхід через Google акаунт"
+    "googleSignInTitle": "Авторизація та вхід через Google акаунт",
+    "userMenuTitle": "Акаунт Google",
+    "userLabel": "Користувач",
+    "userEmailPlaceholder": "email@gmail.com",
+    "logout": "Вийти з акаунту"
   },
   "systemTour": {
     "btnStart": "Інтерактивний гід-тур",
@@ -433,757 +730,1067 @@
     "title": "Тур по системі"
   },
   "tooltips": {
-    "badgeAiCache": "Кеш підказок",
-    "badgeWikillm": "WikiLLM",
-    "badgeNewTerm": "Новий термін",
-    "btnLearnMore": "Дізнатися більше у моделі",
-    "btnAskModel": "Звернутися до моделі за уточненням",
-    "notYetQueried": "Контекстне призначення елемента «{title}» ще не запитувалося у моделі ШІ. Зверніться до моделі для отримання експертного пояснення.",
+    "workspace": {
+      "title": "Робочий простір",
+      "summary": "Робоча область проєкту з пов'язаними файлами, джерелами контексту, базою фактів і документацією.",
+      "category": "Робоча область",
+      "icon": "📁"
+    },
+    "qa": {
+      "title": "Запитання та відповіді (Q&A)",
+      "summary": "Семантичний модуль запитань та відповідей на базі векторного сховища знань.",
+      "category": "База знань",
+      "icon": "💡"
+    },
+    "commits": {
+      "title": "Історія комітів",
+      "summary": "Інтерактивна стрічка комітів репозиторію з аналізом змін та описом дифів.",
+      "category": "Версіонування",
+      "icon": "🌿"
+    },
+    "system_tour": {
+      "title": "Тур системою",
+      "summary": "Покроковий інтерактивний гід ключовими екранами та інструментами веб-інтерфейсу.",
+      "category": "Навчання",
+      "icon": "🧭"
+    },
+    "cfa": {
+      "title": "Ransomware / CFA",
+      "summary": "Controlled Folder Access (CFA) захищає від програм-вимагачів, блокуючи несанкціоновані зміни в захищених папках користувача та системи.",
+      "category": "Захист від вимагачів",
+      "icon": "🔒"
+    },
+    "asr": {
+      "title": "Правила ASR",
+      "summary": "Правила зниження поверхні атак (ASR) блокують типові вектори загроз: шкідливі макроси Office, ненадійні скрипти та ін'єкції коду.",
+      "category": "Зниження поверхні атак",
+      "icon": "🛡️"
+    },
+    "exclusions": {
+      "title": "Виключення Defender",
+      "summary": "Список шляхів, розширень та процесів, виключених зі сканування в реальному часі. Потребує регулярного аудиту.",
+      "category": "Політики виключень",
+      "icon": "⚠️"
+    },
+    "threats": {
+      "title": "Загрози та Карантин",
+      "summary": "Централізований журнал виявлених загроз та ізольоване сховище (Карантин) для безпечного відновлення чи видалення.",
+      "category": "Журнал інцидентів",
+      "icon": "🚨"
+    },
+    "procs": {
+      "title": "Дерево Процесів / Fileless",
+      "summary": "Поведінковий моніторинг запущених процесів та виявлення безфайлових атак через легітимні утиліти Windows (LOLBins).",
+      "category": "Поведінковий аналіз",
+      "icon": "🌳"
+    },
+    "events": {
+      "title": "Журнал Подій",
+      "summary": "Стрічка подій безпеки Захисника Windows (Event ID 1116, 1117, 5001 тощо), що фіксує виявлення, блокування та оновлення.",
+      "category": "Події та аудит",
+      "icon": "📜"
+    },
+    "diag": {
+      "title": "Комплексна Діагностика",
+      "summary": "Глибока перевірка стану антивірусного рушія Windows, конфігурації MpCmdRun, актуальності сигнатур та сканерів.",
+      "category": "ИИ Диагностика",
+      "icon": "🎯"
+    },
+    "quick_scan": {
+      "title": "Швидке сканування",
+      "summary": "Запуск експрес-сканування оперативної пам'яті, автозапуску та системних папок на наявність активних загроз.",
+      "category": "Антивірусне сканування",
+      "icon": "▶️"
+    },
+    "full_scan": {
+      "title": "Повне сканування",
+      "summary": "Глибока перевірка всіх дисків, архівів, системних бібліотек та файлів. Рекомендується при підозрі на зараження.",
+      "category": "Антивірусне сканування",
+      "icon": "🛡️"
+    },
+    "update_sigs": {
+      "title": "Оновлення сигнатур",
+      "summary": "Примусове завантаження та встановлення найновіших антивірусних баз із Microsoft Security Intelligence.",
+      "category": "Сигнатурные базы",
+      "icon": "☁️"
+    },
+    "realtime": {
+      "title": "Захист у реальному часі",
+      "summary": "Основний фільтр файлової системи (WdFilter), що перехоплює та перевіряє всі операції читання й запису файлів.",
+      "category": "Ядро антивируса",
+      "icon": "⚡"
+    },
+    "cloud_tamper": {
+      "title": "Хмарний захист та Tamper",
+      "summary": "Хмарна евристика (MAPS) та захист від несанкціонованих змін (Tamper Protection), що блокує спроби вимкнення антивірусу.",
+      "category": "Расширенная защита",
+      "icon": "☁️"
+    },
+    "summary-dashboard": {
+      "title": "Зведена панель",
+      "summary": "Зведений огляд надійності системи: системні збої, критичні події, апаратні помилки та аномалії живлення.",
+      "category": "Сводная диагностика",
+      "icon": "🚨"
+    },
+    "event-logs": {
+      "title": "Системні Журнали",
+      "summary": "Структурований перегляд системних подій каналів System, Application та Security з діагностичними фільтрами.",
+      "category": "Журналы Windows",
+      "icon": "📝"
+    },
+    "activity": {
+      "title": "Активність Хоста",
+      "summary": "Телеметрія активних процесів, споживання ресурсів, фонових потоків та частоти запусків у реальному часі.",
+      "category": "Активность системы",
+      "icon": "⚙️"
+    },
+    "power-lifecycle": {
+      "title": "Живлення та Стан",
+      "summary": "Аудит режимів сну, подій живлення ACPI, термального тротлінгу, раптових вимкнень та перезавантажень.",
+      "category": "Электропитание",
+      "icon": "⚡"
+    },
+    "defender-logs": {
+      "title": "Журнали Defender",
+      "summary": "Зведений аудит виявлених загроз, ізоляції шкідливого ПЗ та подій мережевого інспектування.",
+      "category": "Безопасность / Defender",
+      "icon": "🛡️"
+    },
+    "forensics": {
+      "title": "Форензика Системи",
+      "summary": "Глибокий аналіз аварійних дампів пам'яті, діагностика BSOD та хронологія системних збоїв.",
+      "category": "История работы ПК",
+      "icon": "⏱️"
+    },
+    "mode-live": {
+      "title": "Режим Live Stream",
+      "summary": "Потік подій та активності процесів у реальному часі з безперервним автоматичним оновленням.",
+      "category": "Режим отображения",
+      "icon": "●"
+    },
+    "mode-audit": {
+      "title": "Режим Смарт-Аудиту",
+      "summary": "Інтелектуальна дедуплікація та розпізнавання патернів серед сплесків подій і системних помилок.",
+      "category": "Аналитика журнала",
+      "icon": "🔬"
+    },
+    "mode-rag": {
+      "title": "Режим RAG Пошуку",
+      "summary": "Семантичний пошук та вибірка контексту з індексованої системної документації та каталогів помилок.",
+      "category": "ИИ Поиск",
+      "icon": "🧠"
+    },
+    "mode-incidents": {
+      "title": "Режим Інцидентів",
+      "summary": "Групування повторюваних збоїв за підсистемами, критичністю та першопричинами.",
+      "category": "Корреляция сбоев",
+      "icon": "🧩"
+    },
+    "mode-timeline": {
+      "title": "Режим Таймлайну",
+      "summary": "Хронологічна теплова карта та розподіл частоти подій для виявлення пікових періодів збоїв.",
+      "category": "Временная шкала",
+      "icon": "📊"
+    },
+    "mode-errors": {
+      "title": "Режим Тільки Помилки",
+      "summary": "Фільтрація стрічки подій: відображення виключно попереджень, помилок та критичних інцидентів.",
+      "category": "Фильтрация потока",
+      "icon": "⚠️"
+    },
+    "mode-raw": {
+      "title": "Режим Сирих Даних",
+      "summary": "Нефільтровані сирі дані телеметрії та нативні записи системних журналів Windows.",
+      "category": "Сырые данные",
+      "icon": "📄"
+    },
+    "sum-power": {
+      "title": "Збої Живлення",
+      "summary": "Інциденти некоректного вимкнення, втрати живлення ядра (Event 41) та збоїв переходу в сплячий режим.",
+      "category": "Критические сбои",
+      "icon": "⚡"
+    },
+    "sum-bsod": {
+      "title": "Аварії BSOD",
+      "summary": "Звіти про сині екрани смерті (BSOD), коди перевірки помилок ядра (Bugcheck) та аналіз мінідампів.",
+      "category": "Критические сбои",
+      "icon": "💻"
+    },
+    "sum-drivers": {
+      "title": "Помилки Драйверів",
+      "summary": "Інциденти тайм-аутів драйверів пристроїв, збої ініціалізації та помилки периферії.",
+      "category": "Аппаратные сбои",
+      "icon": "🔌"
+    },
+    "sum-suspicious": {
+      "title": "Підозрілі Аномалії",
+      "summary": "Аномальні запуски процесів, підозрілі реєстрації служб та нетипові події безпеки.",
+      "category": "Безпека",
+      "icon": "🚨"
+    },
+    "slc-scan": {
+      "title": "Запустити Діагностику",
+      "summary": "Запуск комплексного аналізу системних журналів, аварійних дампів та апаратної телеметрії.",
+      "category": "Операции",
+      "icon": "📡"
+    },
+    "slc-refresh": {
+      "title": "Оновити Журнали",
+      "summary": "Перезавантаження найновіших записів журналів та метрик від провайдерів Windows.",
+      "category": "Операции",
+      "icon": "🔄"
+    },
+    "sum-refresh": {
+      "title": "Оновити Показники",
+      "summary": "Перерахунок зведеної статистики збоїв та актуалізація індикаторів надійності системи.",
+      "category": "Операции",
+      "icon": "🔄"
+    },
+    "ask-ai": {
+      "title": "Пояснення Системи",
+      "summary": "Детальне контекстне пояснення обраного діагностичного запису та його впливу на систему.",
+      "category": "ИИ Диагностика",
+      "icon": "🤖"
+    },
+    "sum-export": {
+      "title": "Експорт Звіту",
+      "summary": "Експорт зведеного звіту стану системи та телеметрії збоїв у форматі JSON або CSV.",
+      "category": "Операции",
+      "icon": "💾"
+    },
+    "sw-inventory": {
+      "title": "Встановлене ПЗ",
+      "summary": "Каталог усіх зареєстрованих класичних програм, додатків Windows Store та залежностей.",
+      "category": "Инвентарь ПО",
+      "icon": "📋"
+    },
+    "sw-packages": {
+      "title": "Пакетні Менеджери",
+      "summary": "Інтегроване керування через Winget, інсталятори MSI та репозиторії пакетів.",
+      "category": "Менеджер пакетов",
+      "icon": "📦"
+    },
+    "sw-dormant": {
+      "title": "Невикористовуване ПЗ",
+      "summary": "Виявлення рідко використовуваних програм на основі телеметрії UserAssist для звільнення диска.",
+      "category": "Аудит неактивности",
+      "icon": "⏳"
+    },
+    "sw-transparency": {
+      "title": "Прозорість ПЗ",
+      "summary": "Глибокий аналіз файлової структури, сертифікатів видавця, драйверів та завдань автозапуску програми.",
+      "category": "ИИ Безопасность",
+      "icon": "🛡️"
+    },
+    "sw-heavy": {
+      "title": "Тяжкі Програми",
+      "summary": "Виявлення програм із найбільшим обсягом зайнятого дискового простору та споживанням пам'яті.",
+      "category": "Производительность",
+      "icon": "⚡"
+    },
+    "sw-sockets": {
+      "title": "Мережеві Сокети",
+      "summary": "Аудит фонової мережевої активності, відкритих портів та вихідних з'єднань програм.",
+      "category": "Сетевая активность",
+      "icon": "🌐"
+    },
+    "sw-winget": {
+      "title": "Winget Менеджер",
+      "summary": "Офіційний менеджер пакетів Windows для автоматичного встановлення, оновлення та видалення програм.",
+      "category": "Пакетный менеджер",
+      "icon": "🧩"
+    },
+    "sw-msi": {
+      "title": "Пакети MSI",
+      "summary": "Перевірка пакетів Windows Installer, стану виправлень та зареєстрованих компонентів GUID.",
+      "category": "Пакетный менеджер",
+      "icon": "⚙️"
+    },
+    "sw-store": {
+      "title": "Додатки Microsoft Store",
+      "summary": "Керування універсальними додатками Windows у пакетах Appx та MSIX.",
+      "category": "Пакетный менеджер",
+      "icon": "🛍️"
+    },
+    "sw-ninite": {
+      "title": "Автоматизація Ninite",
+      "summary": "Автоматизоване пакетне оновлення та встановлення популярних безкоштовних утиліт.",
+      "category": "Пакетный менеджер",
+      "icon": "🚀"
+    },
+    "sw-scan-trigger": {
+      "title": "Сканувати Інвентар ПЗ",
+      "summary": "Сканування гілок реєстру та файлової системи для повного оновлення списку встановленого ПЗ.",
+      "category": "Операции сканера",
+      "icon": "🔍"
+    },
+    "sw-scan-modes": {
+      "title": "Глибина Сканування",
+      "summary": "Перемикання між швидким опитуванням реєстру та глибоким евристичним пошуком на дисках.",
+      "category": "Конфигурация",
+      "icon": "⚙️"
+    },
+    "sw-filter-dormant": {
+      "title": "Фільтр Невикористовуваного",
+      "summary": "Показує лише програми, які не запускалися понад 60 днів.",
+      "category": "Фильтры реестра",
+      "icon": "🟡"
+    },
+    "sw-filter-orphan": {
+      "title": "Фільтр Залишкових Файлів",
+      "summary": "Відображає виявлені залишкові файли, порожні папки та застарілі ключі реєстру видаленого ПЗ.",
+      "category": "Фильтры реестра",
+      "icon": "🔴"
+    },
+    "sw-filter-store": {
+      "title": "Фільтр Store Додатків",
+      "summary": "Фільтрація сучасних додатків UWP/MSIX, завантажених через Microsoft Store.",
+      "category": "Фильтры реестра",
+      "icon": "🛍️"
+    },
+    "sw-refresh-heavy": {
+      "title": "Перерахувати Обсяг Диска",
+      "summary": "Оновлює розрахунок розмірів папок для виявлення найбільш громіздких програм.",
+      "category": "Операции монитора",
+      "icon": "🔄"
+    },
+    "sw-refresh-sockets": {
+      "title": "Оновити Мережеві Сокети",
+      "summary": "Опитування відкритих мережевих портів та активних сокетів, зайнятих програмами.",
+      "category": "Операции монитора",
+      "icon": "🔄"
+    },
+    "winadmin-users": {
+      "title": "Облікові Записи",
+      "summary": "Керування локальними користувачами Windows, політиками паролів та станом акаунтів.",
+      "category": "Облікові записи",
+      "icon": "👥"
+    },
+    "winadmin-groups": {
+      "title": "Групи Безпеки",
+      "summary": "Керування локальними групами безпеки (Administrators, Users, Remote Desktop Users тощо).",
+      "category": "Безпека",
+      "icon": "🏛️"
+    },
+    "winadmin-events": {
+      "title": "Журнал Аудиту Безпеки",
+      "summary": "Журнали реєстрації автентифікації користувачів (4624/4625), підвищення привілеїв та змін акаунтів.",
+      "category": "Аудит безпеки",
+      "icon": "🛡️"
+    },
+    "winadmin-security": {
+      "title": "Політики Безпеки",
+      "summary": "Перевірка локальних політик безпеки, рівня UAC, захисту LSA та ізоляції облікових даних.",
+      "category": "Аудит привилегий",
+      "icon": "🔐"
+    },
+    "winadmin-pid": {
+      "title": "Інспектор PID",
+      "summary": "Зіставлення ідентифікаторів процесів (PID) із токенами безпеки користувача, SID та привілеями.",
+      "category": "Контекст процессов",
+      "icon": "🔬"
+    },
+    "winadmin-catalog": {
+      "title": "Каталог Системи",
+      "summary": "Довідник адміністративних інструментів та системних команд Windows для обслуговування.",
+      "category": "База знань",
+      "icon": "📖"
+    },
+    "winadmin-acl": {
+      "title": "Керування Доступом (ACL)",
+      "summary": "Редактор прав доступу до файлів, папок, гілок реєстру та захищених об'єктів ОС.",
+      "category": "Файловая безопасность",
+      "icon": "🔒"
+    },
+    "winadmin-refresh": {
+      "title": "Оновити Дані Користувачів",
+      "summary": "Оновлення списку локальних акаунтів, активних сесій та членства в групах.",
+      "category": "Операции",
+      "icon": "🔄"
+    },
+    "winadmin-create-user": {
+      "title": "Створити Користувача",
+      "summary": "Відкриває майстер створення нового локального облікового запису з паролем і правами.",
+      "category": "Управление учетными записями",
+      "icon": "👤"
+    },
+    "winadmin-privacy-radar": {
+      "title": "Радар Приватності",
+      "summary": "Аудит передавання телеметрії Windows, рівня діагностичних даних та фонових збирачів.",
+      "category": "Приватність",
+      "icon": "📡"
+    },
+    "winadmin-backup": {
+      "title": "Резервне Копіювання",
+      "summary": "Стан служби тіньового копіювання (VSS), точок відновлення та цілісності бекапів.",
+      "category": "Резервне копіювання",
+      "icon": "💾"
+    },
+    "winadmin-audit-admins": {
+      "title": "Аудит Адміністраторів",
+      "summary": "Перевірка всіх облікових записів із правами локального адміністратора.",
+      "category": "Экспресс-аудит",
+      "icon": "👑"
+    },
+    "winadmin-audit-service": {
+      "title": "Аудит Службового Входу",
+      "summary": "Перевірка облікових записів із правом входу як служба (SeServiceLogonRight).",
+      "category": "Экспресс-аудит",
+      "icon": "⚙️"
+    },
+    "winadmin-audit-rdp": {
+      "title": "Аудит Доступу RDP",
+      "summary": "Перевірка користувачів та груп із дозволом на підключення через віддалений робочий стіл.",
+      "category": "Экспресс-аудит",
+      "icon": "🖥️"
+    },
+    "winadmin-audit-orphaned": {
+      "title": "Аудит Залишкових Профілів",
+      "summary": "Виявлення каталогів профілів користувачів на диску, які більше не мають чинного акаунту.",
+      "category": "Экспресс-аудит",
+      "icon": "⚠️"
+    },
+    "winadmin-acl-takeown": {
+      "title": "Зміна Власника",
+      "summary": "Призначення групи Administrators власником обраного файлу, папки або ключа реєстру.",
+      "category": "ACL Операции",
+      "icon": "🔑"
+    },
+    "winadmin-acl-reset": {
+      "title": "Скинути Права за Замовчуванням",
+      "summary": "Відновлення стандартних успадкованих прав доступу Windows на цільовому об'єкті.",
+      "category": "ACL Операции",
+      "icon": "↩️"
+    },
+    "winadmin-acl-backup": {
+      "title": "Резервна Копія ACL",
+      "summary": "Збереження поточного дескриптора безпеки та списку прав у бекап перед змінами.",
+      "category": "ACL Операции",
+      "icon": "💾"
+    },
+    "winadmin-acl-rollback": {
+      "title": "Відкотити Права ACL",
+      "summary": "Відновлення раніше збережених дескрипторів безпеки та прав доступу на об'єкті.",
+      "category": "ACL Операции",
+      "icon": "⏮️"
+    },
+    "winadmin-acl-inspect": {
+      "title": "Детальний Перегляд ACL",
+      "summary": "Відображення детальних записів керування доступом (ACE/DACL) для обраного об'єкта.",
+      "category": "ACL Операции",
+      "icon": "🔍"
+    },
+    "winadmin-acl-grant": {
+      "title": "Надати Права Доступу",
+      "summary": "Надання зазначених прав читання, запису або повного доступу користувачеві чи групі.",
+      "category": "ACL Операции",
+      "icon": "✍️"
+    },
+    "winadmin-filter-hidden": {
+      "title": "Фільтр Прихованих Акаунтів",
+      "summary": "Відображення вбудованих та вимкнених облікових записів системи.",
+      "category": "Фильтры пользователей",
+      "icon": "👁️"
+    },
+    "winadmin-filter-admins": {
+      "title": "Фільтр Адміністраторів",
+      "summary": "Фільтрація списку: показ виключно акаунтів, що входять до групи Administrators.",
+      "category": "Фильтры пользователей",
+      "icon": "🛡️"
+    },
+    "proc-engine-status": {
+      "title": "Статус Рушія Інспектора",
+      "summary": "Поточна частота опитування телеметрії та стан фонового сервісу інспектора.",
+      "category": "Безопасность процессов",
+      "icon": "🟢"
+    },
+    "proc-global-refresh": {
+      "title": "Оновити Всі Процеси",
+      "summary": "Оновлення таблиці процесів, ієрархії дерев, лічильників пам'яті та дескрипторів.",
+      "category": "Управление монитором",
+      "icon": "🔄"
+    },
+    "proc-subtab-manager": {
+      "title": "Диспетчер Процесів",
+      "summary": "Вкладка диспетчера задач із групуванням програм (Apps), фонових та системних процесів Windows.",
+      "category": "Диспетчер задач",
+      "icon": "📑"
+    },
+    "proc-subtab-top": {
+      "title": "Топ Процесів Хоста",
+      "summary": "Рейтинг процесів у реальному часі за найбільшим споживанням процесора та оперативної пам'яті.",
+      "category": "Мониторинг нагрузки",
+      "icon": "⚡"
+    },
+    "proc-subtab-net": {
+      "title": "Сетева Активність",
+      "summary": "Відстеження активних з'єднань TCP/UDP, прослуховуваних портів та швидкості передавання даних.",
+      "category": "Мережевий моніторинг",
+      "icon": "🌐"
+    },
+    "proc-subtab-files": {
+      "title": "Моніторинг Файлів",
+      "summary": "Стрічка створення, зміни та видалення файлів на диску в реальному часі через ReadDirectoryChangesW.",
+      "category": "Файловый мониторинг",
+      "icon": "📁"
+    },
+    "proc-subtab-leaks": {
+      "title": "Аудит Витоків Ресурсів",
+      "summary": "Виявлення процесів із надмірним накопиченням дескрипторів, об'єктів GDI/USER та витоками пам'яті.",
+      "category": "Диагностика сбоев",
+      "icon": "🛡️"
+    },
+    "pm-card-apps": {
+      "title": "Інтерактивні Програми",
+      "summary": "Фільтр відображення користувацьких програм із графічними вікнами інтерфейсу.",
+      "category": "Категории процессов",
+      "icon": "🪟"
+    },
+    "pm-card-bg": {
+      "title": "Фонові Процеси",
+      "summary": "Фільтр відображення фонових службових процесів без активного графічного інтерфейсу.",
+      "category": "Категории процессов",
+      "icon": "⚙️"
+    },
+    "pm-card-win": {
+      "title": "Процеси Windows",
+      "summary": "Фільтр відображення критичних системних процесів та служб операційної системи Windows.",
+      "category": "Система Windows",
+      "icon": "🪟"
+    },
+    "pm-card-all": {
+      "title": "Усі Процеси",
+      "summary": "Зведене відображення абсолютно всіх активних процесів у всіх сесіях користувачів.",
+      "category": "Сводка системы",
+      "icon": "📊"
+    },
+    "pm-refresh": {
+      "title": "Оновити Дерево Процесів",
+      "summary": "Перебудова ієрархії дерева процесів та перерахунок сумарних метрик груп.",
+      "category": "Управление",
+      "icon": "🔄"
+    },
+    "pm-category-filters": {
+      "title": "Перемикач Категорій",
+      "summary": "Швидке перемикання між категоріями програм, фонових та системних процесів.",
+      "category": "Фільтрація",
+      "icon": "🔘"
+    },
+    "pm-toggle-expand": {
+      "title": "Розгорнути Всі Дерева",
+      "summary": "Розгортає або згортає всі батьківські групи та ієрархії підпроцесів.",
+      "category": "Интерфейс",
+      "icon": "↕️"
+    },
+    "pm-ai-modal": {
+      "title": "Паспорт Процесу",
+      "summary": "Перевірка безпеки виконання, цифрового підпису, пам'яті та телеметрії процесу.",
+      "category": "ИИ Анализ",
+      "icon": "🤖"
+    },
+    "pm-investigate-ps": {
+      "title": "Аудит PowerShell",
+      "summary": "Отримання параметрів командного рядка, блоків скриптів та ієрархії запуску процесу.",
+      "category": "Расследование угроз",
+      "icon": "🔍"
+    },
+    "pm-prompt-settings": {
+      "title": "Налаштування Інспектора",
+      "summary": "Конфігурація порогів високого навантаження CPU, пам'яті та сповіщень про аномалії.",
+      "category": "Настройки ИИ",
+      "icon": "⚙️"
+    },
+    "proc-top-pause": {
+      "title": "Пауза Потоку",
+      "summary": "Призупиняє оновлення топу процесів для спокійного аналізу короткочасних сплесків навантаження.",
+      "category": "Управление потоком",
+      "icon": "⏸️"
+    },
+    "proc-top-refresh": {
+      "title": "Оновити Топ Процесів",
+      "summary": "Негайне опитування поточних процесів із найвищим споживанням ресурсів.",
+      "category": "Управление потоком",
+      "icon": "🔄"
+    },
+    "proc-net-filter-internet": {
+      "title": "Фільтр Інтернет-З'єднань",
+      "summary": "Відображає лише зовнішні інтернет-з'єднання, приховуючи локальний loopback (127.0.0.1).",
+      "category": "Сетевые фильтры",
+      "icon": "🌐"
+    },
+    "proc-net-pause": {
+      "title": "Пауза Моніторингу Мережі",
+      "summary": "Призупиняє оновлення таблиці з'єднань для аналізу встановлених сокетів.",
+      "category": "Мережевий моніторинг",
+      "icon": "⏸️"
+    },
+    "proc-net-refresh": {
+      "title": "Оновити Мережеві З'єднання",
+      "summary": "Опитування активних мережевих з'єднань, стану сокетів та швидкості передавання.",
+      "category": "Мережевий моніторинг",
+      "icon": "🔄"
+    },
+    "proc-watch-badge": {
+      "title": "Контрольована Папка",
+      "summary": "Шлях до каталогу файлової системи, за яким ведеться спостереження змін файлів.",
+      "category": "Файловый мониторинг",
+      "icon": "📁"
+    },
+    "proc-watch-exclusions": {
+      "title": "Виключення Монітора",
+      "summary": "Налаштування папок та розширень (наприклад *.log, *.tmp), що ігноруються монітором.",
+      "category": "Файловый мониторинг",
+      "icon": "🛡️"
+    },
+    "proc-watch-change-dir": {
+      "title": "Змінити Папку Спостереження",
+      "summary": "Вибір іншого каталогу на будь-якому локальному диску для моніторингу файлів.",
+      "category": "Файловый мониторинг",
+      "icon": "📂"
+    },
+    "proc-watch-refresh": {
+      "title": "Очистити та Оновити",
+      "summary": "Очищення буфера журналу та опитування останніх подій файлової системи Windows.",
+      "category": "Файловый мониторинг",
+      "icon": "🔄"
+    },
+    "diag-leaks-total": {
+      "title": "Всього Процесів",
+      "summary": "Загальна кількість процесів Windows, що аналізуються на витоки ресурсів та дескрипторів.",
+      "category": "Аудит витоків",
+      "icon": "💻"
+    },
+    "diag-leaks-suspicious": {
+      "title": "Підозрілі Аномалії Витоків",
+      "summary": "Процеси з темпом росту дескрипторів або GDI, що перевищує норми безпеки.",
+      "category": "Аудит витоків",
+      "icon": "⚠️"
+    },
+    "diag-leaks-handles": {
+      "title": "Пік Дескрипторів ОС",
+      "summary": "Процес із найбільшою кількістю відкритих дескрипторів об'єктів ядра ОС.",
+      "category": "Аудит витоків",
+      "icon": "📦"
+    },
+    "diag-leaks-gdi": {
+      "title": "Пік Об'єктів GDI",
+      "summary": "Процес із найбільшою кількістю графічних об'єктів GDI відносно ліміту 10 000 у Windows.",
+      "category": "Аудит витоків",
+      "icon": "🎨"
+    },
+    "diag-leaks-filters": {
+      "title": "Фільтри Витоків Ресурсів",
+      "summary": "Фільтрація таблиці процесів за ризиком витоку, надмірними дескрипторами чи GDI.",
+      "category": "Аудит витоків",
+      "icon": "🔍"
+    },
+    "diag-leaks-refresh": {
+      "title": "Аудит Витоків Ресурсів",
+      "summary": "Запуск перевірки дескрипторів, графічних об'єктів GDI/USER та помилок сторінок пам'яті.",
+      "category": "Аудит витоків",
+      "icon": "🔄"
+    },
+    "dwm.exe": {
+      "title": "Диспетчер вікон стільниці (DWM)",
+      "summary": "Композитний менеджер вікон Windows, що відповідає за візуальні ефекти, апаратне прискорення та відтворення зображення.",
+      "category": "Системный компонент Windows",
+      "icon": "🪟"
+    },
+    "dwm": {
+      "title": "Диспетчер вікон стільниці (DWM)",
+      "summary": "Композитний менеджер вікон Windows, що відповідає за візуальні ефекти, апаратне прискорення та відтворення зображення.",
+      "category": "Системный компонент Windows",
+      "icon": "🪟"
+    },
+    "explorer.exe": {
+      "title": "Провідник Windows",
+      "summary": "Оболонка користувача Windows: панель задач, стільниця, меню 'Пуск', область сповіщень та файловий менеджер.",
+      "category": "Оболонка Windows",
+      "icon": "📁"
+    },
+    "explorer": {
+      "title": "Провідник Windows",
+      "summary": "Оболонка користувача Windows: панель задач, стільниця, меню 'Пуск', область сповіщень та файловий менеджер.",
+      "category": "Оболонка Windows",
+      "icon": "📁"
+    },
+    "svchost.exe": {
+      "title": "Хост-процес служб Windows (svchost)",
+      "summary": "Системний процес, що виконує фонові служби Windows із бібліотек DLL, згруповані за рівнем ізоляції.",
+      "category": "Служебный хост Windows",
+      "icon": "⚙️"
+    },
+    "svchost": {
+      "title": "Хост-процес служб Windows (svchost)",
+      "summary": "Системний процес, що виконує фонові служби Windows із бібліотек DLL, згруповані за рівнем ізоляції.",
+      "category": "Служебный хост Windows",
+      "icon": "⚙️"
+    },
+    "taskhostw.exe": {
+      "title": "Хост завдань Windows (taskhostw)",
+      "summary": "Виконує заплановані системні завдання, фонові тригери обслуговування та скрипти телеметрії.",
+      "category": "Планировщик задач",
+      "icon": "⏱️"
+    },
+    "taskhostw": {
+      "title": "Хост завдань Windows (taskhostw)",
+      "summary": "Виконує заплановані системні завдання, фонові тригери обслуговування та скрипти телеметрії.",
+      "category": "Планировщик задач",
+      "icon": "⏱️"
+    },
+    "lsass.exe": {
+      "title": "Служба безпеки LSA (lsass)",
+      "summary": "Критичний процес безпеки Windows, що керує входом користувачів, токенами автентифікації та політиками LSA.",
+      "category": "Безопасность ядра",
+      "icon": "🛡️"
+    },
+    "lsass": {
+      "title": "Служба безпеки LSA (lsass)",
+      "summary": "Критичний процес безпеки Windows, що керує входом користувачів, токенами автентифікації та політиками LSA.",
+      "category": "Безопасность ядра",
+      "icon": "🛡️"
+    },
+    "csrss.exe": {
+      "title": "Підсистема CSRSS",
+      "summary": "Критичний компонент підсистеми Win32, що керує консольними вікнами, створенням потоків та завершенням процесів.",
+      "category": "Системное ядро Win32",
+      "icon": "⚙️"
+    },
+    "csrss": {
+      "title": "Підсистема CSRSS",
+      "summary": "Критичний компонент підсистеми Win32, що керує консольними вікнами, створенням потоків та завершенням процесів.",
+      "category": "Системное ядро Win32",
+      "icon": "⚙️"
+    },
+    "services.exe": {
+      "title": "Диспетчер Керування Службами",
+      "summary": "Керує запуском, зупинкою, моніторингом та залежностями системних служб і драйверів Windows.",
+      "category": "Управление службами",
+      "icon": "🛠️"
+    },
+    "services": {
+      "title": "Диспетчер Керування Службами",
+      "summary": "Керує запуском, зупинкою, моніторингом та залежностями системних служб і драйверів Windows.",
+      "category": "Управление службами",
+      "icon": "🛠️"
+    },
+    "smss.exe": {
+      "title": "Диспетчер Сесій (smss)",
+      "summary": "Перший процес користувацького режиму, що ініціалізує змінні середовища, файл підкачки та системні сесії.",
+      "category": "Инициализация сеансов",
+      "icon": "⚡"
+    },
+    "smss": {
+      "title": "Диспетчер Сесій (smss)",
+      "summary": "Перший процес користувацького режиму, що ініціалізує змінні середовища, файл підкачки та системні сесії.",
+      "category": "Инициализация сеансов",
+      "icon": "⚡"
+    },
+    "winlogon.exe": {
+      "title": "Програма Входу Windows (winlogon)",
+      "summary": "Відповідає за безпечний вхід користувача в систему, обробку комбінації Ctrl+Alt+Del та блокування екрана.",
+      "category": "Сеансы пользователей",
+      "icon": "👤"
+    },
+    "winlogon": {
+      "title": "Програма Входу Windows (winlogon)",
+      "summary": "Відповідає за безпечний вхід користувача в систему, обробку комбінації Ctrl+Alt+Del та блокування екрана.",
+      "category": "Сеансы пользователей",
+      "icon": "👤"
+    },
+    "wininit.exe": {
+      "title": "Ініціалізація Windows (wininit)",
+      "summary": "Процес ініціалізації фонових підсистем, що запускає Диспетчер служб (SCM), LSASS та LSA.",
+      "category": "Инициализация Windows",
+      "icon": "🚀"
+    },
+    "wininit": {
+      "title": "Ініціалізація Windows (wininit)",
+      "summary": "Процес ініціалізації фонових підсистем, що запускає Диспетчер служб (SCM), LSASS та LSA.",
+      "category": "Инициализация Windows",
+      "icon": "🚀"
+    },
+    "powershell.exe": {
+      "title": "Windows PowerShell",
+      "summary": "Потужна командна оболонка та скриптова мова на базі .NET для автоматизації та адміністрування системи.",
+      "category": "Интерпретаторы команд",
+      "icon": "⚡"
+    },
+    "powershell": {
+      "title": "Windows PowerShell",
+      "summary": "Потужна командна оболонка та скриптова мова на базі .NET для автоматизації та адміністрування системи.",
+      "category": "Интерпретаторы команд",
+      "icon": "⚡"
+    },
+    "cmd.exe": {
+      "title": "Командний Процесор Windows (cmd)",
+      "summary": "Класичний інтерпретатор командного рядка для запуску пакетних файлів (BAT/CMD) та консольних утиліт.",
+      "category": "Консольные утилиты",
+      "icon": "⬛"
+    },
+    "cmd": {
+      "title": "Командний Процесор Windows (cmd)",
+      "summary": "Класичний інтерпретатор командного рядка для запуску пакетних файлів (BAT/CMD) та консольних утиліт.",
+      "category": "Консольные утилиты",
+      "icon": "⬛"
+    },
+    "conhost.exe": {
+      "title": "Хост Консольного Вікна (conhost)",
+      "summary": "Проміжний процес, що забезпечує введення/виведення та інтерфейс між консольними утилітами та GUI.",
+      "category": "Консольная подсистема",
+      "icon": "🪟"
+    },
+    "conhost": {
+      "title": "Хост Консольного Вікна (conhost)",
+      "summary": "Проміжний процес, що забезпечує введення/виведення та інтерфейс між консольними утилітами та GUI.",
+      "category": "Консольная подсистема",
+      "icon": "🪟"
+    },
+    "msmpeng.exe": {
+      "title": "Служба Antimalware (msmpeng)",
+      "summary": "Головний скануючий рушій Захисника Windows, що виконує захист у реальному часі та евристичний аналіз.",
+      "category": "Антивирусная безопасность",
+      "icon": "🛡️"
+    },
+    "msmpeng": {
+      "title": "Служба Antimalware (msmpeng)",
+      "summary": "Головний скануючий рушій Захисника Windows, що виконує захист у реальному часі та евристичний аналіз.",
+      "category": "Антивирусная безопасность",
+      "icon": "🛡️"
+    },
+    "runtimebroker.exe": {
+      "title": "Runtime Broker",
+      "summary": "Системний посередник, що керує дозволами додатків Windows Store (доступ до камери, мікрофона, файлів).",
+      "category": "Безопасность UWP",
+      "icon": "🔒"
+    },
+    "runtimebroker": {
+      "title": "Runtime Broker",
+      "summary": "Системний посередник, що керує дозволами додатків Windows Store (доступ до камери, мікрофона, файлів).",
+      "category": "Безопасность UWP",
+      "icon": "🔒"
+    },
+    "searchindexer.exe": {
+      "title": "Індексатор Пошуку Windows",
+      "summary": "Фонова служба індексації файлів, листів та метаданих для миттєвого пошуку в системі.",
+      "category": "Индексация поиска",
+      "icon": "🔍"
+    },
+    "searchindexer": {
+      "title": "Індексатор Пошуку Windows",
+      "summary": "Фонова служба індексації файлів, листів та метаданих для миттєвого пошуку в системі.",
+      "category": "Индексация поиска",
+      "icon": "🔍"
+    },
+    "spoolsv.exe": {
+      "title": "Диспетчер Друку (spoolsv)",
+      "summary": "Служба керування чергами друку, завантаженням драйверів та надсиланням документів на принтери.",
+      "category": "Печать и периферия",
+      "icon": "🖨️"
+    },
+    "spoolsv": {
+      "title": "Диспетчер Друку (spoolsv)",
+      "summary": "Служба керування чергами друку, завантаженням драйверів та надсиланням документів на принтери.",
+      "category": "Печать и периферия",
+      "icon": "🖨️"
+    },
+    "system": {
+      "title": "Системний Процес (PID 4)",
+      "summary": "Спеціальний процес, що вміщує потоки ядра ОС, драйвери апаратних пристроїв та контексти виконання.",
+      "category": "Ядро операционной системы",
+      "icon": "💻"
+    },
+    "registry": {
+      "title": "Процес Реєстру Windows",
+      "summary": "Службовий процес ядра, що оптимізує кешування гілок реєстру та стиснення пам'яті.",
+      "category": "Подсистема реестра",
+      "icon": "🗝️"
+    },
+    "cloudflared.exe": {
+      "title": "Демон Cloudflare Tunnel",
+      "summary": "Служба зашифрованого тунелю Zero Trust для безпечного підключення локальних сервісів до Cloudflare.",
+      "category": "Сетевые туннели",
+      "icon": "☁️"
+    },
+    "cloudflared": {
+      "title": "Демон Cloudflare Tunnel",
+      "summary": "Служба зашифрованого тунелю Zero Trust для безпечного підключення локальних сервісів до Cloudflare.",
+      "category": "Сетевые туннели",
+      "icon": "☁️"
+    },
+    "ctfmon.exe": {
+      "title": "Завантажувач CTF (ctfmon)",
+      "summary": "Керує мовною панеллю, розкладками клавіатури, рукописним введенням та розпізнаванням мови в Windows.",
+      "category": "Ввод и локализация",
+      "icon": "⌨️"
+    },
+    "ctfmon": {
+      "title": "Завантажувач CTF (ctfmon)",
+      "summary": "Керує мовною панеллю, розкладками клавіатури, рукописним введенням та розпізнаванням мови в Windows.",
+      "category": "Ввод и локализация",
+      "icon": "⌨️"
+    },
+    "overview": {
+      "title": "Огляд та служби",
+      "summary": "Зведений моніторинг стану служб Windows Defender, активних компонентів захисту та версій антивірусних баз.",
+      "category": "Захисник Windows",
+      "icon": "📊"
+    },
+    "proc-top-ai-modal": {
+      "title": "Паспорт Процесу",
+      "summary": "Детальний паспорт процесу з метриками CPU, RAM, дескрипторів ОС, сокетів та файлової активності.",
+      "category": "Диспетчер процесів",
+      "icon": "🔬"
+    },
+    "proc-top-prompt-settings": {
+      "title": "Налаштування Правил Процесів",
+      "summary": "Конфігурація правил аудиту процесів, порогів витоків дескрипторів та профілів інспектора.",
+      "category": "Налаштування",
+      "icon": "⚙️"
+    },
+    "sw-orphans": {
+      "title": "Остаточні файли ПЗ",
+      "summary": "Виявлення залишкових файлів, порожніх папок у Program Files та застарілих ключів реєстру.",
+      "category": "Аудит ПЗ",
+      "icon": "🗑️"
+    },
+    "sw-startup": {
+      "title": "Автозавантаження програм",
+      "summary": "Аналіз програм, служб та планувальника завдань, що запускаються під час старту Windows.",
+      "category": "Автозапуск",
+      "icon": "🚀"
+    },
+    "throttling": {
+      "title": "Термальний Тротлінг",
+      "summary": "Детекція термального тротлінгу процесора (PROCHOT), обмежень живлення PL1/PL2 та затримок DPC/ISR.",
+      "category": "Апаратний моніторинг",
+      "icon": "🌡️"
+    },
+    "internals-logs": {
+      "title": "Центр журналів",
+      "fullTitle": "Центр внутрішніх журналів ai-tc",
+      "summary": "Перегляд внутрішніх журналів програми ai-tc",
+      "category": "Журналювання",
+      "icon": "📜"
+    },
+    "logs": {
+      "title": "Центр журналів",
+      "fullTitle": "Центр внутрішніх журналів ai-tc",
+      "summary": "Перегляд внутрішніх журналів програми ai-tc",
+      "category": "Журналювання",
+      "icon": "📜"
+    },
+    "create_workspace": {
+      "title": "Створити новий простір",
+      "summary": "Створення ізольованого робочого простору з ініціалізацією Git та відстеженням файлів на місці.",
+      "category": "Робоча область",
+      "icon": "➕"
+    },
+    "diff": {
+      "title": "Порівняння версій (Diff)",
+      "summary": "Інтелектуальний візуалізатор різниць між комітами, знімками та гілками зі Smart Blame.",
+      "category": "Версіонування",
+      "icon": "⚖️"
+    },
+    "git_engine": {
+      "title": "Рушій Git",
+      "summary": "Високошвидкісний локальний рушій Git для відстеження файлів на місці та створення знімків.",
+      "category": "Версіонування",
+      "icon": "🌿"
+    },
+    "gmail": {
+      "title": "Керування Gmail",
+      "summary": "Інтеграція з поштовою інфраструктурою Gmail: пошук листів, категоризація та видобування фактів.",
+      "category": "Комунікації",
+      "icon": "📧"
+    },
+    "graph": {
+      "title": "Темпоральний граф",
+      "summary": "Інтерактивний темпоральний граф архітектурних сутностей, залежностей файлів та бази знань.",
+      "category": "Аналітика",
+      "icon": "🕸️"
+    },
+    "models": {
+      "title": "ШІ Моделі та Провайдери",
+      "summary": "Реєстр та диспетчер ШІ-моделей: Google Gemini, Foundry Local, Ollama, ONNX/DirectML.",
+      "category": "Середовище ШІ",
+      "icon": "🧠"
+    },
+    "obsidian": {
+      "title": "Сховище Obsidian",
+      "summary": "Експорт документів, сутностей та зв'язків робочого простору у формат сховища Obsidian.",
+      "category": "Інтеграція",
+      "icon": "💎"
+    },
+    "plugins": {
+      "title": "Менеджер плагінів",
+      "summary": "Менеджер плагінів та модулів розширення функціональності асистента з ізольованим життєвим циклом.",
+      "category": "Розширення",
+      "icon": "🧩"
+    },
+    "rag": {
+      "title": "Пошук RAG",
+      "summary": "Глобальний п'ятикроковий пошук RAG на базі векторних ембедингів FAISS та семантичного аналізу.",
+      "category": "База знань",
+      "icon": "🔍"
+    },
+    "timeline": {
+      "title": "Шкала часу",
+      "summary": "Хронологічна шкала еволюції кодової бази, фіксація ключових архітектурних рішень та етапів.",
+      "category": "Хронологія",
+      "icon": "⏱️"
+    },
+    "verification": {
+      "title": "Контур верифікації",
+      "summary": "Автоматичний двокроковий контур перевірки цілісності, архітектурних інваріантів та контрактів.",
+      "category": "Верифікація",
+      "icon": "✅"
+    },
     "kb": {
       "workspace": {
         "title": "Робочий простір",
         "summary": "Робочий простір проєкту.",
         "category": "Рабочая область"
-      },
-      "commits": {
-        "title": "Історія комітів Git",
-        "summary": "Інтерактивна стрічка комітів репозиторію з аналізом змін та описом дифів.",
-        "category": "Версионирование"
-      },
-      "rag": {
-        "title": "Семантичний пошук RAG",
-        "summary": "Глобальний п'ятикроковий пошук RAG на базі векторних ембеддінгів FAISS, вилучення фактів та семантичного аналізу.",
-        "category": "База знаний"
-      },
-      "diff": {
-        "title": "Порівняння версій Smart Diff",
-        "summary": "Інтелектуальний візуалізатор різниці між комітами, знімками та гілками з аналізом Smart Blame.",
-        "category": "Версионирование"
-      },
-      "timeline": {
-        "title": "Хронологія кодової бази",
-        "summary": "Хронологічна шкала еволюції кодової бази, фіксація архітектурних рішень та етапів розробки.",
-        "category": "Хронология"
-      },
-      "obsidian": {
-        "title": "Експорт сховища Obsidian",
-        "summary": "Експорт документів, сутностей та зв'язків робочої області у формат сховища нотаток Obsidian з Markdown і графом.",
-        "category": "Интеграция"
-      },
-      "git_engine": {
-        "title": "Локальний рушій Git",
-        "summary": "Високошвидкісний локальний рушій Git для відстеження файлів на місці без переміщення та створення знімків.",
-        "category": "Версионирование"
-      },
-      "graph": {
-        "title": "Темпоральний граф знань",
-        "summary": "Інтерактивний темпоральний граф архітектурних сутностей, залежностей файлів та зв'язків бази знань.",
-        "category": "Аналитика"
-      },
-      "models": {
-        "title": "Моделі ШІ та провайдери",
-        "summary": "Реєстр та диспетчер моделей ШІ: Google Gemini, Microsoft Foundry Local (Phi-3), Ollama (Llama-3), ONNX/DirectML.",
-        "category": "Среда ИИ"
-      },
-      "verification": {
-        "title": "Контур верифікації підсистем",
-        "summary": "Автоматичний двокроковий контур перевірки цілісності, архітектурних інваріантів та контрактів підсистем.",
-        "category": "Верификация"
-      },
-      "plugins": {
-        "title": "Хаб плагінів та розширень",
-        "summary": "Менеджер плагінів та модулів розширення функціональності асистента з ізольованим життєвим циклом.",
-        "category": "Расширения"
-      },
-      "gmail": {
-        "title": "Поштовий менеджер Gmail",
-        "summary": "Інтеграція з поштовою інфраструктурою Gmail: пошук листів, категоризація, вилучення фактів та надсилання звітів.",
-        "category": "Коммуникации"
-      },
-      "create_workspace": {
-        "title": "Створити новий робочий простір",
-        "summary": "Створення ізольованого робочого простору з ініціалізацією Git та відстеженням файлів на місці.",
-        "category": "Рабочая область"
-      },
-      "qa": {
-        "title": "Модуль запитань та відповідей",
-        "summary": "Семантичний модулятор питань і відповідей на базі векторного сховища FAISS і WikiLLM.",
-        "category": "База знаний"
-      },
-      "system_tour": {
-        "title": "Інтерактивний тур системою",
-        "summary": "Пошаговый интерактивный гид по ключевым экранам и возможностям веб-интерфейса.",
-        "category": "Обучение"
-      },
-      "cfa": {
-        "title": "Контрольований доступ до папок (CFA)",
-        "summary": "Controlled Folder Access (CFA) — компонент защиты Защитника Windows от программ-вымогателей (Ransomware). Непрерывно контролирует попытки модификации файлов и блокирует несанкционированные изменения в защищаемых системных и пользовательских каталогах (Документы, Рабочий стол, Картинки).",
-        "category": "Защита от вымогателей"
-      },
-      "asr": {
-        "title": "Зменшення поверхні атаки (ASR)",
-        "summary": "Правила снижения поверхности атак (ASR) блокируют типичные векторы проникновения угроз: вредоносные макросы Office, исполнение недоверенных скриптов PowerShell/WScript, внедрение кода в чужие процессы и обфусцированные эксплойты.",
-        "category": "Снижение поверхности атак"
-      },
-      "exclusions": {
-        "title": "Винятки антивірусу Defender",
-        "summary": "Список путей, расширений и процессов, исключенных администратором из сканирования в реальном времени. Требуют регулярного аудита для предотвращения скрытого запуска зловредов из доверенных каталогов.",
-        "category": "Политики исключений"
-      },
-      "threats": {
-        "title": "Активні загрози та карантин",
-        "summary": "Централизованный журнал нейтрализованных угроз и изолированное безопасное хранилище (Карантин), позволяющее администратору восстановить ложно сработавшие файлы или окончательно удалить опасные артефакты.",
-        "category": "Журнал инцидентов"
-      },
-      "procs": {
-        "title": "Дерево процесів та інспекція пам'яті",
-        "summary": "Модуль профилирования родительско-дочерних связей процессов для выявления бесфайловых угроз (Fileless Malware), аномального использования системных утилит (LOLBins: powershell, rundll32, mshta) и инъекций памяти.",
-        "category": "Поведенческий анализ"
-      },
-      "events": {
-        "title": "Журнал подій Windows",
-        "summary": "События телеметрии Microsoft-Windows-Windows Defender/Operational (Event ID 1116, 1117, 1123, 1124) с детализацией заблокированных модулей, подозрительных сетевых попыток и статусов сканирования.",
-        "category": "События и аудит"
-      },
-      "diag": {
-        "title": "Діагностичний рушій ШІ",
-        "summary": "Комплексный автоматический аудит политик антивирусной защиты, состояния служб, эффективности правил ASR и сигнатур угроз с формированием практических рекомендаций системному администратору.",
-        "category": "ИИ Диагностика"
-      },
-      "quick_scan": {
-        "title": "Швидке сканування Defender",
-        "summary": "Быстрое сканирование активных процессов, оперативной памяти, системного реестра и каталогов автозагрузки Windows на присутствие активных вредоносных программ.",
-        "category": "Антивирусное сканирование"
-      },
-      "full_scan": {
-        "title": "Повне сканування Defender",
-        "summary": "Пофайловая проверка всех разделов жестких дисков, съемных накопителей, архивов и системных библиотек Windows на наличие скрытых руткитов и вредоносных утилит.",
-        "category": "Антивирусное сканирование"
-      },
-      "update_sigs": {
-        "title": "Оновити антивірусні сигнатури",
-        "summary": "Принудительная загрузка новейших антивирусных баз сигнатур и обновления движка Microsoft Defender через защищенные каналы Microsoft Security Intelligence.",
-        "category": "Сигнатурные базы"
-      },
-      "realtime": {
-        "title": "Захист у реальному часі",
-        "summary": "Постоянный перехват и проверка файлов при обращении, чтении и записи. Защищает операционную систему от запуска троянов, вымогателей и шпионского ПО до его выполнения.",
-        "category": "Ядро антивируса"
-      },
-      "cloud_tamper": {
-        "title": "Хмарний захист та захист від підробок",
-        "summary": "Защита от подделки (Tamper Protection) блокирует попытки вредоносных программ отключить Защитник Windows. Облачная защита (MAPS) сверяет неизвестные хэши с глобальным облаком Microsoft в миллисекунды.",
-        "category": "Расширенная защита"
-      },
-      "summary-dashboard": {
-        "title": "Панель зведення збоїв системи",
-        "summary": "Агрегированная сводка критических сбоев: аварийные отключения питания (Kernel-Power 41), фатальные аварии BSOD (BugCheck), сбои драйверов устройств и всплески подозрительной активности.",
-        "category": "Сводная диагностика"
-      },
-      "event-logs": {
-        "title": "Журнали системних подій",
-        "summary": "Централизованный доступ к основным журналам Windows (System, Application, Security, PowerShell, TaskScheduler) для детального аудита системных записей и устранения неполадок.",
-        "category": "Журналы Windows"
-      },
-      "activity": {
-        "title": "Фонова активність хоста",
-        "summary": "Хроника внутренних фоновых процессов, запусков и остановок служб, сессий телеметрии и сервисных задач операционной системы.",
-        "category": "Активность системы"
-      },
-      "power-lifecycle": {
-        "title": "Життєвий цикл живлення та пробуджень",
-        "summary": "Хронология сессий питания: включение ПК, штатные выключения (Event 1074, 6006), периоды сна, гибернации и внезапные аварийные сбои (Event 41, 6008).",
-        "category": "Электропитание"
-      },
-      "defender-logs": {
-        "title": "Журнали подій Defender",
-        "summary": "События антивирусной защиты: детектирование вредоносных программ, изоляция в карантин, сканирование и блокировки несанкционированного доступа (CFA / ASR).",
-        "category": "Безопасность / Defender"
-      },
-      "forensics": {
-        "title": "История действий и активности компьютера (Форензика)",
-        "summary": "Раздел фиксации истории работы операционной системы («черный ящик» ПК). Отображает хронологию запусков программ, сессий питания и событий активности для быстрого расследования сбоев и подозрительных действий.",
-        "category": "История работы ПК"
-      },
-      "mode-live": {
-        "title": "Поток событий журнала в реальном времени",
-        "summary": "Отображение непрерывного потока событий выбранного журнала в реальном времени по мере их возникновения в операционной системе.",
-        "category": "Режим отображения"
-      },
-      "mode-audit": {
-        "title": "Интеллектуальный аудит и агрегация журнала",
-        "summary": "Разведочный анализ (EDA), дедупликация повторяющихся событий, вычисление частотности и частотных аномалий журнала.",
-        "category": "Аналитика журнала"
-      },
-      "mode-rag": {
-        "title": "Семантический поиск по базе знаний журнала через AI",
-        "summary": "Интеллектуальный поиск по записям журнала и инструкциям устранения сбоев с привлечением векторных эмбеддингов и модели ИИ.",
-        "category": "ИИ Поиск"
-      },
-      "mode-incidents": {
-        "title": "Кластеры сгруппированных сбоев",
-        "summary": "Автоматическая группировка связанных аварий, повторяющихся сбоев и цепочек ошибок в изолированные инциденты для расследования первопричин (RCA).",
-        "category": "Корреляция сбоев"
-      },
-      "mode-timeline": {
-        "title": "Хронологическая графическая шкала событий",
-        "summary": "Графическая временная шкала плотности событий (тепловая карта и импульсы активности) для быстрого выявления пиковых интервалов сбоев.",
-        "category": "Временная шкала"
-      },
-      "mode-errors": {
-        "title": "Фильтрация: исключение информационных событий",
-        "summary": "Мгновенная фильтрация журнала событий: скрытие информационных сообщений и отображение исключительно ошибок (Error) и критических сбоев (Critical).",
-        "category": "Фильтрация потока"
-      },
-      "mode-raw": {
-        "title": "Необработанное тело события (XML / JSON телеметрия)",
-        "summary": "Детальный просмотр исходной структуры события Windows Event Log со всеми системными свойствами, параметрами и дескрипторами.",
-        "category": "Сырые данные"
-      },
-      "sum-power": {
-        "title": "Аварийные отключения и сбои питания ПК",
-        "summary": "Журнал внезапных обесточиваний и сбоев электропитания (Event ID 41), когда система выключилась или перезагрузилась без корректного завершения.",
-        "category": "Критические сбои"
-      },
-      "sum-bsod": {
-        "title": "Фатальные системные сбои (Синий экран смерти)",
-        "summary": "Анализ аварийных остановов ядра (BugCheck / Stop Error), кодов ошибок (0x000000D1, 0x0000003B и др.), дампов памяти и сбойных модулей драйверов.",
-        "category": "Критические сбои"
-      },
-      "sum-drivers": {
-        "title": "Журнал аппаратных сбоев и ошибок драйверов устройств",
-        "summary": "Сбои инициализации драйверов оборудования, аппаратные задержки ввода-вывода (I/O Errors) и сбои контроллеров периферии.",
-        "category": "Аппаратные сбои"
-      },
-      "sum-suspicious": {
-        "title": "Подозрительные системные всплески и аномалии",
-        "summary": "Нетипичные системные всплески, частые перезапуски критических служб и блокировки доступа, требующие внимания системного администратора.",
-        "category": "Безопасность"
-      },
-      "slc-scan": {
-        "title": "Діагностичне сканування хоста",
-        "summary": "Немедленный сбор свежих событий из активных журналов Windows Event Log и обновление локальной базы данных телеметрии.",
-        "category": "Операции"
-      },
-      "slc-refresh": {
-        "title": "Оновити дані діагностики",
-        "summary": "Синхронизация и обновление таблицы событий в реальном времени с учетом выбранных фильтров и провайдеров.",
-        "category": "Операции"
-      },
-      "sum-refresh": {
-        "title": "Повторный расчёт метрик и счетчиков сбоев",
-        "summary": "Принудительный пересчет показателей сбоев питания, аварий BSOD, ошибок драйверов и подозрительной активности за выбранный интервал.",
-        "category": "Операции"
-      },
-      "ask-ai": {
-        "title": "Интеллектуальный анализ выборки инцидентов через ИИ",
-        "summary": "Передача текущего среза журнала или сводки сбоев в ИИ-ассистент для формирования структурированного заключения, оценки рисков и шагов решения.",
-        "category": "ИИ Диагностика"
-      },
-      "sum-export": {
-        "title": "Экспорт собранных записей в JSON или CSV",
-        "summary": "Выгрузка отфильтрованных событий журнала или сводки инцидентов в файл JSON или CSV для документирования и отчетов.",
-        "category": "Операции"
-      },
-      "sw-inventory": {
-        "title": "Інвентар встановлених програм",
-        "summary": "Консолидированный реестр Win32 и Store приложений: сбор путей установки, параметров Quiet Uninstall, версий, издателей и точного занимаемого объема на диске.",
-        "category": "Инвентарь ПО"
-      },
-      "sw-packages": {
-        "title": "Менеджери пакетів (WinGet, Store, Ninite)",
-        "summary": "Управление централизованными репозиториями пакетов Winget и Ninite: пакетная установка, фоновое обновление версий одной командой и проверка целостности манифестов.",
-        "category": "Менеджер пакетов"
-      },
-      "sw-dormant": {
-        "title": "Програми, що не використовуються",
-        "summary": "Детектирование приложений без активности более 90 дней по телеметрии UserAssist (ROT13) и Prefetch, а также выявление битых служб, задач и каталогов удаленных программ.",
-        "category": "Аудит неактивности"
-      },
-      "sw-transparency": {
-        "title": "Прозорість програм та перевірка видавця",
-        "summary": "Комплексный скоринг благонадежности приложений через LLM: анализ цифровых сертификатов Authenticode, сетевой телеметрии, повышенных привилегий и потенциальных угроз (PUA/Adware).",
-        "category": "ИИ Безопасность"
-      },
-      "sw-heavy": {
-        "title": "Великі споживачі дискового простору",
-        "summary": "Профилирование программного обеспечения с пиковой утилизацией аппаратных ресурсов: интенсивность ядер процессора, объем выделенной памяти и операции ввода-вывода (I/O).",
-        "category": "Производительность"
-      },
-      "sw-sockets": {
-        "title": "Активні мережеві з'єднання",
-        "summary": "Инспекция прослушиваемых локальных портов TCP/UDP, активных сетевых соединений и сопоставление сокетов с исполняемыми файлами и процессами Windows.",
-        "category": "Сетевая активность"
-      },
-      "sw-winget": {
-        "title": "Менеджер пакетів Windows WinGet",
-        "summary": "Интеграция с официальным репозиторием Winget: поиск обновлений, установка проверенных манифестов и автоматизированное управление пакетами.",
-        "category": "Пакетный менеджер"
-      },
-      "sw-msi": {
-        "title": "Установленные пакеты Windows Installer (MSI) и системного реестра",
-        "summary": "Каталог программного обеспечения, установленного через Windows Installer (msiexec) и стандартные установщики реестра: коды продуктов (ProductCode), версии и деинсталляция.",
-        "category": "Пакетный менеджер"
-      },
-      "sw-store": {
-        "title": "Менеджер додатків Microsoft Store",
-        "summary": "Приложения, установленные через Microsoft Store и платформу пакетов AppX/MSIX: Store ID, версии, быстрый переход в магазин ms-windows-store:// и управление обновлениями.",
-        "category": "Пакетный менеджер"
-      },
-      "sw-ninite": {
-        "title": "Інсталятор пакетів Ninite",
-        "summary": "Пакетное обновление стандартного набора утилит без встроенной рекламы, всплывающих окон подтверждения и сторонних тулбаров.",
-        "category": "Пакетный менеджер"
-      },
-      "sw-scan-trigger": {
-        "title": "Запустити аудит програм",
-        "summary": "Запуск фонового обхода реестра Windows, папок Program Files, кэша Prefetch, записей UserAssist, служб и планировщика задач для выявления всех установленных программ и следов.",
-        "category": "Операции сканера"
-      },
-      "sw-scan-modes": {
-        "title": "Режими аудиту програм",
-        "summary": "Переключение профилей: Быстрый опрос (Quick), Глубокое сканирование (Deep), Форензика артефактов (Forensic) или прицельный поиск сирот и битых ссылок (Orphans).",
-        "category": "Конфигурация"
-      },
-      "sw-filter-dormant": {
-        "title": "Фильтрация приложений без запусков за последние 3 месяца",
-        "summary": "Отображение установленных программ, к которым пользователь не обращался более 90 дней, для освобождения памяти и снижения поверхности атаки.",
-        "category": "Фильтры реестра"
-      },
-      "sw-filter-orphan": {
-        "title": "Выделение обнаруженных сиротских служб, задач и пустых папок",
-        "summary": "Список некорректно удаленного ПО: неудаленные фоновые службы, задачи планировщика и каталоги, исполняемые файлы которых уже отсутствуют на диске.",
-        "category": "Фильтры реестра"
-      },
-      "sw-filter-store": {
-        "title": "Современные приложения Microsoft Store и MSIX/AppX пакеты",
-        "summary": "Пакеты Universal Windows Platform (UWP) и Store-приложения, работающие в изолированных контейнерах песочницы AppContainer.",
-        "category": "Фильтры реестра"
-      },
-      "sw-refresh-heavy": {
-        "title": "Повторный замер утилизации ресурсов процессами",
-        "summary": "Снятие мгновенного слепка расхода CPU, оперативной памяти и интенсивности дискового ввода-вывода активными процессами операционной системы.",
-        "category": "Операции монитора"
-      },
-      "sw-refresh-sockets": {
-        "title": "Повторный опрос таблицы открытых TCP/UDP портов",
-        "summary": "Актуализация сетевой карты соединений: локальные порты, внешние IP-адреса, протоколы передачи данных и привязка к системным PID.",
-        "category": "Операции монитора"
-      },
-      "winadmin-users": {
-        "title": "Локальні користувачі Windows",
-        "summary": "Аудит локальных пользователей Windows (SAM): статус блокировки, скрытые аккаунты, членство в группе Администраторы, домашние каталоги и активные сессии пользователей.",
-        "category": "Учетные записи"
-      },
-      "winadmin-groups": {
-        "title": "Локальні групи безпеки",
-        "summary": "Перечень встроенных и пользовательских групп безопасности Windows, сопоставление SID, назначение привилегий и инспекция состава участников групп.",
-        "category": "Безопасность"
-      },
-      "winadmin-events": {
-        "title": "Події аудиту безпеки",
-        "summary": "Мониторинг ключевых событий безопасности: успешные и неудачные входы (Event 4624/4625), создание и удаление учетных записей (4720/4726), сброс паролей (4724) и блокировки (4740).",
-        "category": "Аудит безопасности"
-      },
-      "winadmin-security": {
-        "title": "Параметри безпеки системи",
-        "summary": "Автоматическая проверка критических привилегий: кто входит в группу Администраторы, права Logon as Service, доступ через Remote Desktop (RDP), поиск осиротевших профилей (Orphaned SIDs) и параметры политики паролей.",
-        "category": "Аудит привилегий"
-      },
-      "winadmin-pid": {
-        "title": "Інспектор PID процесів",
-        "summary": "Глубокое исследование токена безопасности процесса по PID: уровень целостности (Integrity Level), активные привилегии (SeDebugPrivilege, SeImpersonatePrivilege), SID владельца и группы токена.",
-        "category": "Контекст процессов"
-      },
-      "winadmin-catalog": {
-        "title": "Каталог системних інструментів",
-        "summary": "База знаний системных команд и Win32 API для администрирования Windows: вызовы net user, PowerShell cmdlets, WMI/CIM запросы, уровни риска и сценарии автоматизации.",
-        "category": "База знаний"
-      },
-      "winadmin-acl": {
-        "title": "Списки контролю доступу (ACL)",
-        "summary": "Контроль списков управления доступом (DACL/SACL): владелец объекта, наследование прав, списки ACE, назначение и сброс разрешений, а также резервное копирование дампов .acl.",
-        "category": "Файловая безопасность"
-      },
-      "winadmin-refresh": {
-        "title": "Оновити дані адміністрування Windows",
-        "summary": "Принудительный повторный опрос подсистемы SAM, Active Directory, счетчиков журнала безопасности и Privacy Radar.",
-        "category": "Операции"
-      },
-      "winadmin-create-user": {
-        "title": "Створити нового локального користувача Windows",
-        "summary": "Создание новой локальной учетной записи с заданием пароля, членства в группах и параметров принудительной смены пароля при первом входе.",
-        "category": "Управление учетными записями"
-      },
-      "winadmin-privacy-radar": {
-        "title": "Радар конфіденційності та телеметрії Windows",
-        "summary": "Отслеживание активных обращений программ к веб-камере и микрофону в реальном времени через системные реестры доступа Windows Privacy.",
-        "category": "Приватность"
-      },
-      "winadmin-backup": {
-        "title": "Менеджер резервного копіювання Windows",
-        "summary": "Мониторинг состояния службы File History, целевого накопителя архивации, времени создания последней резервной копии и запуск немедленной архивации.",
-        "category": "Резервное копирование"
-      },
-      "winadmin-audit-admins": {
-        "title": "Аудит прав адміністратора",
-        "summary": "Мгновенная проверка и вывод полного списка учетных записей, обладающих повышенными привилегиями локального администратора (BUILTIN\\\\Administrators).",
-        "category": "Экспресс-аудит"
-      },
-      "winadmin-audit-service": {
-        "title": "Аудит прав входу служб",
-        "summary": "Проверка политики SeServiceLogonRight: выявление сервисных аккаунтов и управляемых учетных записей служб (gMSA).",
-        "category": "Экспресс-аудит"
-      },
-      "winadmin-audit-rdp": {
-        "title": "Аудит протоколу віддаленого робочого столу (RDP)",
-        "summary": "Инспекция участников группы Remote Desktop Users и проверка доступности порта TCP 3389 для удаленного управления.",
-        "category": "Экспресс-аудит"
-      },
-      "winadmin-audit-orphaned": {
-        "title": "Аудит облікових записів-сиріт та SID",
-        "summary": "Обнаружение удаленных учетных записей, остаточных каталогов профилей в C:\\\\Users и висячих SID в списках контроля доступа.",
-        "category": "Экспресс-аудит"
-      },
-      "winadmin-acl-takeown": {
-        "title": "Отримання прав власності на файли / папки",
-        "summary": "Принудительная смена владельца файла или директории на Administrators через системную утилиту takeown.exe с сохранением прав.",
-        "category": "ACL Операции"
-      },
-      "winadmin-acl-reset": {
-        "title": "Скидання дозволів ACL до типових",
-        "summary": "Удаление явных ACE и восстановление стандартного наследования прав от родительской папки (icacls /reset).",
-        "category": "ACL Операции"
-      },
-      "winadmin-acl-backup": {
-        "title": "Створити резервну копію безпеки ACL",
-        "summary": "Создание резервной копии текущей таблицы разрешений в apps/logs/acl_backups/ перед модификацией прав доступа.",
-        "category": "ACL Операции"
-      },
-      "winadmin-acl-rollback": {
-        "title": "Відновити резервну копію безпеки ACL",
-        "summary": "Применение резервного файла ACL для гарантированного отката случайных или некорректных изменений прав.",
-        "category": "ACL Операции"
-      },
-      "winadmin-acl-inspect": {
-        "title": "Перевірити списки ACL файлу/папки",
-        "summary": "Анализ дескриптора безопасности указанного файла или каталога: чтение субъектов, типов прав (Allow/Deny) и флагов наследования.",
-        "category": "ACL Операции"
-      },
-      "winadmin-acl-grant": {
-        "title": "Надати / змінити дозволи ACL",
-        "summary": "Применение выбранного уровня доступа (Full Control, Modify, Read/Execute, Read, Write) через вызов icacls.exe с поддержкой безопасного режима Dry Run.",
-        "category": "ACL Операции"
-      },
-      "winadmin-filter-hidden": {
-        "title": "Выделение служебных и скрытых учетных записей Windows",
-        "summary": "Отображение специальных учетных записей (DefaultAccount, WDAGUtilityAccount и др.), скрытых от экрана входа в систему.",
-        "category": "Фильтры пользователей"
-      },
-      "winadmin-filter-admins": {
-        "title": "Фильтрация пользователей с административными правами",
-        "summary": "Быстрый отбор учетных записей, входящих в группу BUILTIN\\\\Administrators.",
-        "category": "Фильтры пользователей"
-      },
-      "proc-engine-status": {
-        "title": "Защита от переиспользования идентификаторов процессов (PID Recycling Guard)",
-        "summary": "Механизм защиты от подмены процессов. Отслеживает момент закрытия программы и предотвращает ошибочные действия над новым процессом с тем же номером PID.",
-        "category": "Безопасность процессов"
-      },
-      "proc-global-refresh": {
-        "title": "Принудительная синхронизация процессов и активности",
-        "summary": "Мгновенно опрашивает все подсистемы и обновляет списки работающих программ, сетевых соединений и файловых операций.",
-        "category": "Управление монитором"
-      },
-      "proc-subtab-manager": {
-        "title": "Диспетчер процессов и приложений Windows",
-        "summary": "Раздел управления программами в стиле Диспетчера задач Windows. Показывает открытые окна, фоновые службы и расход памяти и процессора.",
-        "category": "Диспетчер задач"
-      },
-      "proc-subtab-top": {
-        "title": "Живой поток наиболее ресурсоемких процессов хоста",
-        "summary": "Таблица лидеров по нагрузке на процессор и память в реальном времени. Помогает сразу увидеть программы, которые тормозят компьютер.",
-        "category": "Мониторинг нагрузки"
-      },
-      "proc-subtab-net": {
-        "title": "Сетевая активность программ и открытые сокеты",
-        "summary": "Показывает, какие программы прямо сейчас подключены к интернету, отправляют или скачивают данные и к каким серверам обращаются.",
-        "category": "Сетевой мониторинг"
-      },
-      "proc-subtab-files": {
-        "title": "Мониторинг изменения и создания файлов на диске в реальном времени",
-        "summary": "Живая лента файловых операций: показывает, какая именно программа создает, изменяет или удаляет файлы на диске.",
-        "category": "Файловый мониторинг"
-      },
-      "proc-subtab-leaks": {
-        "title": "Аудит дескрипторов, GDI-объектов и утечек памяти",
-        "summary": "Диагностика зависаний и микрофризов. Находит программы, которые забывают освобождать оперативную память или системные дескрипторы.",
-        "category": "Диагностика сбоев"
-      },
-      "pm-card-apps": {
-        "title": "Количество запущенных пользовательских программ с окнами",
-        "summary": "Обычные программы с графическим интерфейсом и окнами, запущенные пользователем (браузеры, плееры, редакторы).",
-        "category": "Категории процессов"
-      },
-      "pm-card-bg": {
-        "title": "Фоновые службы, демоны и вспомогательные утилиты",
-        "summary": "Программы без собственного окна, работающие в фоне (агенты обновлений, фоновые синхронизаторы и службы драйверов).",
-        "category": "Категории процессов"
-      },
-      "pm-card-win": {
-        "title": "Системные процессы ядра и служб операционной системы Windows",
-        "summary": "Критические компоненты Windows (explorer.exe, lsass.exe, services.exe), необходимые для стабильной работы операционной системы.",
-        "category": "Система Windows"
-      },
-      "pm-card-all": {
-        "title": "Общее число запущенных процессов и суммарный объем занятой памяти",
-        "summary": "Сводные данные о загрузке компьютера: общее количество активных процессов и объем оперативной памяти, занятый всеми программами.",
-        "category": "Сводка системы"
-      },
-      "pm-refresh": {
-        "title": "Обновление данных диспетчера процессов и приложений",
-        "summary": "Заново считывает список запущенных приложений, расход ресурсов и статус дерева процессов.",
-        "category": "Управление"
-      },
-      "pm-category-filters": {
-        "title": "Переключение категорий: Все, Apps, Background, Windows",
-        "summary": "Быстрая фильтрация списка процессов по типу: только программы с окнами, только фоновые службы или системные процессы Windows.",
-        "category": "Фильтрация"
-      },
-      "pm-toggle-expand": {
-        "title": "Сворачивание и разворачивание дочерних процессов и окон",
-        "summary": "Раскрывает или скрывает дочерние подпроцессы и связанные окна у сгруппированных программ.",
-        "category": "Интерфейс"
-      },
-      "pm-ai-modal": {
-        "title": "Интеллектуальный анализ процессов и программ через модель ИИ",
-        "summary": "Запускает глубокий анализ выбранных процессов: оценивает надежность исполняемых файлов, объясняет их назначение и выявляет скрытые угрозы.",
-        "category": "ИИ Анализ"
-      },
-      "pm-investigate-ps": {
-        "title": "ИИ-расследование источников запуска скрытых скриптов PowerShell",
-        "summary": "Поиск родительских программ и задач, которые запускают консоль PowerShell в скрытом режиме или выполняют фоновые скрипты.",
-        "category": "Расследование угроз"
-      },
-      "pm-prompt-settings": {
-        "title": "Конфигурация системного промпта и инструкций для ИИ-анализа процессов",
-        "summary": "Позволяет настроить правила и системные указания модели ИИ при формировании отчетов о безопасности процессов.",
-        "category": "Настройки ИИ"
-      },
-      "proc-top-pause": {
-        "title": "Временная приостановка автоматического обновления таблицы",
-        "summary": "Останавливает постоянное обновление таблицы процессов, чтобы можно было спокойно изучить значения без смещения строк.",
-        "category": "Управление потоком"
-      },
-      "proc-top-refresh": {
-        "title": "Внеочередной замер самых ресурсоемких процессов",
-        "summary": "Мгновенно опрашивает процессор и оперативную память и обновляет список наиболее активных программ.",
-        "category": "Управление потоком"
-      },
-      "proc-net-filter-internet": {
-        "title": "Фильтр соединений: исключение локального межпроцессного обмена",
-        "summary": "Оставляет в таблице только подключения к внешним серверам в интернете, скрывая локальные соединения внутри компьютера (localhost).",
-        "category": "Сетевые фильтры"
-      },
-      "proc-net-pause": {
-        "title": "Приостановка обновления таблицы сетевых подключений",
-        "summary": "Фиксирует список активных сетевых соединений на экране для спокойного анализа IP-адресов и портов.",
-        "category": "Сетевой мониторинг"
-      },
-      "proc-net-refresh": {
-        "title": "Повторный опрос сетевой таблицы TCP/UDP сокетов",
-        "summary": "Считывает актуальный список открытых портов, подключений к сайтам и сетевой трафик приложений.",
-        "category": "Сетевой мониторинг"
-      },
-      "proc-watch-badge": {
-        "title": "Текущий каталог, изменения в котором отслеживаются в реальном времени",
-        "summary": "Путь к директории на диске, в которой WinAPI-монитор перехватывает создание, изменение и удаление любых файлов.",
-        "category": "Файловый мониторинг"
-      },
-      "proc-watch-exclusions": {
-        "title": "Настройка масок файлов и папок, исключаемых из ленты событий",
-        "summary": "Позволяет скрыть шумные временные файлы (.tmp, кэш браузера, логи), чтобы видеть только важные изменения на диске.",
-        "category": "Файловый мониторинг"
-      },
-      "proc-watch-change-dir": {
-        "title": "Смена целевого каталога файлового наблюдателя",
-        "summary": "Позволяет выбрать любую папку на компьютере для контроля за действиями программ внутри нее.",
-        "category": "Файловый мониторинг"
-      },
-      "proc-watch-refresh": {
-        "title": "Принудительное считывание свежих файловых изменений",
-        "summary": "Обновляет список недавно измененных файлов и программ, которые с ними работали.",
-        "category": "Файловый мониторинг"
-      },
-      "diag-leaks-total": {
-        "title": "Общее число проверенных процессов на предмет утечек памяти и дескрипторов",
-        "summary": "Количество запущенных программ, прошедших проверку системных счетчиков Win32 API на скрытые утечки ресурсов.",
-        "category": "Аудит утечек"
-      },
-      "diag-leaks-suspicious": {
-        "title": "Число программ с аномальным расходом дескрипторов или памяти",
-        "summary": "Программы, у которых зафиксирован бесконтрольный рост числа дескрипторов (Handles), графических объектов GDI или ошибок страниц памяти.",
-        "category": "Аудит утечек"
-      },
-      "diag-leaks-handles": {
-        "title": "Максимальное количество открытых дескрипторов среди всех программ",
-        "summary": "Показывает программу-рекордсмена по числу открытых системных дескрипторов (файлов, ключей реестра, потоков). При превышении 10 000 система теряет стабильность.",
-        "category": "Аудит утечек"
-      },
-      "diag-leaks-gdi": {
-        "title": "Максимальное число графических объектов интерфейса (GDI)",
-        "summary": "Показывает программу с наибольшим числом графических элементов (шрифтов, кистей, окон). Превышение лимита в 10 000 приводит к сбоям отрисовки окон.",
-        "category": "Аудит утечек"
-      },
-      "diag-leaks-filters": {
-        "title": "Фильтрация процессов по порогам дескрипторов и признакам утечек",
-        "summary": "Быстрый отбор: только подозрительные программы, процессы с более чем 500 GDI-объектами или свыше 1500 системных дескрипторов.",
-        "category": "Аудит утечек"
-      },
-      "diag-leaks-refresh": {
-        "title": "Повторный запуск аудита дескрипторов и ресурсов",
-        "summary": "Пересчитывает счетчики дескрипторов и графических объектов для всех запущенных программ и обновляет оценки рисков.",
-        "category": "Аудит утечек"
-      },
-      "dwm": {
-        "title": "Desktop Window Manager (dwm.exe)",
-        "summary": "dwm.exe (Desktop Window Manager) — важнейший системный процесс Windows, отвечающий за отрисовку визуальных эффектов интерфейса, композицию окон, прозрачность и аппаратное ускорение через DirectX.",
-        "category": "Системный компонент Windows"
-      },
-      "explorer": {
-        "title": "Windows Explorer / Shell (explorer.exe)",
-        "summary": "explorer.exe — основной процесс графической оболочки пользователя в Windows: обеспечивает работу панели задач, меню «Пуск», рабочего стола и файлового менеджера.",
-        "category": "Оболочка Windows"
-      },
-      "svchost": {
-        "title": "Host Process for Windows Services (svchost.exe)",
-        "summary": "svchost.exe — универсальный системный хост-процесс, запускающий фоновые службы Windows из динамических библиотек (DLL). Каждый экземпляр изолирует группу служб по модели прав.",
-        "category": "Служебный хост Windows"
-      },
-      "taskhostw": {
-        "title": "Host Process for Windows Tasks (taskhostw.exe)",
-        "summary": "taskhostw.exe — системный хост для выполнения запланированных задач Windows, основанных на DLL-модулях, при входе пользователя в сеанс и по расписанию Task Scheduler.",
-        "category": "Планировщик задач"
-      },
-      "lsass": {
-        "title": "Local Security Authority Subsystem Service (lsass.exe)",
-        "summary": "lsass.exe — критический процесс безопасности Windows: осуществляет аутентификацию локальных пользователей и домена Active Directory, управление маркерами доступа и протоколами NTLM/Kerberos.",
-        "category": "Безопасность ядра"
-      },
-      "csrss": {
-        "title": "Client Server Runtime Process (csrss.exe)",
-        "summary": "csrss.exe — фундаментальная пользовательская подсистема Win32: управляет созданием и завершением потоков, окнами консоли и сессионным контекстом.",
-        "category": "Системное ядро Win32"
-      },
-      "services": {
-        "title": "Service Control Manager (services.exe)",
-        "summary": "services.exe (SCM) — системный диспетчер управления службами: запускает, останавливает и мониторит состояние фоновых сервисов и драйверов Windows.",
-        "category": "Управление службами"
-      },
-      "smss": {
-        "title": "Session Manager Subsystem (smss.exe)",
-        "summary": "smss.exe — первый процесс пользовательского режима при загрузке Windows NT: создает переменные окружения, запускает подсистемы winlogon и csrss, управляет файлами подкачки.",
-        "category": "Инициализация сеансов"
-      },
-      "winlogon": {
-        "title": "Windows Logon Application (winlogon.exe)",
-        "summary": "winlogon.exe — обеспечивает интерактивный вход и выход пользователей, блокировку экрана, обработку защищенной последовательности клавиш (SAS / Ctrl+Alt+Del).",
-        "category": "Сеансы пользователей"
-      },
-      "wininit": {
-        "title": "Windows Start-Up Application (wininit.exe)",
-        "summary": "wininit.exe — процесс начальной инициализации пользовательского режима Windows: запускает Service Control Manager (services.exe), LSASS и LSA Secrets.",
-        "category": "Инициализация Windows"
-      },
-      "powershell": {
-        "title": "Windows PowerShell Command Interpreter (powershell.exe)",
-        "summary": "powershell.exe — объектно-ориентированная среда командной строки и скриптов автоматизации администрирования операционной системы Windows.",
-        "category": "Интерпретаторы команд"
-      },
-      "cmd": {
-        "title": "Windows Command Prompt (cmd.exe)",
-        "summary": "cmd.exe — стандартный интерфейс командной строки Windows для выполнения сценариев пакетной обработки .bat/.cmd и служебных утилит.",
-        "category": "Консольные утилиты"
-      },
-      "conhost": {
-        "title": "Console Window Host (conhost.exe)",
-        "summary": "conhost.exe — хост-процесс оконного интерфейса консоли: обеспечивает отрисовку окон для консольных приложений и безопасность взаимодействия с csrss.",
-        "category": "Консольная подсистема"
-      },
-      "msmpeng": {
-        "title": "Microsoft Defender Antivirus Service (msmpeng.exe)",
-        "summary": "msmpeng.exe — ядро сканирования антивирусной защиты Microsoft Defender в реальном времени: защита от вредоносных программ, мониторинг поведения и сканирование файлов.",
-        "category": "Антивирусная безопасность"
-      },
-      "runtimebroker": {
-        "title": "Windows Runtime Broker (runtimebroker.exe)",
-        "summary": "runtimebroker.exe — процесс-посредник, управляющий разрешениями и доступом к системным API (камера, микрофон, геолокация) для приложений из Microsoft Store (UWP/AppX).",
-        "category": "Безопасность UWP"
-      },
-      "searchindexer": {
-        "title": "Windows Search Indexer (searchindexer.exe)",
-        "summary": "searchindexer.exe — фоновая служба индексирования файлов, электронной почты и свойств документов для мгновенного поиска в Windows.",
-        "category": "Индексация поиска"
-      },
-      "spoolsv": {
-        "title": "Print Spooler Service (spoolsv.exe)",
-        "summary": "spoolsv.exe — системная служба управления очередями печати и взаимодействия с драйверами принтеров Windows.",
-        "category": "Печать и периферия"
-      },
-      "system": {
-        "title": "Windows NT Kernel & System Process",
-        "summary": "System (PID 4) — корневой процесс уровня ядра Windows NT: содержит потоки времени выполнения ядра, исполняет системные драйверы и координирует работу аппаратуры.",
-        "category": "Ядро операционной системы"
-      },
-      "registry": {
-        "title": "Windows Registry Architecture Worker",
-        "summary": "Registry (PID ~100-160) — специализированный процесс ядра Windows 10/11 для сжатия и оптимизации доступа к кустам реестра в оперативной памяти.",
-        "category": "Подсистема реестра"
-      },
-      "cloudflared": {
-        "title": "Cloudflare Zero Trust Tunnel Daemon",
-        "summary": "cloudflared.exe — агент сетевого туннелирования Cloudflare Zero Trust: обеспечивает безопасный исходящий доступ к локальным службам без открытых портов в Интернет.",
-        "category": "Сетевые туннели"
-      },
-      "ctfmon": {
-        "title": "CTF Loader (ctfmon.exe)",
-        "summary": "ctfmon.exe — процесс управления альтернативным вводом данных, поддержкой языковых панелей, экранной клавиатуры и распознавания речи в Windows.",
-        "category": "Ввод и локализация"
       }
     },
-    "badgeNavigation": "Навігація",
-    "defaultTitle": "Елемент інтерфейсу",
-    "editor": {
-      "title": "Редактор спливаючих підказок",
-      "subtitle": "Керування статичними підказками інтерфейсу, одноразовий переклад на 4 мови та валідація i18n",
-      "btnSave": "Зберегти підказку",
-      "btnSaveAll": "Зберегти всі зміни",
-      "btnAutoTranslate": "Одноразовий автопереклад",
-      "btnAdd": "Додати підказку",
-      "searchPlaceholder": "Пошук за ключем, заголовком чи описом...",
-      "livePreview": "Інтерактивний передперегляд",
-      "statTotal": "Всього підказок",
-      "statTranslated": "Перекладено на 4 мови",
-      "statMissing": "Потребують перекладу",
-      "keyLabel": "Ключ підказки (ID)",
-      "categoryLabel": "Категорія",
-      "iconLabel": "Іконка",
-      "selectorLabel": "Селектор DOM / data-i18n-title",
-      "savedSuccess": "Підказку успішно збережено!"
-    },
     "subtabs": {
-      "catalog": "Каталог підказок",
-      "catalogTitle": "Перегляд повного реєстру підказок інтерфейсу",
-      "editor": "Редактор підказки",
-      "editorTitle": "Редагування текстів та передперегляд картки",
-      "kb": "База знань (WikiLLM)",
-      "kbTitle": "Терміни та поняття бази знань інтерфейсу",
-      "audit": "Аудит та валідація",
-      "auditTitle": "Перевірка неперекладених заголовків та атрибутів",
-      "panel-editor-lang-ruTitle": "Редагування текстів підказки російською мовою (RU)",
-      "panel-editor-lang-enTitle": "Редагування текстів підказки англійською мовою (EN)",
-      "panel-editor-lang-heTitle": "Редагування текстів підказки івритом (HE)",
-      "panel-editor-lang-ukTitle": "Редагування текстів підказки українською мовою (UK)"
+      "catalogLabel": "Каталог",
+      "catalogTitle": "Каталог підказок інтерфейсу",
+      "editorLabel": "Редактор",
+      "editorTitle": "Редактор обраної підказки",
+      "kbLabel": "База знань",
+      "kbTitle": "Керування базою знань підказок (SQLite)",
+      "auditLabel": "Аудит",
+      "auditTitle": "Аудит покриття інтерфейсу підказками",
+      "panel-editor-lang-ruTitle": "Російська мова",
+      "panel-editor-lang-enTitle": "Англійська мова",
+      "panel-editor-lang-heTitle": "Іврит",
+      "panel-editor-lang-ukTitle": "Українська мова",
+      "catalog": "Каталог",
+      "editor": "Редактор",
+      "kb": "База знань",
+      "audit": "Аудит"
+    },
+    "editor": {
+      "btnAutoTranslate": "Автопереклад",
+      "btnAutoTranslateTitle": "Перекласти підказку на всі мови за допомогою локального словника",
+      "btnSave": "Зберегти",
+      "btnSaveTitle": "Зберегти зміни підказки",
+      "title": "Редактор контекстних підказок",
+      "subtitle": "Керування мультимовними підказками для елементів інтерфейсу",
+      "statTotal": "Всього підказок",
+      "statTranslated": "Повністю перекладені",
+      "statMissing": "Потребують перекладу",
+      "searchPlaceholder": "Пошук по підказках...",
+      "categoryLabel": "Категорія",
+      "categoryPlaceholder": "Виберіть категорію...",
+      "keyLabel": "Ключ",
+      "iconLabel": "Іконка",
+      "titleEnLabel": "Заголовок (EN)",
+      "descEnLabel": "Опис (EN)",
+      "titleHeLabel": "Заголовок (HE)",
+      "descHeLabel": "Опис (HE)",
+      "livePreview": "Попередній перегляд"
     }
   },
   "ui": {
@@ -1258,7 +1865,9 @@
       "txt_b424fd08": "{raw_data}",
       "txt_53f4f0ae": "Используйте переменние , , , для автоматической подстановки контекста строки таблици.",
       "txt_b7d58390": "Сбросить по умолчанию",
-      "txt_45346fe2": "Сохранить промпт"
+      "txt_45346fe2": "Сохранить промпт",
+      "txt_117e0f66": "Используйте переменные",
+      "txt_595664ee": "для автоматической подстановки контекста строки таблицы."
     },
     "ide": {
       "txt_b55b1f12": "Провідник",
@@ -1283,20 +1892,20 @@
       "txt_1fc2d3b3": "AI-Assistant",
       "txt_3adad3ce": "Умная история файлов",
       "txt_87a4286b": "Активно",
-      "txt_352f5b3b": "🧭 Интерактивний гид-тур",
-      "txt_9adf73bb": "Рабочие пространства",
-      "txt_090f7c40": "первий опит работи с workspace",
-      "txt_ee69127b": "готов",
-      "txt_186ddb2d": "Управление документами & Git",
-      "txt_ef293092": "+ Создать рабочее пространство",
-      "txt_53be1f12": "Мастер: Создать рабочую область. Дать ей имя",
-      "txt_ac0cd42d": "Модели и База Знаний (WikiLLM)",
-      "txt_1db129d2": "Диагностика Git (GC)",
-      "txt_dbb375d1": "Почта и Коммуникации",
+      "txt_352f5b3b": "🧭 Інтерактивний гід-тур",
+      "txt_9adf73bb": "Робочі простори",
+      "txt_090f7c40": "перший досвід роботи з workspace",
+      "txt_ee69127b": "готовий",
+      "txt_186ddb2d": "Керування документами & Git",
+      "txt_ef293092": "+ Створити робочий простір",
+      "txt_53be1f12": "Майстер: Створити робочу область. Дати їй ім'я",
+      "txt_ac0cd42d": "Моделі та База Знань (WikiLLM)",
+      "txt_1db129d2": "Діагностика Git (GC)",
+      "txt_dbb375d1": "Пошта та Комунікації",
       "txt_97e9b1d0": "Керування поштою (Gmail)",
-      "txt_85b9a52f": "Модули и Расширения",
-      "txt_d73a63b4": "Плагини (Plugins Hub)",
-      "txt_065a4bdc": "Оформление",
+      "txt_85b9a52f": "Модулі та Розширення",
+      "txt_d73a63b4": "Плагіни (Plugins Hub)",
+      "txt_065a4bdc": "Оформлення",
       "txt_0948f589": "Редактор тем",
       "txt_e3afed00": "Admin",
       "txt_051d7ea9": "Русский (ru-RU)",
@@ -1361,15 +1970,45 @@
       "searchResults": "Результати пошуку"
     },
     "commits": {
-      "txt_a8e8fb68": "Полний аудит коммитов, хешей, авторов и описаний изменений",
-      "txt_b7ca8395": "Таблица коммитов (REST: /v1/panel/panel-commits)",
-      "txt_8f8e2027": "0 комітів",
-      "txt_59d5b10c": "Commit",
-      "txt_8cdd8bb7": "Дата",
-      "txt_7c7d054b": "Автор",
-      "txt_37157665": "Сообщение",
-      "txt_fb3df31b": "Действия",
-      "txt_f079b253": "Загрузка списка коммитов..."
+      "txt_a8e8fb68": "Хронологія збережень, оновлень документів та автоматичних подій у сховищі",
+      "txt_b7ca8395": "Історія збережень та дій",
+      "txt_8f8e2027": "0 подій",
+      "txt_59d5b10c": "Подія",
+      "txt_8cdd8bb7": "Коли",
+      "txt_7c7d054b": "Хто",
+      "txt_37157665": "Що відбулося",
+      "txt_fb3df31b": "Дії",
+      "txt_f079b253": "Завантаження журналу версій...",
+      "commitsCountSuffix": "подій",
+      "notFound": "Записів у журналі поки немає",
+      "authorUnknown": "Система",
+      "diffBtn": "Що змінилося",
+      "filterAll": "Усі події",
+      "filterDocs": "Документи",
+      "filterAuto": "Авто-обробка",
+      "filterNotes": "Нотатки з чату",
+      "typeCreated": "Створено",
+      "typeUpdated": "Оновлено",
+      "typeDeleted": "Видалено",
+      "typeMoved": "Переміщено",
+      "typeAuto": "Авто",
+      "typeNote": "Нотатка",
+      "typeSystem": "Система",
+      "today": "Сьогодні",
+      "yesterday": "Вчора",
+      "compareModalTitle": "Порівняння версій документа",
+      "openAllCommitsBtn": "Так, відкрити всі версії (до 10)",
+      "keepLatestOnlyBtn": "Ні, лише цю поруч з оригіналом",
+      "openFullDiffBtn": "Відкрити в розширеному порівнянні",
+      "multiCommitsQuestion": "Для цих документів знайдено ще {count} збережених версій. Відкрити їх також для порівняння (не більше 10)?",
+      "compareNoFiles": "У цьому збереженні немає змінених файлів для перегляду.",
+      "compareShownCount": "Показано",
+      "compareMaxTen": "макс. 10",
+      "paneCommittedTitle": "Збережена версія",
+      "paneCurrentTitle": "Нинішня версія (оригінал)",
+      "paneCurrentBadge": "Зараз",
+      "compareIdentical": "Текст у збереженій та нинішній версіях збігається",
+      "compareDiffLines": "Відмінних рядків"
     },
     "cws": {
       "txt_2231746c": "Створити новий простір",
@@ -1439,15 +2078,42 @@
       "init_git_commit_multiple": "Підключення зовнішніх об'єктів ({count}) для стеження на місці"
     },
     "diff": {
-      "txt_f00b92bd": "Построчний анализ изменений, инспекция ревизий и ИИ-суммаризация последствий",
-      "txt_1bca034f": "Загрузить Diff",
-      "txt_42b34c89": "ИИ-Инсайти",
-      "txt_3af9e925": "Статистика измененних файлов (REST: /v1/panel/panel-diff-stats)",
-      "txt_e9e5145e": "0 файлів",
-      "txt_c8a11502": "Ожидание загрузки данних панели...",
-      "txt_7cd8b0fa": "ИИ-суммаризация архитектурних последствий коммита",
-      "txt_95e4aae4": "HEAD :: Все файли",
-      "txt_a4377dac": "Готов"
+      "txt_f00b92bd": "Наочний перегляд правок у документах: що додано, змінено або видалено, з поясненням від ШІ",
+      "txt_1bca034f": "Оновити",
+      "txt_42b34c89": "Пояснити простими словами (ШІ)",
+      "txt_3af9e925": "Нещодавно змінені документи",
+      "txt_e9e5145e": "0 документів",
+      "txt_c8a11502": "Завантаження списку документів...",
+      "txt_7cd8b0fa": "Пояснення змін від ШІ простими словами",
+      "txt_95e4aae4": "Останнє збереження • Усі документи",
+      "txt_a4377dac": "Готово",
+      "txt_b6d72f5e": "Оберіть збереження зі списку вище або натисніть на документ, щоб побачити правки.",
+      "selectVersionTitle": "Оберіть версію з історії збережень",
+      "loadingVersions": "Завантаження списку збережень...",
+      "noVersions": "Збережених версій поки немає",
+      "latestTag": "Останнє",
+      "latestVersion": "Останнє збереження",
+      "selectedVersion": "Обране збереження",
+      "allDocuments": "Усі документи у збереженні",
+      "onlyChanges": "Тільки зміни",
+      "modeFriendly": "Наочний вигляд",
+      "modeRaw": "Технічний вигляд",
+      "addedLabel": "додано",
+      "removedLabel": "видалено",
+      "binaryNotice": "Документ оновлено (вкладення, PDF та зображення не відображаються порядково).",
+      "unchangedSeparator": "••• Незмінена частина документа •••",
+      "noChanges": "В обраній версії немає текстових змін.",
+      "noTextLines": "Вміст документа не змінився.",
+      "docsCountSuffix": "документів",
+      "noRecentFiles": "Нещодавніх змін документів поки немає.",
+      "loadingDiff": "Завантаження змін...",
+      "statusLoading": "Завантаження...",
+      "statusLoaded": "Готово",
+      "statusError": "Помилка",
+      "loadError": "Не вдалося завантажити зміни",
+      "aiAnalyzing": "ШІ вивчає правки та готує зрозуміле пояснення...",
+      "aiDone": "Пояснення сформовано.",
+      "aiError": "Не вдалося отримати пояснення ШІ"
     },
     "gim": {
       "txt_510b0866": "Диагностика и обслуживание Git-репозитория",
@@ -1581,7 +2247,8 @@
       "txt_ea1fb3d8": "Окно валидности",
       "txt_7203f7a4": "Статус",
       "txt_50a761a1": "Дія",
-      "txt_4bfaca3e": "Загрузка графа через универсальний загрузчик панелей..."
+      "txt_4bfaca3e": "Загрузка графа через универсальний загрузчик панелей...",
+      "txt_519a645b": "Рабочая область: —"
     },
     "mdl": {
       "txt_5ab4b565": "Пул моделей ИИ и API Провайдери",
@@ -1695,7 +2362,60 @@
       "txt_a1dc2950": "Отправка тестового запроса в Google Gemini...",
       "txt_6fae0c9a": "Ответ модели:",
       "txt_b7fa3967": "Повторить тест",
-      "txt_dd9463bd": "Закрити"
+      "txt_dd9463bd": "Закрити",
+      "local_bert_tab": "⚡ Браузерний BERT (WebGPU)",
+      "local_bert_heading": "Браузерний BERT (Transformers.js + WebGPU / WASM)",
+      "local_bert_alert_title": "Локальний інференс прямо в Electron без хмарних API",
+      "local_bert_alert_desc": "Компактні ONNX-моделі (INT8) запускаються у Web Worker браузера, кешуються локально та прискорюються через WebGPU (із резервним переходом на WASM).",
+      "local_bert_enable": "Увімкнути браузерний BERT-рушій",
+      "local_bert_mode_label": "Режим вибору моделей",
+      "local_bert_mode_multi": "Єдина багатомовна модель (рекомендовано)",
+      "local_bert_mode_per_lang": "Окрема модель для кожної мови",
+      "local_bert_default_model_label": "Основна модель (ONNX)",
+      "local_bert_per_lang_title": "Моделі за мовами (ru / en / he / uk)",
+      "local_bert_lang_ru": "Російська (ru)",
+      "local_bert_lang_en": "Англійська (en)",
+      "local_bert_lang_he": "Іврит (he)",
+      "local_bert_lang_uk": "Українська (uk)",
+      "local_bert_backend_label": "Бекенд виконання",
+      "local_bert_backend_auto": "Авто (WebGPU -> WASM)",
+      "local_bert_backend_webgpu": "Лише WebGPU",
+      "local_bert_backend_wasm": "Лише WASM (CPU)",
+      "local_bert_quant_label": "Квантування ваг",
+      "local_bert_quant_q8": "INT8 (q8 — компактно і швидко)",
+      "local_bert_quant_fp32": "FP32 (повна точність)",
+      "local_bert_threshold_label": "Поріг семантичного кешу",
+      "local_bert_intent_routing": "Zero-Cost роутинг намірів до виклику LLM",
+      "local_bert_semantic_cache": "Семантичний кеш відповідей у браузері",
+      "local_bert_save_btn": "Зберегти налаштування BERT",
+      "local_bert_saved": "Налаштування браузерного BERT збережено!",
+      "local_bert_test_title": "Живий тест у браузері (порівняння ембедінгів)",
+      "local_bert_test_btn": "Перевірити в браузері",
+      "local_bert_need_texts": "Введіть обидві фрази для порівняння",
+      "local_bert_loading_worker": "Ініціалізація WebGPU/WASM...",
+      "emb_card_title": "Моделі ембедінгів (векторизація та RAG)",
+      "emb_saved_label": "Активна модель ембедінгів:",
+      "emb_provider_label": "Провайдер ембедінгів",
+      "emb_model_label": "Модель ембедінгів",
+      "emb_save_btn": "Зберегти модель ембедінгів",
+      "emb_test_label": "Перевірка векторизації (ембедінг)",
+      "emb_test_hint": "Local BERT працює прямо у браузері (WebAssembly / WebGPU)",
+      "emb_test_btn": "Тест вектора",
+      "emb_prov_local_bert": "⚡ Браузерний BERT (WebAssembly / WebGPU)",
+      "emb_prov_gemini": "✨ Google Gemini API",
+      "emb_prov_ollama": "🦙 Ollama (Локальний сервер)",
+      "emb_prov_openai": "🌐 OpenAI Compatible",
+      "emb_prov_hash": "🔢 Local Hash (Офлайн fallback)",
+      "emb_runtime_browser": "Браузер (WASM/WebGPU)",
+      "emb_runtime_cloud": "Хмарний API",
+      "emb_runtime_local": "Локальний бекенд",
+      "emb_no_models": "Немає доступних моделей",
+      "emb_refreshed": "Список моделей ембедінгів оновлено",
+      "emb_load_error": "Помилка завантаження моделей ембедінгів",
+      "emb_select_first": "Спочатку оберіть модель ембедінгів",
+      "emb_saved": "Модель ембедінгів збережено",
+      "emb_save_error": "Помилка збереження моделі ембедінгів",
+      "emb_testing": "Генерація вектора..."
     },
     "plg": {
       "txt_a957f0d3": "Плагини и Маркетплейс расширений",
@@ -1714,7 +2434,14 @@
       "txt_fea358e4": "Загрузка маркетплейса плагинов...",
       "txt_2b8cb57e": "Настройки плагина:",
       "txt_987b33c6": "Скасувати",
-      "txt_f2e3f707": "Сохранить настройки"
+      "txt_f2e3f707": "Сохранить настройки",
+      "txt_skills_tab": "⚡ Навички (Skills)",
+      "txt_skills_title": "Автономні навички асистента",
+      "txt_skills_subtitle": "Каталог навичок та редактор параметрів підключення (secrets.json)",
+      "txt_save_skill": "Зберегти параметри",
+      "txt_test_skill": "Перевірити з'єднання",
+      "txt_loading_skills": "Завантаження каталогу навичок...",
+      "txt_modal_skill_title": "Налаштування навички:"
     },
     "rag": {
       "txt_1f8df190": "Векторний поиск (FAISS) и фактологический ретривер по документам активного рабочего пространства",
@@ -1738,7 +2465,17 @@
       "txt_0577df9a": "Язик",
       "txt_b505df5a": "SHA256",
       "txt_680472e0": "Фрагмент текста документа",
-      "txt_7a41c828": "Загрузка чанков бази знаний через универсальний загрузчик панелей..."
+      "txt_7a41c828": "Загрузка чанков бази знаний через универсальний загрузчик панелей...",
+      "build_btn": "Побудувати RAG",
+      "build_all_btn": "Зібрати для всіх РО",
+      "status_loading": "Завантаження статусу RAG...",
+      "status_ready": "RAG готовий",
+      "status_empty": "RAG порожній",
+      "status_needs_rebuild": "Потрібна перебудова",
+      "building_status": "Побудова RAG...",
+      "building_all_status": "Збирання RAG для всіх РО...",
+      "built_success": "RAG успішно оновлено",
+      "built_all_success": "RAG оновлено для всіх РО"
     },
     "stat": {
       "txt_a347bdf8": "Диагностическая готовность компонентов Git, WikiLLM, темпорального графа и векторного RAG",
@@ -1896,7 +2633,25 @@
       "txt_6d3d85e6": "Создать и применить",
       "txt_5c980cd5": "Переименовать тему",
       "txt_bf2965cf": "Новое название теми:",
-      "txt_74ea58b6": "Зберегти"
+      "txt_74ea58b6": "Зберегти",
+      "buildCustomBtn": "Зібрати свою тему",
+      "sectionInputsAlerts": "Поля вводу та інфо-банери",
+      "alertLightBgLabel": "Фон інфо-банера",
+      "alertLightBorderLabel": "Межа інфо-банера",
+      "alertLightTextLabel": "Текст інфо-банера",
+      "inputBgLabel": "Фон полів вводу",
+      "inputTextLabel": "Текст полів вводу",
+      "inputBorderLabel": "Межа полів вводу",
+      "previewTrackingSection": "Панель відстеження (банер, блоки, поля та кнопки)",
+      "previewBannerSample": "Файли та теки залишаються на місці: Git підключається безпосередньо до шляхів на диску.",
+      "previewEmptyBlockSample": "Теки та файли ще не додано. Оберіть теку або файл нижче.",
+      "keepEditsLabel": "Зберегти поточні правки з редактора",
+      "keepEditsHint": "Якщо вимкнено, нова тема почнеться з чистої палітри обраної базової теми.",
+      "optCustomThemes": "Користувацькі теми",
+      "optLightThemes": "Світлі теми",
+      "optDarkThemes": "Темні теми",
+      "myCopySuffix": "Моя тема",
+      "basedOnPrefix": "Зібрана на основі"
     },
     "tml": {
       "txt_16c7ed78": "Хронологический срез еволюции кодовой бази и контрольних точек",
@@ -1946,7 +2701,16 @@
       "label_attendees": "Учасники (email через кому)",
       "label_desc": "Опис зустрічі",
       "btn_cancel": "Скасувати",
-      "btn_save": "Зберегти"
+      "btn_save": "Зберегти",
+      "load_error": "Помилка завантаження календаря",
+      "open_in_gcal": "Відкрити в Google Calendar",
+      "delete_event": "Видалити подію",
+      "no_attendees": "Без учасників",
+      "confirm_delete": "Ви впевнені, що хочете видалити цю подію з Google Календаря?",
+      "delete_failed": "Не вдалося видалити подію",
+      "delete_error_prefix": "Помилка під час видалення: ",
+      "fill_required": "Будь ласка, заповніть тему та час події",
+      "create_error": "Помилка під час створення події"
     },
     "drive": {
       "title": "Google Диск",
@@ -1960,7 +2724,13 @@
       "select_file": "Виберіть файл *",
       "parent_folder": "ID папки на Диску (необов'язково)",
       "btn_cancel": "Скасувати",
-      "btn_start_upload": "Завантажити"
+      "btn_start_upload": "Завантажити",
+      "txt_1307d169": "📁 Папки",
+      "txt_0f9eefa7": "📊 Таблицы",
+      "txt_63d6a35a": "📄 Документы",
+      "txt_6e1fdab8": "📁 Google Диск",
+      "txt_1aa39e33": "Имя файла",
+      "txt_8a534553": "Загрузка файлов Google Drive..."
     },
     "contacts": {
       "title": "Телефонна книга (Контакти)",
@@ -1979,7 +2749,8 @@
       "label_title": "Посада",
       "label_notes": "Нотатки",
       "btn_cancel": "Скасувати",
-      "btn_save": "Зберегти"
+      "btn_save": "Зберегти",
+      "txt_0f70b917": "Всего контактов: 0"
     },
     "docCategorizer": {
       "title": "Категоризатор документів",
@@ -2048,7 +2819,216 @@
       "insuranceCoordDesc": "Оцінка стану тварини, опис ідентифікаційних міток та узгодження суми покриття поліса.",
       "insuranceAgent": "Страховий агент",
       "docPackageTitle": "Комплект документації щодо угоди купівлі-продажу",
-      "workspaceSyncNote": "Усі створювані документи автоматично прив'язані до поточного робочого простору."
+      "workspaceSyncNote": "Усі створювані документи автоматично прив'язані до поточного робочого простору.",
+      "txt_50c1c700": "0 дел",
+      "txt_4f4f8f23": "Сделка",
+      "txt_3dc6afa1": "Выберите дело из списка слева",
+      "txt_a507d360": "Здесь отображаются участники, декомпозированные шаги, чеклист и документы.",
+      "txt_5508e1e4": "Нет задач в данном деле",
+      "txt_4aecbbe3": "Требует слота",
+      "txt_27dcfb3c": "3 документа",
+      "txt_e8017a19": "Договор купли-продажи коровы (Проект)",
+      "txt_4ba673be": "Стороны: Шмулик (Продавец) ↔ Дод Моше (Покупатель)",
+      "txt_30ab6155": "Черновик",
+      "txt_d5430d8f": "Ветеринарный паспорт и справка о вакцинации",
+      "txt_316c3a52": "Предоставляет продавец (Шмулик) перед осмотром",
+      "txt_b12982bb": "Ожидание файла",
+      "txt_fcdcbfe6": "Полис страхования с/х животных",
+      "txt_0192cea6": "Оформляется агентом после осмотра животного",
+      "txt_e904d651": "После осмотра"
+    },
+    "common": {
+      "txt_8d2291b8": "Готов к работе",
+      "txt_6e641b4a": "Не проверено",
+      "txt_1b05f82d": "Модуль",
+      "txt_bf46b747": "предоставляет интеллектуальную историю изменений кодовой базы:",
+      "txt_2ae1cc15": "Архитектурные связи",
+      "txt_35da23e7": "Все панели загружаются через"
+    },
+    "doc_categorizer": {
+      "txt_b606efa6": "0 найдено",
+      "txt_ac1bbd60": "Все статусы",
+      "txt_f2b2018a": "Категоризированы",
+      "txt_25927e9b": "Уверенность",
+      "txt_5bbc005a": "Изменен",
+      "txt_a3a054b1": "0 ожидают",
+      "txt_737b19eb": "0 совпадений"
+    },
+    "git_maintenance": {
+      "txt_19d60172": "Готов к сбору метрик."
+    },
+    "models": {
+      "txt_37b39b1a": "Интеграция с сервисами Google:",
+      "txt_08de0a43": "(чтение, черновики),",
+      "txt_f97d1d61": "(поиск файлов, чтение),",
+      "txt_c1a56a6e": "(чтение/запись таблиц) и",
+      "txt_4fb97dfa": "При вызове инструментов ассистент использует аккаунт",
+      "txt_ed40c418": "или аккаунт по умолчанию (",
+      "txt_7ed12194": "или",
+      "txt_b98ccbc2": "из"
+    },
+    "tooltips": {
+      "txt_53660e08": "Все категории",
+      "txt_de92d1b9": "Все статусы перевода",
+      "txt_e4b7258a": "100% переведено (RU, EN, HE, UK)",
+      "txt_b8727d4f": "Требует доперевода",
+      "txt_4f9bbe7b": "Ключ / ID",
+      "txt_7bc258a4": "Заголовок (RU)",
+      "txt_9469cc39": "Заголовок (EN)",
+      "txt_c98fc857": "Локали",
+      "txt_875a3beb": "Загрузка каталога подсказок...",
+      "txt_06780e24": "Редактирование подсказки",
+      "txt_7f0ab4f9": "Пояснение / Описание (RU)",
+      "txt_ab1e8fa8": "Заголовок (UK)",
+      "txt_3dc32e22": "Пояснення / Опис (UK)",
+      "txt_087f4531": "Визуализация подсказки при наведении курсора (строго без кнопок вызова модели):",
+      "txt_2c0ee5ae": "Заголовок подсказки",
+      "txt_759dedb6": "Здесь отображается готовый краткий текст подсказки для выбранного языка.",
+      "txt_c359fe4b": "Термины базы знаний WikiLLM и системные сущности",
+      "txt_65420c5c": "Идентификатор",
+      "txt_19c8ce1c": "Краткое описание (WikiLLM)",
+      "txt_79c9df8f": "Загрузка базы знаний...",
+      "txt_307e3aaa": "Соответствие стандартам i18n",
+      "txt_5ff35a66": "Статические тултипы без вызова модели:",
+      "txt_5145e6dd": "Соблюдается (100%)",
+      "txt_fb87a97c": "Отсутствие сырых ключей перевода:",
+      "txt_a0b11865": "Проверено",
+      "txt_bdd45760": "Синхронизация с адресной строкой URL:",
+      "txt_464a1470": "Динамический callback title в Bootstrap:",
+      "txt_5f8eab1d": "Справка по стандарту подсказок",
+      "txt_9f67dcdd": "В соответствии со стандартом",
+      "txt_7e1c498f": "Все подсказки меню формулируются",
+      "txt_72183e88": "сразу, без обращения к LLM",
+      "txt_c3cdd2c0": "Каждый элемент с",
+      "txt_80486196": "обязан иметь парный атрибут",
+      "txt_d51910de": "Все подсказки хранятся в словарях локализации для 4 языков (RU, EN, HE, UK)."
+    },
+    "workspace": {
+      "txt_00bb46d5": "0 объектов в слежении",
+      "txt_fe7d688c": "Ревизия #1",
+      "txt_6d96ae54": "Перемещено без потерь (R100): 0",
+      "txt_436b812b": "Иерархия строится на основе семантической оценки содержимого всех локальных и внешних файлов Git."
+    },
+    "table": {
+      "txt_491b99df": "Заголовок реестра",
+      "txt_de2925f0": "Сущность",
+      "txt_556f2546": "Параметр",
+      "txt_6e6c2404": "Загрузка данных..."
+    },
+    "file_tree": {
+      "txt_4c243872": "Объект",
+      "txt_aa5f2dfe": "0 строк",
+      "txt_f4c352ca": "Начальное содержимое:",
+      "txt_7e7460bd": "Сообщение коммита:"
+    },
+    "instruments": {
+      "txt_851339df": "Поиск файлов",
+      "txt_4bebc5de": "Google Почта",
+      "txt_75768c49": "Контакты",
+      "txt_35836cab": "Календарь",
+      "txt_426f3946": "Таблицы",
+      "txt_6d8365a5": "Документы",
+      "txt_88a638c0": "Сеть / Порты",
+      "txt_bdb613cd": "Safe (Безопасный)",
+      "txt_1d2a2829": "Medium (Предупреждение)",
+      "txt_cd3c7784": "High (Критический)",
+      "txt_233698ba": "Нажмите «Выполнить инструмент» для запуска..."
+    },
+    "issues": {
+      "txt_b41139ba": "Загрузка репозитория...",
+      "txt_65639a84": "gh CLI: проверка...",
+      "txt_a1d27b40": "Открыть в GitHub",
+      "txt_18529cea": "Список задач",
+      "txt_b0081592": "Создать задачу",
+      "txt_b3a8887d": "Вехи (Milestones)",
+      "txt_a4a53413": "Метки и параметры",
+      "txt_4bf80150": "Всего задач",
+      "txt_6a88da67": "Открыто (Open)",
+      "txt_7534cd22": "Закрыто (Closed)",
+      "txt_6507d313": "Ошибки (Bugs)",
+      "txt_52d2e892": "Функции (Features)",
+      "txt_c2b2197f": "Критические",
+      "txt_1efc30a6": "Открытые (Open)",
+      "txt_a7bde158": "Закрытые (Closed)",
+      "txt_0ac7f111": "Все задачи",
+      "txt_332e63a3": "🐛 Bug (Ошибка)",
+      "txt_344b0cad": "✨ Feature (Функция)",
+      "txt_87bb9529": "🔧 Enhancement (Улучшение)",
+      "txt_f9a08511": "Все компоненты",
+      "txt_76530947": "Заголовок и метки",
+      "txt_49dec84b": "Компонент",
+      "txt_a0f9f1af": "Приоритет",
+      "txt_1d3ab78a": "Исполнитель",
+      "txt_ed490229": "Загрузка задач...",
+      "txt_6dd8ec7e": "Регистрация новой задачи GitHub Issue",
+      "txt_dd2cb420": "Шаблон:",
+      "txt_445841cb": "-- Без шаблона --",
+      "txt_221c5a5a": "Название задачи (Title):",
+      "txt_507ace95": "Тип задачи (Type):",
+      "txt_6f3dcbca": "✨ Feature (Новая функция)",
+      "txt_341faf66": "🐛 Bug (Ошибка/Дефект)",
+      "txt_b2a7f279": "Приоритет (Priority):",
+      "txt_3cf05e80": "🔥 Critical (Критический)",
+      "txt_8be6b78a": "⚡ High (Высокий)",
+      "txt_77972767": "⚖️ Medium (Средний)",
+      "txt_38042728": "☕ Low (Низкий)",
+      "txt_b013f044": "Компонент AI-TC:",
+      "txt_39fa51ec": "Core (Ядро/Общее)",
+      "txt_63f10cc8": "Telemetry (Телеметрия)",
+      "txt_ca93721e": "Network (Сеть/Трафик)",
+      "txt_8ca6f894": "Windows (Службы/Диски)",
+      "txt_09ba7c36": "GUI (Интерфейс/WebGUI)",
+      "txt_81abddbb": "AI (Модели/Агенты/RAG)",
+      "txt_eb1a38af": "MCP (Серверы/Протокол)",
+      "txt_4d334f72": "Исполнитель (Assignee):",
+      "txt_67a949ab": "Описание задачи (Markdown):",
+      "txt_b73d3bc1": "Поддерживает списки требований и чек-листы",
+      "txt_347f4366": "Опубликовать Issue",
+      "txt_009ac58e": "Дорожная карта релизов (AI-TC Milestones)",
+      "txt_04889dbf": "Стандартная сетка меток AI-TC (Labels Taxonomy)",
+      "txt_e8253e8c": "Синхронизировать с GitHub",
+      "txt_d81fbd56": "Метка",
+      "txt_48312239": "Категория и назначение",
+      "txt_371885a1": "Цвет",
+      "txt_476447c8": "Issue-driven AI Developer (Оркестрация задачи)",
+      "txt_5a0a4027": "Создать ветку Git под задачу",
+      "txt_1f62e5c0": "Сформировать план ТЗ",
+      "txt_ace1b10c": "Закрыть задачу",
+      "txt_00f108ec": "Описание задачи:",
+      "txt_e05641d9": "Добавить комментарий:"
+    },
+    "obsidian": {
+      "txt_7d96b42a": "Слов: 0 | Символов: 0",
+      "txt_5cc3b948": "Выберите заметку",
+      "txt_027040c6": "хранилище/заметка.md",
+      "txt_76aa1af9": "Граф связей",
+      "txt_85af970e": "Закрыть граф",
+      "txt_4c49936f": "Все изменения сохранены",
+      "txt_64ec2ae0": "Входящие ссылки (Backlinks)",
+      "txt_0f8d8bf2": "Несвязанные упоминания",
+      "txt_8b39ac40": "Исходящие ссылки (Outgoing)",
+      "txt_b81747f8": "➕ Создание новой заметки Obsidian",
+      "txt_a9e6d1a3": "Название заметки",
+      "txt_6eebd607": "Папка (опционально)"
+    },
+    "theme_editor": {
+      "txt_64f55fb7": "Вы можете скопировать этот блок CSS в файл стилей (например,",
+      "txt_26a73c31": ") для постоянного применения темы оформления:"
+    },
+    "outlook": {
+      "txt_header_title": "Microsoft Outlook",
+      "txt_header_subtitle": "Інтеграція з поштовою інфраструктурою Microsoft 365 та Desktop Outlook",
+      "txt_reload": "Оновити",
+      "txt_inbox": "Вхідні",
+      "txt_compose": "Написати листа",
+      "txt_col_from": "Від кого",
+      "txt_col_subject": "Тема повідомлення",
+      "txt_col_date": "Дата",
+      "txt_loading": "Завантаження повідомлень Outlook...",
+      "txt_label_to": "Одержувач (Email)",
+      "txt_label_subject": "Тема повідомлення",
+      "txt_label_body": "Текст листа",
+      "txt_btn_send": "Надіслати повідомлення"
     }
   },
   "titles": {
@@ -2084,7 +3064,7 @@
       "title_e3241394": "Згорнути навігатор (Ctrl+B)",
       "title_2df29703": "Обновить каталог плагинов",
       "title_17a110d9": "Свернуть панель (Ctrl+B)",
-      "title_c13990e0": "Открить меню разделов",
+      "title_c13990e0": "Відкрити меню розділів",
       "title_c21ce32d": "Главная страница — AI Assistant",
       "title_3987a67a": "Глобальний контекст Git-репозитория и рабочей области",
       "title_2231746c": "Створити новий простір",
@@ -2112,7 +3092,22 @@
       "tasks": "Розумні завдання та доручення",
       "instruments": "Інструменти ланцюжків міркувань CoT [Alt+0]",
       "expandSidebar": "Розгорнути / згорнути бічну панель",
-      "tooltipsEditor": "Редактор підказок інтерфейсу"
+      "tooltipsEditor": "Редактор підказок інтерфейсу",
+      "confirmRename": "Перейменувати об'єкт і зафіксувати зміну в Git",
+      "confirmCopy": "Створити копію файлу і зафіксувати в Git",
+      "outlook": "Microsoft Outlook: пошта та повідомлення",
+      "commands": "База знань команд та сніпетів",
+      "toggleSidebar": "Відкрити меню розділів",
+      "workspace": "Провідник робочих просторів і документів (Explorer) [Alt+1]",
+      "commits": "Журнал версій та історія подій у сховищі документів [Alt+2]",
+      "diff": "Наочне порівняння версій документів та огляд правок [Alt+3]",
+      "timeline": "Шкала часу і хронологія версій (Timeline) [Alt+4]",
+      "graph": "Темпоральний граф знань і залежностей (Graph) [Alt+6]",
+      "rag": "Глобальний 5-етапний пошук RAG (Search) [Alt+8]",
+      "verification": "Контур верифікації та цілісності [Alt+9]",
+      "plugins": "Менеджер плагінів та модулів (Extensions Hub)",
+      "gmail": "Керування поштою Gmail",
+      "confirmAddFromDisk": "Додати вибрані файли та каталоги до робочої області"
     },
     "cws": {
       "title_01c37831": "Повернутися до списку робочих просторів",
@@ -2148,13 +3143,18 @@
       "title_ff72fede": "Сохранить заметку",
       "title_71711d9b": "Отправить тестовий запрос в вибранную модель",
       "title_3e6c233a": "Отменить виполнение проверочного запроса",
-      "title_dbe5444a": "Оновити"
+      "title_dbe5444a": "Оновити",
+      "emb_refresh_title": "Оновити список доступних моделей ембедінгів",
+      "emb_test_title": "Перевірити генерацію вектора ембедінга"
     },
     "plg": {
-      "title_d06719a3": "Пересканировать каталог plugins/ и обновить статус"
+      "title_d06719a3": "Пересканировать каталог plugins/ и обновить статус",
+      "title_reload_skills": "Оновити список навичок"
     },
     "rag": {
-      "title_1277a504": "Виберите рабочую область"
+      "title_1277a504": "Виберите рабочую область",
+      "build_btn": "Побудувати або перебудувати RAG-індекс поточної робочої області",
+      "build_all_btn": "Побудувати RAG-індекси у всіх робочих областях"
     },
     "thm": {
       "title_310f22f4": "Скинути кастомні зміни до вибраної теми",
@@ -2167,7 +3167,8 @@
       "title_eaaabd93": "Сбросить оформление дочерней теми к исходним значениям родителя",
       "title_9fd5c43b": "Удалить дочернюю тему",
       "title_8c7bffa4": "Вибрать цвет",
-      "title_d3786fa7": "Полноекранний режим предварительного просмотра"
+      "title_d3786fa7": "Полноекранний режим предварительного просмотра",
+      "buildCustomTitle": "Зібрати власну тему на основі поточної з вашими кольорами"
     },
     "auto": {
       "": "Полноэкранный режим предварительного просмотра",
@@ -2178,6 +3179,13 @@
       "json": "Импортировать тему из JSON-файла",
       "css": "Скопировать готовый CSS-код переменных в буфер обмена",
       "localstorage": "Сохранить настройки темы в LocalStorage"
+    },
+    "obsidian": {
+      "quote": "Цитата (> цитата)",
+      "callout": "Вставити блок Callout (> [!NOTE])"
+    },
+    "outlook": {
+      "title_reload": "Оновити повідомлення Outlook"
     }
   },
   "placeholders": {
@@ -2200,10 +3208,12 @@
       "workspaceSearch": "Пошук робочого простору...",
       "createItemName": "наприклад: notes.md або script.py",
       "initialContent": "# Заголовок документа...",
-      "commitMsgOptional": "Повідомлення коміту Git (опціонально)..."
+      "commitMsgOptional": "Повідомлення коміту Git (опціонально)...",
+      "renameNewName": "наприклад: new_notes.md",
+      "copyTargetPath": "наприклад: notes_copy.md або folder/notes_copy.md"
     },
     "commits": {
-      "ph_ef75ffc3": "Пошук по комітах..."
+      "ph_ef75ffc3": "Пошук за описом, документом або співробітником..."
     },
     "cws": {
       "ph_e1bf53f6": "наприклад: project_documentation або my_codebase",
@@ -2213,7 +3223,7 @@
       "ph_025dbb3b": "C:\\Work\\notes.md або D:\\Configs\\settings.json"
     },
     "diff": {
-      "ph_b1260988": "Хеш коммита (например HEAD)"
+      "ph_b1260988": "Оберіть збереження зі списку"
     },
     "gmail": {
       "ph_8f56b6b7": "Пошук у пошті (наприклад, from:google, subject:важливо, is:unread)...",
@@ -2233,11 +3243,15 @@
       "ph_a3aa39f1": "http://localhost:54837",
       "ph_e23fae53": "http://localhost:11434",
       "ph_3216606b": "models/onnx",
-      "ph_6f528903": "phi-3.5-mini-instruct-onnx"
+      "ph_6f528903": "phi-3.5-mini-instruct-onnx",
+      "local_bert_ph_a": "Перша фраза (наприклад: Як виправити помилку мережі?)",
+      "local_bert_ph_b": "Друга фраза (наприклад: Діагностика проблем з інтернетом)",
+      "emb_test_ph": "Введіть фразу для отримання вектора ембедінга..."
     },
     "plg": {
       "ph_1dc959f6": "Поиск по установленним плагинам...",
-      "ph_b0265d96": "Поиск в маркетплейсе..."
+      "ph_b0265d96": "Поиск в маркетплейсе...",
+      "ph_search_skills": "Пошук по навичках..."
     },
     "rag": {
       "ph_378641b1": "Задайте естественний вопрос по документам рабочей области (например: Кто вимил раму? Какие факти зафиксировани?)"
@@ -2249,6 +3263,60 @@
     },
     "tml": {
       "ph_f50c2e66": "apps/ai_assistant/main.py"
+    },
+    "calendar": {
+      "txt_0b348354": "Поиск по названию или описанию...",
+      "txt_b2f089dd": "Например: Обсуждение архитектуры",
+      "txt_bd384c90": "Google Meet / Офис",
+      "txt_9f44ec10": "Повестка дня, заметки..."
+    },
+    "contacts": {
+      "txt_44de5fd4": "Поиск по имени, номеру телефона или email...",
+      "txt_acd41b5f": "Иван",
+      "txt_cd1a2693": "Иванов",
+      "txt_5316e54c": "Компания / Проект",
+      "txt_e6d7dd4d": "Инженер",
+      "txt_565a58ba": "Дополнительная информация..."
+    },
+    "doc_categorizer": {
+      "txt_123a033d": "Поиск по имени или фрагменту...",
+      "txt_9d180113": "Задайте естественный вопрос или фразу (например: акт за обслуживание сервера, договор аренды, страховка авто)..."
+    },
+    "drive": {
+      "txt_a9ba005e": "Поиск по имени файла...",
+      "txt_fad67fc1": "Оставьте пустым для корня Диска"
+    },
+    "tasks": {
+      "txt_4da7c397": "Вставьте сюда текст разговора, поручение или расшифровку аудио..."
+    },
+    "table": {
+      "txt_cb030850": "Поиск в таблице..."
+    },
+    "instruments": {
+      "txt_0885dc9d": "Вставьте мысли или код LLM...",
+      "txt_1f6e30bc": "Понятное название инструмента",
+      "txt_ef98ae4f": "Краткое описание работы инструмента для CoT планировщика",
+      "txt_465f1bd9": "# Код инструмента с подстановкой параметров {param_name}"
+    },
+    "issues": {
+      "txt_27a15147": "Поиск по номеру, названию...",
+      "txt_16feb67d": "Краткое и емкое название задачи",
+      "txt_1d61b2b7": "@me или логин",
+      "txt_c42a6d6f": "Подробное описание проблемы, требования или шаги воспроизведения...",
+      "txt_4e702b8f": "Текст комментария..."
+    },
+    "obsidian": {
+      "txt_afdf7bb5": "Начните писать Markdown заметку... Используйте [[вики-ссылки]] и #теги",
+      "txt_4d47938d": "Моя новая заметка",
+      "txt_8538dcd7": "Например: Notes или Projects/AI"
+    },
+    "commands": {
+      "search": "Пошук за назвою, кодом, тегами...",
+      "title": "Наприклад: Git: Очищення невідстежуваних файлів",
+      "category": "Наприклад: Git, Мережа, Docker, Система",
+      "tags": "#git #cleanup #force",
+      "description": "Короткий опис дії команди",
+      "command": "git clean -fd"
     }
   },
   "fileEditor": {
@@ -2318,6 +3386,7 @@
     "noFileSelected": "Файл не обрано",
     "emptyTitle": "Немає відкритих файлів",
     "emptyHint": "Оберіть файл у провіднику зліва або створіть новий.",
+    "closeTabTitle": "Закрити вкладку",
     "closeAllTitle": "Закрити всі вкладки",
     "mediaVideoTitle": "Вбудований відеоплеєр",
     "mediaAudioTitle": "Аудіозапис",
@@ -2326,7 +3395,9 @@
     "saveAsBtn": "Зберегти як...",
     "saveAsTitle": "Зберегти файл під іншим ім'ям (Ctrl+Shift+S)",
     "saveAllBtn": "Зберегти все",
-    "saveAllTitle": "Зберегти всі відкриті файли (Ctrl+Alt+S / Ctrl+K S)"
+    "saveAllTitle": "Зберегти всі відкриті файли (Ctrl+Alt+S / Ctrl+K S)",
+    "directionLtrTitle": "Напрямок тексту зліва направо (LTR)",
+    "directionRtlTitle": "Напрямок тексту справа наліво (RTL)"
   },
   "models": {
     "subtabs": {
@@ -2337,13 +3408,21 @@
       "ollamaTitle": "Раздел: 🦙 Ollama (Local)",
       "onnxTitle": "Раздел: 🧠 Microsoft ONNX / Olive",
       "gacc-mode-fileTitle": "Раздел: 📁 Загрузить файл",
-      "gacc-mode-jsonTitle": "Раздел: 📝 Вставить JSON"
+      "gacc-mode-jsonTitle": "Раздел: 📝 Вставить JSON",
+      "localBertTitle": "Розділ: ⚡ Браузерний BERT (WebGPU / WASM)"
     }
   },
   "plugins": {
     "subtabs": {
       "installedTitle": "Раздел: Установленные плагины",
-      "marketplaceTitle": "Маркетплейс стандартных плагинов"
+      "marketplaceTitle": "Маркетплейс стандартных плагинов",
+      "skillsTitle": "Розділ: Автономні навички (Skills)"
+    },
+    "blocks": {
+      "allTitle": "Фільтр: Усі області видимості плагінів",
+      "systemTitle": "Фільтр: Системні плагіни ядра",
+      "developerTitle": "Фільтр: Плагіни для розробників",
+      "userTitle": "Фільтр: Користувацькі плагіни"
     }
   },
   "doc_categorizer": {
@@ -2360,7 +3439,23 @@
   },
   "contacts": {
     "refreshTitle": "Оновити список контактів",
-    "clearSearchTitle": "Скинути пошук"
+    "clearSearchTitle": "Скинути пошук",
+    "btn_import_fakes": "Імпорт демо-контактів",
+    "btn_export": "Експорт JSON",
+    "btn_clear_all": "Очистити контакти",
+    "btn_import_fakes_title": "Імпортувати 5 тестових ізраїльських контактів у Google People API",
+    "btn_export_title": "Експортувати поточні контакти у файл JSON",
+    "btn_clear_all_title": "Видалити всі контакти з адресної книги Google",
+    "confirm_clear_all": "Ви впевнені, що хочете видалити ВСІ контакти з адресної книги Google?",
+    "confirm_import_fakes": "Імпортувати 5 демо-контактів у Google People API?",
+    "importing": "Імпорт контактів...",
+    "imported_success": "Успішно імпортовано {count} контактів!",
+    "clearing": "Видалення всіх контактів...",
+    "cleared_success": "Усі контакти видалено!",
+    "export_empty": "Немає контактів для експорту",
+    "modal_edit_title": "Редагувати контакт",
+    "btn_edit_title": "Редагувати контакт",
+    "btn_save_changes": "Зберегти зміни"
   },
   "drive": {
     "refreshTitle": "Оновити список файлів",
@@ -2425,7 +3520,8 @@
     "submitCreateBtn": "Створити",
     "summaryModalTitle": "ШІ-зведення файлу",
     "closeBtn": "Закрити",
-    "targetDirLabel": "Цільовий каталог"
+    "targetDirLabel": "Цільовий каталог",
+    "workspaceDefaultName": "Робоча область"
   },
   "obsidian": {
     "title": "База знань Obsidian",
@@ -2454,7 +3550,8 @@
       "preview": "Перегляд",
       "previewTitle": "Попередній перегляд",
       "graph": "Граф",
-      "graphTitle": "Граф знань"
+      "graphTitle": "Граф знань",
+      "viewModesAria": "Режими відображення"
     },
     "actions": {
       "newNote": "Нова нотатка",
@@ -2517,7 +3614,17 @@
     "toolShortcutsHelpTitle": "Довідка по гарячих клавішах",
     "filterByTagTitle": "Фільтрувати за тегом",
     "createNewNoteTitle": "Створити нову нотатку",
-    "toggleSidebarTitle": "Приховати / показати бічну панель [Ctrl+B]"
+    "toggleSidebarTitle": "Приховати / показати бічну панель [Ctrl+B]",
+    "vaultDefaultName": "Сховище",
+    "clearSearchTitle": "Очистити рядок пошуку",
+    "allTagsBtn": "Усі",
+    "resetTagFilterTitle": "Скинути фільтр за тегами",
+    "deleteNoteTitle": "Видалити поточну нотатку",
+    "toggleInspectorTitle": "Показати або приховати інспектор зв'язків",
+    "linksInspectorBtn": "Зв'язки",
+    "graphZoomInTitle": "Наблизити граф зв'язків",
+    "graphZoomOutTitle": "Віддалити граф зв'язків",
+    "graphZoomResetTitle": "Скинути масштаб графа"
   },
   "doc_categorizer.subtabs.subtab-catalogTitle": "Раздел: Каталог документов",
   "doc_categorizer.subtabs.subtab-uncertainTitle": "Раздел: Очередь вопросов",
@@ -2544,10 +3651,10 @@
   "workspace.subtabs.ws-files-obsidian-btnTitle": "Раздел: Obsidian Vault",
   "workspace.subtabs.ws-files-sources-btnTitle": "Раздел: Внешние источники",
   "languages": {
-    "he": "עברית (Hebrew)",
-    "ru": "Російська (Русский)",
-    "en": "English",
-    "uk": "Українська"
+    "he": "עברית (he-IL)",
+    "ru": "Русский (ru-RU)",
+    "en": "English (en-US)",
+    "uk": "Українська (uk-UA)"
   },
   "ide": {
     "emptyFolder": "Папка порожня",
@@ -2614,8 +3721,39 @@
       "revealTitle": "Показати файл або папку у провіднику системи",
       "closeTab": "Закрити",
       "closeOtherTabs": "Закрити інші",
-      "closeAllTabs": "Закрити все"
+      "closeAllTabs": "Закрити все",
+      "copyFile": "Копіювати файл...",
+      "copyFileTitle": "Створити копію файлу у робочому просторі",
+      "copyFilename": "Копіювати ім'я файлу",
+      "copyFilenameTitle": "Копіювати ім'я файлу або папки у буфер обміну",
+      "filesOnlyTitle": "Дія доступна лише для файлів",
+      "summaryDisabledTitle": "Зведення доступне лише для файлів",
+      "wasmEditorDisabledTitle": "Редактор доступний лише для файлів",
+      "quickEditorDisabledTitle": "Редагування доступне лише для файлів",
+      "copyFilenameSuccess": "Ім'я скопійовано у буфер обміну:",
+      "copyFilenameError": "Не вдалося скопіювати ім'я файлу:",
+      "revealSuccess": "Відкрито у провіднику:",
+      "revealError": "Не вдалося відкрити у провіднику:",
+      "rootFolderLabel": "Корінь робочої області",
+      "folderWord": "Папка",
+      "addFromDisk": "Додати з диска/ів",
+      "addFromDiskTitle": "Додати шлях до файлу або каталогу з диска для завантаження в робочу область"
     },
+    "renameItemModalTitle": "Перейменування об'єкта",
+    "currentPathLabel": "Поточний шлях:",
+    "newNameLabel": "Нове ім'я:",
+    "commitMessageLabel": "Повідомлення коміту Git (необов'язково):",
+    "btnRenameSubmit": "Перейменувати",
+    "copyItemModalTitle": "Копіювання файлу",
+    "sourceFileLabel": "Вихідний файл:",
+    "copyTargetPathLabel": "Ім'я або шлях копії:",
+    "btnCopySubmit": "Створити копію",
+    "specifyNewNameAlert": "Вкажіть нове ім'я, відмінне від поточного.",
+    "specifyCopyTargetAlert": "Вкажіть ім'я або шлях для копії файлу.",
+    "renameSuccess": "Перейменовано на",
+    "renameError": "Помилка перейменування:",
+    "copySuccess": "Створено копію файлу:",
+    "copyError": "Помилка копіювання файлу:",
     "linesWord": "Рядків",
     "charsWord": "Символів",
     "rootFolder": "/ (корінь)",
@@ -2626,7 +3764,32 @@
     "editorTabSplit": "Вигляд/Редактор",
     "editorTabSplitTitle": "Вигляд/Редактор (роздільний вигляд)",
     "editorTabView": "Вигляд",
-    "editorTabViewTitle": "Вигляд"
+    "editorTabViewTitle": "Вигляд",
+    "explorer": {
+      "title": "Провідник",
+      "newFileTitle": "Новий файл",
+      "refreshTitle": "Оновити дерево файлів",
+      "openFolderTitle": "Відкрити папку в провіднику",
+      "collapseTitle": "Згорнути навігатор (Ctrl+B)",
+      "defaultBranch": "master",
+      "emptyFilesCount": "0 файлів",
+      "gitSynced": "Git Synced"
+    },
+    "extensions": {
+      "title": "Розширення: Marketplace",
+      "refreshTitle": "Оновити каталог плагінів",
+      "collapseTitle": "Згорнути панель (Ctrl+B)",
+      "searchPlaceholder": "Пошук у Marketplace...",
+      "loading": "Завантаження розширень..."
+    },
+    "addFromDiskModalTitle": "Додати з диска/ів",
+    "addFromDiskDescription": "Вкажіть шлях до конкретного файлу або каталогу на диску (або виберіть через «Огляд...») для завантаження в робочу область:",
+    "addFromDiskStagedLabel": "Вибрані шляхи для завантаження:",
+    "addFromDiskCopyLabel": "Копіювати файли в робочу область (інакше — відстежувати на місці)",
+    "btnAddFromDiskSubmit": "Додати та завантажити",
+    "specifyDiskPathAlert": "Вкажіть або виберіть хоча б один шлях до файлу або каталогу.",
+    "addFromDiskSuccess": "Додано об'єктів:",
+    "addFromDiskError": "Помилка додавання з диска:"
   },
   "tasks": {
     "loadDemoTitle": "Завантажити тестовий сценарій: Купівля корови дядька Моше",
@@ -2655,7 +3818,9 @@
       "storageLabel": "Сховище та Синхронізація",
       "storageTitle": "Сховище та Синхронізація",
       "runtimeLabel": "Рантайм та SafeOps",
-      "runtimeTitle": "Параметри рантайму та SafeOps"
+      "runtimeTitle": "Параметри рантайму та SafeOps",
+      "statusLabel": "Готовність підсистем",
+      "statusTitle": "Діагностична готовність підсистем (Git, WikiLLM, темпоральний граф та RAG)"
     },
     "blocks": {
       "listLabel": "Список інструментів",
@@ -2711,7 +3876,12 @@
     "runnerParamsLabel": "Параметри виконання:",
     "runAsAdmin": "Від імені адміністратора",
     "btnExecute": "Виконати інструмент",
-    "runnerOutput": "Результат виконання:"
+    "runnerOutput": "Результат виконання:",
+    "statusActive": "Активний",
+    "statusIndexed": "Індексовано",
+    "statusConfigured": "Налаштовано",
+    "prefixPlaceholder": "Інструмент міркування",
+    "paramsHint": "JSON Schema (object з properties)"
   },
   "tasks.subtabs.casesTitle": "tasks.subtabs.casesTitle",
   "tasks.subtabs.intakeTitle": "tasks.subtabs.intakeTitle",
@@ -2738,5 +3908,268 @@
   "tooltips.subtabs.panel-editor-lang-ruTitle": "Раздел: Русский (RU)",
   "tooltips.subtabs.panel-editor-lang-enTitle": "Раздел: English (EN)",
   "tooltips.subtabs.panel-editor-lang-heTitle": "Раздел: עברית (HE)",
-  "tooltips.subtabs.panel-editor-lang-ukTitle": "Раздел: Українська (UK)"
+  "tooltips.subtabs.panel-editor-lang-ukTitle": "Раздел: Українська (UK)",
+  "issues": {
+    "subtabs": {
+      "listTitle": "Розділ: Список задач та фільтри GitHub Issues",
+      "newTitle": "Розділ: Створення нової задачі GitHub Issue",
+      "milestonesTitle": "Розділ: Віхи та релізи (Milestones)",
+      "labelsTitle": "Розділ: Мітки та налаштування репозиторію"
+    },
+    "types": {
+      "documentation": "📚 Документація",
+      "refactoring": "♻️ Рефакторинг",
+      "research": "❓ Дослідження"
+    }
+  },
+  "ui.plg.txt_skills_tab": "⚡ Навички (Skills)",
+  "ui.plg.txt_skills_title": "Автономні навички асистента",
+  "ui.plg.txt_skills_subtitle": "Каталог навичок та редактор параметрів підключення (secrets.json)",
+  "ui.plg.txt_save_skill": "Зберегти параметри",
+  "ui.plg.txt_test_skill": "Перевірити з'єднання",
+  "titles.plg.title_reload_skills": "Оновити список навичок",
+  "placeholders.plg.ph_search_skills": "Пошук по навичках...",
+  "plugins.subtabs.skillsTitle": "Розділ: Автономні навички (Skills)",
+  "ui.plg.txt_loading_skills": "Завантаження каталогу навичок...",
+  "ui.plg.txt_modal_skill_title": "Налаштування навички:",
+  "titles.ide.outlook": "Microsoft Outlook: пошта та повідомлення",
+  "titles.outlook.title_reload": "Оновити повідомлення Outlook",
+  "ui.outlook.txt_header_title": "Microsoft Outlook",
+  "ui.outlook.txt_header_subtitle": "Інтеграція з поштовою інфраструктурою Microsoft 365 та Desktop Outlook",
+  "ui.outlook.txt_reload": "Оновити",
+  "ui.outlook.txt_inbox": "Вхідні",
+  "ui.outlook.txt_compose": "Написати листа",
+  "ui.outlook.txt_col_from": "Від кого",
+  "ui.outlook.txt_col_subject": "Тема повідомлення",
+  "ui.outlook.txt_col_date": "Дата",
+  "ui.outlook.txt_loading": "Завантаження повідомлень Outlook...",
+  "ui.outlook.txt_label_to": "Одержувач (Email)",
+  "ui.outlook.txt_label_subject": "Тема повідомлення",
+  "ui.outlook.txt_label_body": "Текст листа",
+  "ui.outlook.txt_btn_send": "Надіслати повідомлення",
+  "outlook.subtabs.inboxTitle": "Розділ: Вхідні повідомлення Outlook",
+  "outlook.subtabs.composeTitle": "Розділ: Написати листа",
+  "fileEditor.directionLtrTitle": "Зліва направо (LTR)",
+  "fileEditor.directionRtlTitle": "Справа наліво (RTL)",
+  "fileEditor.directionToggleTitle": "Перемкнути напрямок тексту (LTR/RTL)",
+  "commands": {
+    "headerTitle": "База знань команд",
+    "headerSubtitle": "Сніпети, сценарії та шпаргалки системного адміністрування",
+    "btnRefresh": "Оновити",
+    "btnRefreshTitle": "Оновити список команд і категорії",
+    "btnExportMd": "Markdown",
+    "btnExportMdTitle": "Відкрити Markdown-шпаргалку команд",
+    "btnCreate": "Створити команду",
+    "btnCreateTitle": "Додати нову команду до бази знань",
+    "subtabs": {
+      "cheatsheetLabel": "Шпаргалка команд",
+      "cheatsheetTitle": "Каталог команд та сценаріїв",
+      "markdownLabel": "Markdown Шпаргалка",
+      "markdownTitle": "Перегляд та експорт всієї шпаргалки у форматі Markdown"
+    },
+    "blocks": {
+      "listTitle": "Список команд"
+    },
+    "filterAllCategories": "Усі категорії",
+    "filterAllShells": "Усі оболонки",
+    "filterFavoriteOnly": "Тільки обрані",
+    "emptyState": "Команд не знайдено. Спробуйте змінити фільтри або додайте нову команду.",
+    "markdownSubtitle": "Згенерована Markdown-шпаргалка з усіма командами за категоріями",
+    "btnCopyAllMarkdown": "Скопіювати всю шпаргалку",
+    "btnCopy": "Скопіювати",
+    "editorTitle": "Редактор команди",
+    "fieldName": "Назва команди",
+    "fieldCategory": "Категорія",
+    "fieldShell": "Оболонка",
+    "fieldTags": "Теги (через кому або пробіл)",
+    "fieldRisk": "Рівень ризику",
+    "fieldFavorite": "В обране",
+    "fieldDescription": "Опис та сценарій застосування",
+    "fieldCommand": "Текст команди або сценарію",
+    "commandHint": "Для змінних використовуйте плейсхолдери, наприклад: <PORT>, <PATH>, <PID>",
+    "riskSafe": "Безпечно (safe)",
+    "riskWarn": "Увага (warn)",
+    "riskDanger": "Деструктивно (danger)",
+    "btnDelete": "Видалити команду",
+    "btnDeleteLabel": "Видалити",
+    "btnCancel": "Скасувати",
+    "btnSave": "Зберегти",
+    "btnSaveLabel": "Зберегти",
+    "runnerTitle": "Інтерактивний запуск команди",
+    "runnerCommandLabel": "Команда для виконання:",
+    "runnerParamsTitle": "Параметри та плейсхолдери:",
+    "runAsAdmin": "Запустити від імені адміністратора",
+    "btnRunNow": "Виконати",
+    "runnerOutputLabel": "Вивід терміналу:",
+    "btnClose": "Закрити"
+  },
+  "editor_files_toolbar_aria": "Панель інструментів форматування",
+  "editor_files_bold_tooltip": "Напівжирний (Ctrl+B)",
+  "editor_files_bold_aria": "Напівжирний",
+  "editor_files_italic_tooltip": "Курсив (Ctrl+I)",
+  "editor_files_italic_aria": "Курсив",
+  "editor_files_heading_tooltip": "Заголовок",
+  "editor_files_heading_aria": "Заголовок",
+  "editor_files_code_tooltip": "Код",
+  "editor_files_code_aria": "Код",
+  "editor_files_ul_tooltip": "Маркований список",
+  "editor_files_ul_aria": "Маркований список",
+  "editor_files_ol_tooltip": "Нумерований список",
+  "editor_files_ol_aria": "Нумерований список",
+  "editor_files_quote_tooltip": "Цитата",
+  "editor_files_quote_aria": "Цитата",
+  "editor_files_table_tooltip": "Вставити таблицю",
+  "editor_files_table_aria": "Таблиця",
+  "editor_files_mode_wysiwyg": "Візуальний",
+  "editor_files_mode_wysiwyg_tooltip": "Режим WYSIWYG",
+  "editor_files_mode_split": "Розділений",
+  "editor_files_mode_split_tooltip": "Розділений режим",
+  "editor_files_mode_raw": "Вихідний код",
+  "editor_files_mode_raw_tooltip": "Режим вихідного тексту",
+  "editor_files_save": "Зберегти",
+  "editor_files_save_tooltip": "Зберегти зміни",
+  "editor_files_save_aria": "Зберегти",
+  "editor_files_toc_title": "Зміст",
+  "editor_files_toc_aria": "Зміст документа",
+  "editor_files_placeholder": "Введіть текст або Markdown...",
+  "editor_files_input_aria": "Вихідний текст",
+  "editor_files_visual_aria": "Візуальний редактор",
+  "editor_files_stat_lines": "Рядків",
+  "editor_files_stat_words": "Слів",
+  "editor_files_stat_chars": "Символів",
+  "editor_files_stat_time": "Читання",
+  "editor_files_wasm_active": "Rust WASM Core",
+  "editor_files_wasm_tooltip": "Ядро WebAssembly активне",
+  "verificationModal": {
+    "title": "2-Step Анотація факту (Candidate Proposal)",
+    "sourceLabel": "Джерело (Source ID - Commit / File):",
+    "sourcePlaceholder": "HEAD або hash коміту",
+    "targetLabel": "Цільова сутність (Target ID - Fact / Error):",
+    "targetPlaceholder": "hardware_sensors / telemetry_db",
+    "relationTypeLabel": "Тип відношення:",
+    "relModifies": "modifies (модифікує логіку)",
+    "relFixes": "fixes (виправляє збій)",
+    "relDocuments": "documents (документує архітектуру)",
+    "relCausedBy": "caused_by (викликано зміною)",
+    "factDescLabel": "Архітектурний факт / Опис:",
+    "factDescPlaceholder": "Короткий опис підтвердженого факту без конфіденційних даних...",
+    "step1Hint": "Крок 1: Контур перевірить відсутність ін'єкцій та секретів перед фіксацією в графі знань.",
+    "btnVerifyAndSave": "Пройти верифікацію та зберегти"
+  },
+  "aiModal": {
+    "recordDetails": "Деталі запису",
+    "explanationTitle": "AI Contextual Explanation",
+    "webGrounding": "Web Grounding",
+    "webGroundingTitle": "Відомості збагачуються пошуком в інтернеті",
+    "promptBtn": "Промпт",
+    "promptBtnTitle": "Налаштувати розширений шаблон промпту",
+    "refreshBtn": "Оновити",
+    "refreshBtnTitle": "Оновити AI-аналіз",
+    "showRawData": "Показати сирий код / дані",
+    "devTips": "Поради розробнику",
+    "showSystemInstruction": "Показати системну інструкцію",
+    "devTipsAndDocs": "Поради розробнику та документація по компоненту",
+    "saveToAiInstruments": "Зберегти в ai_instruments.db",
+    "saveToAiInstrumentsTitle": "Зберегти ці скрипти та утиліти в ізольовану базу інструментів агента ai_instruments.db",
+    "contextData": "Контекст / Дані",
+    "systemInstructionAndConfig": "Системна інструкція та конфігурація ШІ",
+    "panelPrefix": "Панель: -",
+    "panelIdTitle": "ID панелі, що викликає",
+    "typePrefix": "Тип: -",
+    "customBadge": "Кастомна",
+    "providerLabel": "Провайдер",
+    "providerGemini": "Google Gemini",
+    "providerOpenAi": "OpenAI / Compatible",
+    "providerOllama": "Ollama Local",
+    "providerFoundry": "Foundry Local",
+    "providerCopilot": "Windows Copilot+ AI",
+    "modelLabel": "Модель",
+    "modelDefaultPlaceholder": "За замовчуванням (з config.json)",
+    "systemInstructionLabel": "Системна інструкція (System Instruction):",
+    "saveInstructionBtn": "Зберегти",
+    "saveInstructionTitle": "Зберегти змінену інструкцію для цієї сутності",
+    "resetInstructionBtn": "Скидання",
+    "resetInstructionTitle": "Скинути до системної інструкції за замовчуванням",
+    "instructionPlaceholder": "Роль експерта, правила аналізу та формат відповіді для моделі...",
+    "instructionHint": "Інструкція передається під час виклику моделі та аналізу",
+    "closeBtn": "Закрити",
+    "promptEditorTitle": "Редактор шаблону промпту",
+    "tableTypeLabel": "Тип таблиці / сутності",
+    "typeUserAccount": "user_account (Облікові записи та сесії Windows)",
+    "typeSecurityEvent": "security_event (Події безпеки Windows)",
+    "typeProcess": "process (Процеси Windows)",
+    "typeService": "service (Служби Windows)",
+    "typeSoftware": "software (Встановлене ПЗ)",
+    "typeTask": "task (Завдання планувальника)",
+    "typeStartup": "startup (Автозавантаження)",
+    "typeNetwork": "network (Мережеві з'єднання)",
+    "typeRegistry": "registry (Реєстр Windows)",
+    "typeDisk": "disk (Диски та томи)",
+    "typeCpu": "cpu (Процесор CPU)",
+    "typeGpu": "gpu (Відеокарта GPU)",
+    "typeFileEvent": "file_event (Файлові події)",
+    "typeWebsite": "website (Моніторинг сайтів)",
+    "typeRagDoc": "rag_doc (RAG База знань)",
+    "typeGeneric": "generic (Загальний шаблон)",
+    "templateName": "Назва шаблону",
+    "systemInstructionHeader": "Системна інструкція (System Instruction)",
+    "aiRoleBadge": "Роль та поведінка ШІ",
+    "systemInstructionDesc": "Системна інструкція задає контекст ролі експерта, обмеження та формат відповіді ШІ для вибраного типу сутності.",
+    "promptTemplateLabel": "Шаблон тексту промпту (Prompt Template)",
+    "varTitle": "{title}",
+    "varSubtitle": "{subtitle}",
+    "varMetadata": "{metadata}",
+    "varRawData": "{raw_data}",
+    "promptVarsHint": "Використовуйте змінні {title}, {subtitle}, {metadata}, {raw_data} для автоматичної підстановки контексту рядка таблиці.",
+    "promptPlaceholder": "Текст промпту з плейсхолдерами...",
+    "resetDefaultBtn": "Скинути за замовчуванням",
+    "savePromptBtn": "Зберегти промпт",
+    "processPassport": "🤖 Паспорт процесу"
+  },
+  "createWorkspaceTab": {
+    "headerTitle": "Створити новий простір",
+    "headerSubtitle": "Ініціалізація репозиторію Git, прив'язка директорій та файлів на диску для моніторингу змін без їх переміщення.",
+    "gitEngineReady": "Git Engine Ready",
+    "backToWorkspaces": "До робочої області",
+    "backToWorkspacesTitle": "Повернутися до списку робочих областей",
+    "step1Title": "Крок 1",
+    "step1Desc": "Параметри простору та робоча директорія (Git Init)",
+    "idNotCreated": "ID: не створено",
+    "nameLabel": "Ім'я простору",
+    "namePlaceholder": "наприклад: project_documentation або my_codebase",
+    "nameHint": "Унікальне людинозрозуміле ім'я для вибору в інтерфейсі.",
+    "workingDirLabel": "Робоча директорія (шлях до Git-репозиторію):",
+    "workingDirPlaceholder": "наприклад: C:\\Projects\\MyRepo або залиште порожнім",
+    "browseDirTitle": "Вибрати робочу директорію на комп'ютері",
+    "browseBtn": "Огляд...",
+    "workingDirHint": "Якщо шлях не вказано, автоматично створюється папка в <code>data/workspaces/</code> з <code>git init</code> та каталогом <code>assets/</code>.",
+    "descLabel": "Опис простору:",
+    "descPlaceholder": "Короткий опис призначення простору, архітектурних завдань або нотаток...",
+    "step2Title": "Крок 2",
+    "step2Desc": "Вибір директорій та файлів для стеження за змінами",
+    "emptyObjectsCount": "0 об'єктів",
+    "emptyHead": "HEAD: ---",
+    "inPlaceHeading": "Файли та директорії залишаються на своїх місцях:",
+    "inPlaceDesc": "Переміщати та дублювати їх не потрібно. Git-рушій та модуль розумного версіонування підключають вказані шляхи напряму і відстежують правки за вихідними адресами на диску.",
+    "monitoredObjectsTitle": "Об'єкти, що знаходяться під наглядом у цьому просторі:",
+    "refreshStatusBtn": "Оновити статус",
+    "emptyTrackedHint": "Директорії та файли поки не додані. Виберіть директорію або файл нижче.",
+    "dirToTrackLabel": "Директорія (папка) для відстеження:",
+    "dirToTrackPlaceholder": "C:\\Projects\\my_service\\docs",
+    "chooseFolderTitle": "Вибрати папку на комп'ютері",
+    "dirToTrackHint": "Всі вкладені файли (md, txt, pdf, docx, xlsx, py та ін.) будуть скануватися та ставитися на версійний облік.",
+    "addDirBtn": "Додати директорію у стеження",
+    "fileToTrackLabel": "Окремий файл для відстеження:",
+    "fileToTrackPlaceholder": "C:\\Work\\notes.md або D:\\Configs\\settings.json",
+    "chooseFileTitle": "Вибрати файл на комп'ютері",
+    "fileToTrackHint": "Файл залишається на своєму місці. Кожне збереження реєструється у темпоральній історії Git.",
+    "addFileBtn": "Додати файл у стеження",
+    "initialCommitNote": "При створенні буде сформовано репозиторій Git і початковий коміт.",
+    "submitBtn": "Створити простір та ініціалізувати Git",
+    "goToWorkspaceBtn": "Перейти до робочої області",
+    "subtabParamsLabel": "Параметри та Git",
+    "subtabParamsTitle": "Відкрити панель параметрів простору: введення імені, мови, робочої директорії та ініціалізації Git",
+    "subtabSourcesLabel": "Директорії та файли",
+    "subtabSourcesTitle": "Відкрити панель підключення зовнішніх директорій і файлів для стеження за змінами на місці"
+  }
 }

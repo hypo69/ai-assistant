@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 23:50:00
+# Updated: 2026-11-20 02:04:00
 # =============================================================================
 
 from __future__ import annotations
@@ -41,6 +41,7 @@ from apps.ai_assistant.core.content_extractor import (
     MEDIA_WITH_AUDIO_EXTENSIONS,
     PDF_EXTENSIONS,
 )
+from apps.ai_assistant.core.obsidian_vault import ObsidianVaultBuilder
 from apps.ai_assistant.core.workspace_registry import (
     format_host_qualified_path,
     get_current_host_name,
@@ -64,7 +65,7 @@ class WorkspaceItemsTracker:
     def _resolve_workspace_path(self, workspace_id: str) -> Tuple[Dict[str, Any], Path]:
         """Возвращает метаданные и абсолютный путь к репозиторию рабочей области."""
         ws, ws_path = self.wm._get_or_create_workspace(workspace_id)
-        self.wm._ensure_git_repo(ws_path)
+        self.wm._ensure_git_repo(ws_path, name=ws.get("name", ""), description=ws.get("description", ""), language=ws.get("language"))
         return ws, ws_path.resolve()
 
     async def _process_and_commit_file(
@@ -699,7 +700,7 @@ class WorkspaceItemsTracker:
                                 old_item = existing_local_paths[child_key]
                                 old_item["is_external"] = True
                                 old_rel = str(old_item.get("rel_path") or "")
-                                if old_rel and "/" not in old_rel:
+                                if old_rel and not old_rel.startswith(f"{src_name}/"):
                                     old_item["rel_path"] = child_rel
                                     old_item["parent_source"] = src_name
                                     existing_rel_paths[child_rel] = old_item
@@ -851,9 +852,10 @@ class WorkspaceItemsTracker:
                     "items": manifest_items,
                 }
                 manifest_path = meta_dir / "manifest.json"
-                tmp_manifest = manifest_path.with_suffix(".json.tmp")
-                tmp_manifest.write_text(json.dumps(manifest_obj, indent=2, ensure_ascii=False), encoding="utf-8")
-                os.replace(tmp_manifest, manifest_path)
+                ObsidianVaultBuilder._atomic_write_text(
+                    manifest_path,
+                    json.dumps(manifest_obj, indent=2, ensure_ascii=False),
+                )
             except Exception as man_exc:
                 logger.debug(f"[WorkspaceItemsTracker] Запись .workspace/manifest.json: {man_exc}")
 
@@ -925,7 +927,8 @@ class WorkspaceItemsTracker:
 
     def ensure_workspace_folder(self, workspace_id: str) -> Dict[str, Any]:
         """Создаёт папку workspaces/<id> с каталогом assets/ при её отсутствии и инициализирует Git-репозиторий."""
-        _, ws_path = self.wm._get_or_create_workspace(workspace_id)
+        ws = self.wm.create_or_select_workspace(workspace_id, name=workspace_id)
+        ws_path = Path(ws["path"])
         (ws_path / "assets").mkdir(parents=True, exist_ok=True)
         return self.check_workspace_folder(workspace_id)
 

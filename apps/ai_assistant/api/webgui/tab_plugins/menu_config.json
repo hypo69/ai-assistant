@@ -14,7 +14,7 @@
         "icon": "bi bi-check2-circle text-success",
         "label_i18n": "ui.plg.txt_cc2f1a66",
         "title_i18n": "plugins.subtabs.installedTitle",
-        "default_title": "Раздел: Установленные плагины",
+        "default_title": "{{plugins.subtabs.installedTitle}}",
         "order": 0
       },
       {
@@ -25,9 +25,72 @@
         "icon": "bi bi-shop text-primary",
         "label_i18n": "ui.plg.txt_c2db0209",
         "title_i18n": "plugins.subtabs.marketplaceTitle",
-        "default_title": "Маркетплейс стандартных плагинов",
+        "default_title": "{{plugins.subtabs.marketplaceTitle}}",
         "order": 1
+      },
+      {
+        "id": "skills",
+        "button_id": "nav-skills-tab",
+        "pane_id": "tab-pane-skills",
+        "panel_id": "panel-skills",
+        "icon": "bi bi-lightning-charge text-warning",
+        "label_i18n": "ui.plg.txt_skills_tab",
+        "title_i18n": "plugins.subtabs.skillsTitle",
+        "default_title": "{{plugins.subtabs.skillsTitle}}",
+        "order": 2
       }
     ]
+  },
+  "blocks": {
+    "default": {
+      "nav_id": "plugins-scope-filter-group",
+      "storage_key": "tab-plugins_blocks_order",
+      "items": [
+        {
+          "id": "all",
+          "button_id": "plg-button-fc505dae",
+          "pane_id": "",
+          "block_id": "block-all",
+          "icon": "bi-grid",
+          "label_i18n": "ui.plg.txt_fc505dae",
+          "title_i18n": "plugins.blocks.allTitle",
+          "default_title": "{{plugins.blocks.allTitle}}",
+          "order": 0
+        },
+        {
+          "id": "system",
+          "button_id": "plg-button-13155df4",
+          "pane_id": "",
+          "block_id": "block-system",
+          "icon": "bi bi-gear-fill me-1",
+          "label_i18n": "ui.plg.txt_13155df4",
+          "title_i18n": "plugins.blocks.systemTitle",
+          "default_title": "{{plugins.blocks.systemTitle}}",
+          "order": 1
+        },
+        {
+          "id": "developer",
+          "button_id": "plg-button-da097394",
+          "pane_id": "",
+          "block_id": "block-developer",
+          "icon": "bi bi-code-slash me-1",
+          "label_i18n": "ui.plg.txt_da097394",
+          "title_i18n": "plugins.blocks.developerTitle",
+          "default_title": "{{plugins.blocks.developerTitle}}",
+          "order": 2
+        },
+        {
+          "id": "user",
+          "button_id": "plg-button-0f2f3df5",
+          "pane_id": "",
+          "block_id": "block-user",
+          "icon": "bi bi-person-fill me-1",
+          "label_i18n": "ui.plg.txt_0f2f3df5",
+          "title_i18n": "plugins.blocks.userTitle",
+          "default_title": "{{plugins.blocks.userTitle}}",
+          "order": 3
+        }
+      ]
+    }
   }
 }

@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-10 17:35:00
+ * Updated: 2026-11-19 20:59:00
  * =============================================================================
  */
 
@@ -253,38 +253,164 @@
   user-select: none;
 }
 
-/* Пузырь сообщения пользователя: выравнивание справа, мягкий фон темы */
+/* Пузырь сообщения пользователя: мягкий голубой фон hsl(216, 100%, 91%) */
 .chat-msg-user {
-  background: var(--chat-user-bg);
-  color: var(--chat-user-text);
-  border-radius: 14px 14px 2px 14px;
-  padding: 0.55rem 0.95rem;
-  max-width: 80%;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  box-shadow: var(--shadow-xs);
-  word-break: break-word;
-  white-space: pre-wrap;
-  border: 1px solid transparent;
-}
-
-/* Пузырь сообщения бота / ассистента: выравнивание слева */
-.chat-msg-bot {
-  background: var(--chat-bot-bg);
-  color: var(--chat-bot-text);
-  border: 1px solid var(--border-color);
-  border-radius: 14px 14px 14px 2px;
-  padding: 0.75rem 1rem;
-  flex-grow: 1;
-  max-width: 95%;
-  font-size: 0.88rem;
+  align-self: flex-start;
+  background-color: var(--chat-user-bg, hsl(216, 100%, 91%)) !important;
+  color: var(--chat-user-text, #0f172a) !important;
+  border: 1px solid var(--chat-user-border, hsl(216, 75%, 80%)) !important;
+  border-radius: 14px 14px 14px 4px;
+  padding: 0.6rem 1rem;
+  max-width: min(78%, 680px);
+  font-size: 0.92rem;
   line-height: 1.5;
   box-shadow: var(--shadow-xs);
   word-break: break-word;
 }
 
+/* Пузырь сообщения бота / ассистента */
+.chat-msg-bot {
+  align-self: flex-start;
+  background-color: var(--chat-bot-bg, var(--surface-1)) !important;
+  color: var(--chat-bot-text, var(--text-color)) !important;
+  border: 1px solid var(--chat-bot-border, var(--border-color)) !important;
+  border-radius: 14px 14px 14px 4px;
+  padding: 0.75rem 1.1rem;
+  max-width: min(88%, 820px);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  box-shadow: var(--shadow-xs);
+  word-break: break-word;
+}
+
+/* На иврите (RTL) или при ивритском тексте и собеседник, и модель выравниваются строго по правому краю */
+[dir="rtl"] #ws-chat-messages,
+html[dir="rtl"] #ws-chat-messages,
+body[dir="rtl"] #ws-chat-messages,
+#ws-chat-messages[dir="rtl"] {
+  align-items: flex-start !important;
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+[dir="rtl"] .chat-msg-user,
+html[dir="rtl"] .chat-msg-user,
+body[dir="rtl"] .chat-msg-user,
+[dir="rtl"] .chat-msg-bot,
+html[dir="rtl"] .chat-msg-bot,
+body[dir="rtl"] .chat-msg-bot,
+.chat-msg-user[dir="rtl"],
+.chat-msg-bot[dir="rtl"] {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  text-align: right !important;
+  direction: rtl !important;
+  border-radius: 14px 14px 4px 14px;
+}
+
+#ws-chat-messages:not([dir="rtl"]) .chat-msg-user[dir="rtl"],
+#ws-chat-messages:not([dir="rtl"]) .chat-msg-bot[dir="rtl"] {
+  align-self: flex-end !important;
+}
+
+[dir="rtl"] #ws-chat-messages .chat-msg-user,
+[dir="rtl"] #ws-chat-messages .chat-msg-bot,
+#ws-chat-messages[dir="rtl"] .chat-msg-user,
+#ws-chat-messages[dir="rtl"] .chat-msg-bot {
+  align-self: flex-start !important;
+}
+
+[dir="rtl"] .chat-message-row.user-row,
+[dir="rtl"] .chat-message-row.bot-row,
+html[dir="rtl"] .chat-message-row.user-row,
+html[dir="rtl"] .chat-message-row.bot-row {
+  justify-content: flex-start !important;
+  text-align: right !important;
+}
+
+/* Чистая Markdown-верстка внутри пузырей чата */
+.chat-msg-user > p:last-child,
+.chat-msg-bot > p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-msg-user > p:first-child,
+.chat-msg-bot > p:first-child {
+  margin-top: 0;
+}
+
+.chat-msg-bot blockquote {
+  margin: 0.5rem 0 0.25rem 0;
+  padding: 0.45rem 0.85rem;
+  border-inline-start: 3px solid var(--nav-active, #2563eb);
+  background-color: var(--surface-2, rgba(0, 0, 0, 0.04));
+  border-radius: 6px;
+  font-size: 0.86rem;
+  color: var(--text-color);
+}
+
+.chat-msg-bot blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-msg-bot code {
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+  background-color: var(--surface-2);
+  color: var(--nav-active);
+  font-size: 0.85em;
+}
+
 .chat-msg-bot a {
   color: var(--nav-active);
+}
+
+/* Группа ввода сообщения в подвале чата: крупное поле ввода сверху, кнопки снизу */
+#ws-chat-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+#ws-chat-input-group > #ws-chat-input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 100%;
+  resize: vertical;
+  min-height: 104px;
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.chat-input-actions,
+#ws-chat-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.chat-input-actions > .btn,
+#ws-chat-actions-row > .btn,
+#ws-chat-input-group > .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* В RTL-языках (иврит) кнопки под полем ввода выравниваются строго вправо */
+[dir="rtl"] .chat-input-actions,
+html[dir="rtl"] .chat-input-actions,
+body[dir="rtl"] .chat-input-actions,
+[dir="rtl"] #ws-chat-actions-row,
+html[dir="rtl"] #ws-chat-actions-row,
+body[dir="rtl"] #ws-chat-actions-row {
+  direction: rtl !important;
+  justify-content: flex-start !important;
+  text-align: right !important;
 }
 
 /* Диагностический конвейер этапов (Stages Pipeline) */

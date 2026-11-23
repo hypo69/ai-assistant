@@ -14,7 +14,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 19:56:00
+# Updated: 2026-11-23 17:49:00
 # =============================================================================
 
 from __future__ import annotations
@@ -395,12 +395,12 @@ class DocumentCategorizerService:
                     VALUES (?, ?, 'path_contains', ?)
                 """, (rule_pattern, category, datetime.now().isoformat()))
 
-                # Автоматически перекатегоризуем похожие документы по новому правилу
+                # Автоматически перекатегоризуем похожие документы по новому правилу (INSTR безопасен для Windows-слэшей)
                 cur.execute("""
                     UPDATE documents
                     SET category = ?, confidence = 0.95, status = 'classified'
-                    WHERE file_path LIKE ? AND status = 'uncertain'
-                """, (category, f"%{rule_pattern}%"))
+                    WHERE INSTR(LOWER(file_path), LOWER(?)) > 0 AND status = 'uncertain'
+                """, (category, rule_pattern))
 
             conn.commit()
             return True
@@ -424,8 +424,8 @@ class DocumentCategorizerService:
             where_clauses.append("status = ?")
             params.append(status)
         if query:
-            where_clauses.append("(file_name LIKE ? OR content_preview LIKE ?)")
-            params.extend([f"%{query}%", f"%{query}%"])
+            where_clauses.append("(INSTR(LOWER(file_name), LOWER(?)) > 0 OR INSTR(LOWER(content_preview), LOWER(?)) > 0)")
+            params.extend([query, query])
 
         where_sql = " AND ".join(where_clauses)
 
@@ -472,13 +472,13 @@ class DocumentCategorizerService:
                 return [dict(r) for r in cur.fetchall()]
             except Exception as exc:
                 logger.debug(f"[DocCategorizer] Ошибка FTS поиска: {exc}")
-                # Fallback на LIKE поиск
+                # Fallback на INSTR-поиск (без экранирования Windows-слэшей и спецсимволов LIKE)
                 cur.execute("""
                     SELECT id, file_name, file_path, category, confidence, content_preview
                     FROM documents
-                    WHERE file_name LIKE ? OR content_preview LIKE ?
+                    WHERE INSTR(LOWER(file_name), LOWER(?)) > 0 OR INSTR(LOWER(content_preview), LOWER(?)) > 0
                     LIMIT ?
-                """, (f"%{clean_q}%", f"%{clean_q}%", limit))
+                """, (clean_q, clean_q, limit))
                 return [dict(r) for r in cur.fetchall()]
 
 

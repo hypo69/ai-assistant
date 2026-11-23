@@ -1,0 +1,180 @@
+# Updated: 2026-11-20 02:31:00
+# Общий Docker Compose стек проекта AI-Assistant:
+#   - app       : микросервис AI-Assistant (WebGUI + REST API на порту 8002 -> хост 8090)
+#   - webserver : Paperless-ngx DMS (порт 8000 -> хост 8010)
+#   - db        : PostgreSQL 18 (БД для Paperless-ngx)
+#   - broker    : Valkey 9 (Redis-совместимый брокер задач)
+#   - gotenberg : конвертация офисных документов и HTML в PDF
+#   - tika      : извлечение текста и метаданных из документов
+#
+# Каталог paperless-ngx/ (локальная разработка) не изменяется; для сборки из него
+# подключите docker-compose.build.yml.
+
+name: ai-assistant
+
+# Общие настройки логирования с ротацией для всех контейнеров стека
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ---------------------------------------------------------------------------
+  # Основной сервис AI-Assistant (WebGUI, REST API, RAG, WikiLLM, Плагины)
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: ${APP_BUILD_TARGET:-dev}
+    restart: unless-stopped
+    command: ["python", "-m", "apps.ai_assistant", "serve", "--host", "0.0.0.0", "--port", "8002", "--no-gui"]
+    depends_on:
+      webserver:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT:-8090}:8002"
+    volumes:
+      - ..:/app
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      PAPERLESS_BASE_URL: http://webserver:8000
+      TZ: ${TZ:-Europe/Kyiv}
+      AI_ASSISTANT_IN_DOCKER: "1"
+      TELEGRAM_BOT_AUTOSTART: ${TELEGRAM_BOT_AUTOSTART:-0}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8002/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 25s
+      retries: 3
+    networks:
+      - ai-assistant-net
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # Брокер задач (Valkey / Redis)
+  # ---------------------------------------------------------------------------
+  broker:
+    image: docker.io/valkey/valkey:9-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping | grep -q PONG"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai-assistant-net
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # База данных PostgreSQL 18 для Paperless-ngx
+  # ---------------------------------------------------------------------------
+  db:
+    image: docker.io/library/postgres:18
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-paperless}
+      POSTGRES_USER: ${POSTGRES_USER:-paperless}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-paperless}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-paperless} -d ${POSTGRES_DB:-paperless}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai-assistant-net
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # Paperless-ngx — система управления документами (DMS)
+  # ---------------------------------------------------------------------------
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
+      tika:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${PAPERLESS_PORT:-8010}:8000"
+    volumes:
+      - data:/usr/src/paperless/data
+      - media:/usr/src/paperless/media
+      - ./export:/usr/src/paperless/export
+      - ./consume:/usr/src/paperless/consume
+    env_file:
+      - path: .env.paperless
+        required: false
+    environment:
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_DBHOST: db
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBNAME: ${POSTGRES_DB:-paperless}
+      PAPERLESS_DBUSER: ${POSTGRES_USER:-paperless}
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:-paperless}
+      PAPERLESS_TIKA_ENABLED: 1
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+      PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+    networks:
+      - ai-assistant-net
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # Gotenberg — конвертация документов в PDF
+  # ---------------------------------------------------------------------------
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg:8.38
+    restart: unless-stopped
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=^file:///tmp/.*"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - ai-assistant-net
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # Apache Tika — парсинг и извлечение текста из документов
+  # ---------------------------------------------------------------------------
+  tika:
+    image: docker.io/apache/tika:3.3.1.0
+    restart: unless-stopped
+    networks:
+      - ai-assistant-net
+    logging: *default-logging
+
+networks:
+  ai-assistant-net:
+    name: ai-assistant-net
+    driver: bridge
+
+# Имена томов совпадают с томами прежнего стека paperless — накопленные данные сохраняются.
+volumes:
+  data:
+    name: paperless_data
+  media:
+    name: paperless_media
+  pgdata:
+    name: paperless_pgdata
+  redisdata:
+    name: paperless_redisdata

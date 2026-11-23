@@ -16,7 +16,7 @@
 # Package: src.utils
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-10 17:35:00
+# Updated: 2026-11-12 00:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -24,7 +24,10 @@ from __future__ import annotations
 
 import asyncio
 import threading
-import pythoncom
+try:
+    import pythoncom
+except ImportError:  # не Windows (Docker/Linux): COM недоступен
+    pythoncom = None
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Any, TypeVar, ParamSpec
 T = TypeVar('T')
@@ -41,7 +44,8 @@ class ComWorker:
     @staticmethod
     def _init_com() -> None:
         """Initialize COM for this thread."""
-        pythoncom.CoInitialize()
+        if pythoncom is not None:
+            pythoncom.CoInitialize()
 
     async def run(self, func: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
         """Execute a function in the dedicated COM-initialized thread."""

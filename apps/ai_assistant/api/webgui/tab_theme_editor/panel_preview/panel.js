@@ -7,15 +7,15 @@
  *   скругления, эффекты Glassmorphism и CRT Scanlines, полноэкранный режим.
  *
  * File: panel_preview/panel.js
- * Project: ai-assistant
+ * Project: ai-windows-admin
  * Package: apps/windows/api/webgui/tab_theme_editor/panel_preview
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-20 11:15:00
+ * Updated: 2026-11-19 18:00:00
  * =============================================================================
  */
 
-import { collectTokensFromUI } from '../panel_tokens/panel.js';
+import { collectTokensFromUI, isColorLight } from '../panel_tokens/panel.js';
 
 /**
  * Обновляет стили и токены в песочнице предпросмотра (Live Preview).
@@ -85,10 +85,25 @@ export function updateLivePreview() {
     sandbox.classList.remove('crt-scanline-effect');
   }
 
+  // Обновляем инфо-баннер (.alert-light) и поля ввода в песочнице предпросмотра
+  sandbox.querySelectorAll('.alert-light').forEach((el) => {
+    if (tokens['--alert-light-bg']) el.style.backgroundColor = tokens['--alert-light-bg'];
+    if (tokens['--alert-light-border']) el.style.borderColor = tokens['--alert-light-border'];
+    if (tokens['--alert-light-text']) el.style.color = tokens['--alert-light-text'];
+  });
+  sandbox.querySelectorAll('.form-control, .form-select').forEach((el) => {
+    if (tokens['--input-bg']) el.style.backgroundColor = tokens['--input-bg'];
+    if (tokens['--input-text']) el.style.color = tokens['--input-text'];
+    if (tokens['--input-border']) el.style.borderColor = tokens['--input-border'];
+  });
+
   // Динамическое применение к глобальному ThemeEngine для немедленного отклика во всем окне
   const presetSelect = document.getElementById('theme-preset-select');
   if (presetSelect?.value && window.themeEngine) {
     window.themeEngine.previewTheme(presetSelect.value);
+  }
+  if (tokens['--bg-color']) {
+    document.documentElement.setAttribute('data-bs-theme', isColorLight(tokens['--bg-color']) ? 'light' : 'dark');
   }
   if (window.themeEngine) {
     window.themeEngine.applyCustomOverrides(tokens, false);

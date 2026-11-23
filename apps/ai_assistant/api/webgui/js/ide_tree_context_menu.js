@@ -31,9 +31,7 @@
 
 
  *   - Добавить: создание файла или директории в выбранной папке с коммитом в Git
-
-
-
+ *   - Добавить с диска/ов: добавление пути к файлу или директории на диске для загрузки в рабочую область
  *   - Удалить: удаление файла/каталога с подтверждением и коммитом в Git
 
 
@@ -52,7 +50,7 @@
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 23:50:00
+ * Updated: 2026-11-19 20:50:00
 
 
 
@@ -64,11 +62,13 @@
 
 
 
-import { getActiveWorkspaceId } from './top_workspace_dropdown.js';
+import { getActiveWorkspaceId } from './top_workspace_dropdown.js?v=20261116_v1';
 
 
 
-import { refreshFileTree } from './ide_file_explorer.js?v=20261106_v2';
+import { invalidateExplorerFileTreeCache, refreshFileTree } from './ide_file_explorer.js?v=20261119_v1';
+
+import { mountTrackSourcesPicker } from '../components/track_sources_picker/track_sources_picker.js?v=20261107_v1';
 
 
 
@@ -178,6 +178,10 @@ function ensureTreeContextMenuDOM() {
           <span class="custom-context-menu-icon"><i class="bi bi-plus-circle text-success"></i></span>
           <span class="custom-context-menu-label" id="cm-tree-lbl-add" data-i18n="ide.contextMenu.createNew">${t('ide.contextMenu.createNew')}</span>
           <span class="text-muted font-size-80" id="cm-tree-badge-add" data-i18n="ide.contextMenu.fileFolder">${t('ide.contextMenu.fileFolder')}</span>
+        </div>
+        <div class="custom-context-menu-item" data-tree-action="add-from-disk" id="cm-tree-item-add-from-disk" title="${t('ide.contextMenu.addFromDiskTitle')}" data-i18n-title="ide.contextMenu.addFromDiskTitle">
+          <span class="custom-context-menu-icon"><i class="bi bi-hdd-stack text-info"></i></span>
+          <span class="custom-context-menu-label" id="cm-tree-lbl-add-from-disk" data-i18n="ide.contextMenu.addFromDisk">${t('ide.contextMenu.addFromDisk')}</span>
         </div>
         <div class="custom-context-menu-item" data-tree-action="edit" id="cm-tree-item-edit" title="${t('ide.contextMenu.quickEditorTitle')}" data-i18n-title="ide.contextMenu.quickEditorTitle">
           <span class="custom-context-menu-icon"><i class="bi bi-pencil text-primary"></i></span>
@@ -396,6 +400,10 @@ async function handleTreeAction(action) {
 
       break;
 
+    case 'add-from-disk':
+      openAddFromDiskModal(wsId);
+      break;
+
 
 
     case 'edit':
@@ -493,6 +501,166 @@ export async function copyFilenameToClipboard(target) {
   } catch (err) {
     showToast(`❌ ${t('ide.contextMenu.copyFilenameError')} ${err.message}`, 'danger');
   }
+}
+
+let addFromDiskPicker = null;
+let stagedDiskItems = [];
+
+/**
+ * Перерисовывает список выбранных путей в модальном окне добавления с диска.
+ */
+function renderStagedDiskItems() {
+  const wrapEl = document.getElementById('ide-add-from-disk-staged-wrap');
+  const listEl = document.getElementById('ide-add-from-disk-staged-list');
+  if (!wrapEl || !listEl) return;
+
+  if (stagedDiskItems.length === 0) {
+    wrapEl.classList.add('d-none');
+    listEl.innerHTML = '';
+    return;
+  }
+
+  wrapEl.classList.remove('d-none');
+  listEl.innerHTML = '';
+  stagedDiskItems.forEach((item, idx) => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex align-items-center justify-content-between gap-2 py-1 px-2';
+
+    const left = document.createElement('div');
+    left.className = 'd-flex align-items-center gap-2 text-truncate font-monospace';
+    const icon = document.createElement('i');
+    icon.className = item.type === 'directory'
+      ? 'bi bi-folder2-open text-warning flex-shrink-0'
+      : 'bi bi-file-earmark-code text-info flex-shrink-0';
+    const span = document.createElement('span');
+    span.className = 'text-truncate';
+    span.textContent = item.path;
+    left.appendChild(icon);
+    left.appendChild(span);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn btn-sm btn-link text-danger p-0 flex-shrink-0';
+    removeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+    removeBtn.onclick = () => {
+      stagedDiskItems.splice(idx, 1);
+      renderStagedDiskItems();
+    };
+
+    li.appendChild(left);
+    li.appendChild(removeBtn);
+    listEl.appendChild(li);
+  });
+}
+
+/**
+ * Открывает модальное окно добавления файла или директории с диска в рабочую область.
+ * @param {string} wsId
+ */
+export function openAddFromDiskModal(wsId) {
+  const modalEl = document.getElementById('modal-ide-add-from-disk');
+  if (!modalEl || !window.bootstrap) return;
+
+  const targetWs = wsId || getActiveWorkspaceId() || 'default';
+  modalEl.dataset.workspaceId = targetWs;
+
+  stagedDiskItems = [];
+  renderStagedDiskItems();
+
+  const mountEl = document.getElementById('ide-add-from-disk-picker-mount');
+  if (mountEl && !addFromDiskPicker) {
+    addFromDiskPicker = mountTrackSourcesPicker(mountEl, {
+      prefix: 'ide-disk-picker',
+      onItemAdded: async (path, type) => {
+        const clean = String(path || '').trim();
+        if (!clean) return;
+        const exists = stagedDiskItems.some((it) => it.path.toLowerCase() === clean.toLowerCase());
+        if (!exists) {
+          stagedDiskItems.push({ path: clean, type });
+          renderStagedDiskItems();
+        }
+      },
+    });
+  } else if (addFromDiskPicker) {
+    addFromDiskPicker.clearInputs();
+  }
+
+  const copyCheckbox = document.getElementById('ide-add-from-disk-copy-checkbox');
+  if (copyCheckbox) copyCheckbox.checked = false;
+
+  const commitMsgInput = document.getElementById('ide-add-from-disk-commit-msg');
+  if (commitMsgInput) commitMsgInput.value = '';
+
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
+}
+
+/**
+ * Инициализирует отправку формы добавления файлов или директорий с диска.
+ */
+function initAddFromDiskModalSubmit() {
+  const submitBtn = document.getElementById('ide-btn-submit-add-from-disk');
+  submitBtn?.addEventListener('click', async () => {
+    const modalEl = document.getElementById('modal-ide-add-from-disk');
+    const wsId = modalEl?.dataset.workspaceId || getActiveWorkspaceId() || 'default';
+
+    const entered = addFromDiskPicker ? addFromDiskPicker.getEnteredPaths() : [];
+    const allPathsMap = new Map();
+    [...stagedDiskItems, ...entered].forEach((it) => {
+      const clean = String(it?.path || '').trim();
+      if (clean && !allPathsMap.has(clean.toLowerCase())) {
+        allPathsMap.set(clean.toLowerCase(), clean);
+      }
+    });
+    const paths = Array.from(allPathsMap.values());
+
+    if (paths.length === 0) {
+      showToast(t('ide.specifyDiskPathAlert', 'Укажите или выберите хотя бы один путь к файлу или директории.'), 'warning');
+      return;
+    }
+
+    const copyToWorkspace = document.getElementById('ide-add-from-disk-copy-checkbox')?.checked || false;
+    const commitMsg = (document.getElementById('ide-add-from-disk-commit-msg')?.value || '').trim() || null;
+
+    const origHtml = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    try {
+      const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(wsId)}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: paths,
+          copy_to_workspace: copyToWorkspace,
+          commit_message: commitMsg,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || `HTTP ${res.status}`);
+      }
+
+      const addedCount = data.files_added ?? paths.length;
+      if (Array.isArray(data.errors) && data.errors.length > 0 && addedCount === 0) {
+        throw new Error(data.errors.join('; '));
+      }
+
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+      stagedDiskItems = [];
+      renderStagedDiskItems();
+      if (addFromDiskPicker) addFromDiskPicker.clearInputs();
+
+      showToast(`✅ ${t('ide.addFromDiskSuccess', 'Добавлено объектов:')} ${addedCount}`, 'success');
+      invalidateExplorerFileTreeCache(wsId);
+      await refreshFileTree(wsId);
+    } catch (err) {
+      showToast(`❌ ${t('ide.addFromDiskError', 'Ошибка добавления с диска:')} ${err.message}`, 'danger');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = origHtml;
+    }
+  });
 }
 
 /**
@@ -804,22 +972,37 @@ function openCreateModal(target, initialType = 'file') {
 
 
   if (nameInput) {
-
-
-
     nameInput.value = '';
-
-
-
+    nameInput.setAttribute('dir', 'auto');
+    if (!nameInput._rtlInputBound) {
+      nameInput._rtlInputBound = true;
+      nameInput.addEventListener('input', () => {
+        if (contentInput && !contentInput.value.trim()) {
+          const d = detectDocumentDirection('', nameInput.value);
+          contentInput.setAttribute('dir', d);
+          contentInput.style.direction = d;
+          contentInput.style.textAlign = d === 'rtl' ? 'right' : 'left';
+        }
+      });
+    }
     setTimeout(() => nameInput.focus(), 300);
-
-
-
   }
 
-
-
-  if (contentInput) contentInput.value = '';
+  if (contentInput) {
+    contentInput.value = '';
+    contentInput.setAttribute('dir', 'ltr');
+    contentInput.style.direction = 'ltr';
+    contentInput.style.textAlign = 'left';
+    if (!contentInput._rtlInputBound) {
+      contentInput._rtlInputBound = true;
+      contentInput.addEventListener('input', () => {
+        const d = detectDocumentDirection(contentInput.value, nameInput?.value || '');
+        contentInput.setAttribute('dir', d);
+        contentInput.style.direction = d;
+        contentInput.style.textAlign = d === 'rtl' ? 'right' : 'left';
+      });
+    }
+  }
 
 
 
@@ -1177,6 +1360,77 @@ export async function openFileSummary(target, wsId) {
 
 }
 
+const HEBREW_CHAR_RE = /[\u0590-\u05FF]/;
+const HEBREW_CHAR_GLOBAL_RE = /[\u0590-\u05FF]/g;
+const CYRILLIC_CHAR_GLOBAL_RE = /[\u0400-\u04FF]/g;
+const LATIN_CHAR_GLOBAL_RE = /[a-zA-Z]/g;
+const FRONTMATTER_BLOCK_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
+const LANG_DIRECTIVE_RE = /^\s*(?:<!--\s*)?(?:lang\s*=|language\s*:)\s*['"]?([a-zA-Z\-_]+)['"]?(?:\s*-->)?\s*$/im;
+const LANG_TAG_RE = /^\s*-\s*lang\/([a-zA-Z\-_]+)\s*$/im;
+
+/**
+ * Автоматически определяет направление текста документа ('rtl' для иврита, иначе 'ltr').
+ * @param {string} content
+ * @param {string} [fileName='']
+ * @param {string|null} [explicitDirection=null]
+ * @returns {'rtl'|'ltr'}
+ */
+export function detectDocumentDirection(content, fileName = '', explicitDirection = null) {
+  if (typeof window !== 'undefined' && typeof window.detectDocumentDirection === 'function' && window.detectDocumentDirection !== detectDocumentDirection) {
+    return window.detectDocumentDirection(content, fileName, explicitDirection);
+  }
+  if (explicitDirection === 'rtl') return 'rtl';
+
+  const text = typeof content === 'string' ? content.slice(0, 32768) : '';
+  if (text) {
+    const head = text.slice(0, 2048);
+    const mDir = head.match(LANG_DIRECTIVE_RE);
+    if (mDir) {
+      const dirLang = mDir[1].trim().toLowerCase().split(/[-_]/)[0];
+      if (['he', 'heb', 'iw'].includes(dirLang)) return 'rtl';
+      if (['ru', 'en', 'uk', 'ua'].includes(dirLang)) return 'ltr';
+    }
+
+    const mTag = head.match(LANG_TAG_RE);
+    if (mTag) {
+      const tagLang = mTag[1].trim().toLowerCase().split(/[-_]/)[0];
+      if (['he', 'heb', 'iw'].includes(tagLang)) return 'rtl';
+    }
+
+    let body = text;
+    const fmMatch = text.match(FRONTMATTER_BLOCK_RE);
+    if (fmMatch) {
+      body = text.slice(fmMatch[0].length);
+    }
+
+    const sample = body.trim() ? body : text;
+    const heCount = (sample.match(HEBREW_CHAR_GLOBAL_RE) || []).length;
+    if (heCount > 0) {
+      const cyrCount = (sample.match(CYRILLIC_CHAR_GLOBAL_RE) || []).length;
+      const latCount = (sample.match(LATIN_CHAR_GLOBAL_RE) || []).length;
+      const totalLetters = heCount + cyrCount + latCount;
+      if (heCount >= cyrCount && (heCount >= latCount || (totalLetters > 0 && heCount / totalLetters >= 0.2))) {
+        return 'rtl';
+      }
+      for (const line of sample.split(/\r?\n/)) {
+        const cleanLine = line.trim().replace(/^[#>\-*+0-9.\s[\]()]+/, '');
+        if (cleanLine) {
+          if (HEBREW_CHAR_RE.test(cleanLine)) return 'rtl';
+          break;
+        }
+      }
+    }
+  }
+
+  if (fileName && HEBREW_CHAR_RE.test(String(fileName))) {
+    if (!text || (!CYRILLIC_CHAR_GLOBAL_RE.test(text) && !LATIN_CHAR_GLOBAL_RE.test(text))) {
+      return 'rtl';
+    }
+  }
+
+  return 'ltr';
+}
+
 /**
  * Определяет вероятный тип (расширение) файла по содержимому и имени, если у файла нет расширения.
  * @param {string} content
@@ -1345,7 +1599,7 @@ export function preprocessMarkdownContent(src) {
 }
 
 /**
- * Автономный парсер Markdown (CommonMark + GFM) для модального редактора.
+ * Автономный парсер Markdown (CommonMark + GFM + Mermaid) для модального редактора.
  * @param {string} src
  * @returns {string}
  */
@@ -1354,6 +1608,52 @@ export function parseMarkdownToHtmlFallback(src) {
 
   const { frontmatterHtml, cleanMarkdown } = preprocessMarkdownContent(src);
 
+  const escapeHtml = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const escapeAttr = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const buildMermaidCard = (rawCode) => {
+    const cleanCode = String(rawCode || '').trim();
+    const encoded = encodeURIComponent(cleanCode);
+    const safeCode = escapeHtml(cleanCode);
+    return `
+      <div class="card my-2.5 border border-subtle shadow-xs mermaid-diagram-wrapper" data-mermaid-rendered="false" data-mermaid-code="${escapeAttr(encoded)}" dir="ltr">
+        <div class="card-header py-1 px-2.5 bg-body-tertiary d-flex align-items-center justify-content-between font-monospace small text-muted">
+          <span class="d-inline-flex align-items-center gap-1.5">
+            <i class="bi bi-diagram-3 text-primary"></i>
+            <span>Mermaid</span>
+          </span>
+          <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1.5 mermaid-toggle-source-btn" title="Code / Diagram">
+            <i class="bi bi-code-slash"></i>
+          </button>
+        </div>
+        <div class="card-body p-3 text-center overflow-auto bg-body mermaid-diagram-stage" dir="ltr">
+          <div class="text-muted small py-2">
+            <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span>
+            <span>Mermaid...</span>
+          </div>
+        </div>
+        <pre class="p-2.5 m-0 overflow-auto bg-body-tertiary font-monospace small border-top border-subtle d-none mermaid-diagram-source" dir="ltr" style="line-height: 1.45; text-align: left;"><code>${safeCode}</code></pre>
+      </div>
+    `;
+  };
+
+  const mermaidPlaceholders = [];
+  const mdWithoutMermaid = cleanMarkdown.replace(
+    /```\s*mermaid[ \t]*\r?\n([\s\S]*?)```/gi,
+    (_, graphCode) => {
+      const idx = mermaidPlaceholders.length;
+      mermaidPlaceholders.push(buildMermaidCard(graphCode));
+      return `\n\n<div data-mermaid-placeholder="${idx}"></div>\n\n`;
+    }
+  );
+  const restoreMermaid = (htmlStr) => {
+    if (mermaidPlaceholders.length === 0) return htmlStr;
+    return htmlStr.replace(
+      /<div data-mermaid-placeholder="(\d+)"><\/div>/g,
+      (_, idx) => mermaidPlaceholders[parseInt(idx, 10)] || ''
+    );
+  };
+
   if (typeof window !== 'undefined') {
     if (typeof window.marked?.parse === 'function') {
       try {
@@ -1361,16 +1661,20 @@ export function parseMarkdownToHtmlFallback(src) {
           window.marked.setOptions({ breaks: true, gfm: true });
           window._markedConfigured = true;
         }
-        return frontmatterHtml + window.marked.parse(cleanMarkdown);
+        return frontmatterHtml + restoreMermaid(window.marked.parse(mdWithoutMermaid));
       } catch (_) {}
     }
   }
 
-  const escapeHtml = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const codeBlocks = [];
-  let text = cleanMarkdown.replace(/```([a-zA-Z0-9_\-#+.]*)\r?\n([\s\S]*?)```/g, (_, lang, code) => {
+  let text = mdWithoutMermaid.replace(/```([a-zA-Z0-9_\-#+.]*)\r?\n([\s\S]*?)```/g, (_, lang, code) => {
     const idx = codeBlocks.length;
-    const safeLang = escapeHtml(lang.trim() || 'text');
+    const rawLang = (lang || '').trim();
+    if (rawLang.toLowerCase() === 'mermaid') {
+      codeBlocks.push(buildMermaidCard(code));
+      return `@@CODE_BLOCK_${idx}@@`;
+    }
+    const safeLang = escapeHtml(rawLang || 'text');
     const safeCode = escapeHtml(code);
     codeBlocks.push(`
       <div class="card my-2 border border-subtle shadow-xs">
@@ -1426,6 +1730,8 @@ export function parseMarkdownToHtmlFallback(src) {
     return `<p class="mb-2 leading-relaxed" dir="auto">${trimmed.replace(/\r?\n/g, '<br />')}</p>`;
   }).join('\n');
   text = text.replace(/@@CODE_BLOCK_(\d+)@@/g, (_, idx) => codeBlocks[parseInt(idx, 10)] || '');
+  text = text.replace(/&lt;div data-mermaid-placeholder=&quot;(\d+)&quot;&gt;&lt;\/div&gt;/g, (_, idx) => mermaidPlaceholders[parseInt(idx, 10)] || '');
+  text = restoreMermaid(text);
   return frontmatterHtml + text;
 }
 
@@ -1520,22 +1826,39 @@ export async function openEditorModal(target, wsId) {
   // Режим просмотра: для Markdown по умолчанию открываем раздельный вид (Вид/Редактор)
   let currentModalMode = isMarkdown ? 'split' : 'code';
 
+  const applyModalDirection = (dir) => {
+    const validDir = dir === 'rtl' ? 'rtl' : 'ltr';
+    const align = validDir === 'rtl' ? 'right' : 'left';
+    if (textarea) {
+      textarea.setAttribute('dir', validDir);
+      textarea.style.direction = validDir;
+      textarea.style.textAlign = align;
+    }
+    if (mdPreview) {
+      mdPreview.setAttribute('dir', validDir);
+      mdPreview.style.direction = validDir;
+      mdPreview.style.textAlign = align;
+    }
+  };
+
   const renderModalPreview = () => {
     if (!mdPreview) return;
     const raw = textarea?.value || '';
-    if (typeof window.marked !== 'undefined' && typeof window.marked.parse === 'function') {
-      try {
-        mdPreview.innerHTML = window.marked.parse(raw);
-        return;
-      } catch (err) {
-        console.warn('[IDE Modal Editor] marked parse error:', err);
-      }
-    }
     if (typeof window.parseMarkdownToHtml === 'function') {
       mdPreview.innerHTML = window.parseMarkdownToHtml(raw);
-      return;
+    } else if (typeof window.marked !== 'undefined' && typeof window.marked.parse === 'function') {
+      try {
+        mdPreview.innerHTML = window.marked.parse(raw);
+      } catch (err) {
+        console.warn('[IDE Modal Editor] marked parse error:', err);
+        mdPreview.innerHTML = parseMarkdownToHtmlFallback(raw);
+      }
+    } else {
+      mdPreview.innerHTML = parseMarkdownToHtmlFallback(raw);
     }
-    mdPreview.innerHTML = parseMarkdownToHtmlFallback(raw);
+    if (typeof window.renderMermaidDiagramsInContainer === 'function') {
+      window.renderMermaidDiagramsInContainer(mdPreview);
+    }
   };
 
   const applyModalMode = (mode) => {
@@ -1702,6 +2025,10 @@ export async function openEditorModal(target, wsId) {
         textarea.value = data.content ?? '';
         textarea.disabled = false;
 
+        // Автоматическое включение RTL для документов на иврите
+        const docDir = detectDocumentDirection(data.content ?? '', fileName, data?.direction || null);
+        applyModalDirection(docDir);
+
         // Если у файла нет расширения — определяем тип по бэкенду или по содержимому
         if (!ext || ext === fileName.toLowerCase()) {
           const detected = (data && data.detected_type) || detectFileTypeFromContent(data.content, fileName);
@@ -1735,6 +2062,7 @@ export async function openEditorModal(target, wsId) {
 
       textarea?.addEventListener('input', () => {
         updateStats();
+        applyModalDirection(detectDocumentDirection(textarea?.value || '', fileName));
         if (currentModalMode === 'split' || currentModalMode === 'preview') {
           renderModalPreview();
         }
@@ -2377,7 +2705,14 @@ async function openVersionsModal(target, wsId) {
 
 
 
-            if (previewContent) previewContent.textContent = cData.content || '(файл пуст на этой ревизии)';
+            if (previewContent) {
+              const revText = cData.content || '(файл пуст на этой ревизии)';
+              previewContent.textContent = revText;
+              const revDir = detectDocumentDirection(cData.content || '', target.relPath, cData?.direction || null);
+              previewContent.setAttribute('dir', revDir);
+              previewContent.style.direction = revDir;
+              previewContent.style.textAlign = revDir === 'rtl' ? 'right' : 'left';
+            }
 
 
 
@@ -2465,7 +2800,13 @@ async function openVersionsModal(target, wsId) {
 
 
 
-              if (previewContent) previewContent.textContent = diffText;
+              if (previewContent) {
+                previewContent.textContent = diffText;
+                const diffDir = detectDocumentDirection(diffText, target.relPath);
+                previewContent.setAttribute('dir', diffDir);
+                previewContent.style.direction = diffDir;
+                previewContent.style.textAlign = diffDir === 'rtl' ? 'right' : 'left';
+              }
 
 
 
@@ -2838,6 +3179,7 @@ function showTreeContextMenu(e) {
 export function initIdeTreeContextMenu() {
   ensureTreeContextMenuDOM();
   initCreateModalSubmit();
+  initAddFromDiskModalSubmit();
   initRenameModalSubmit();
   initCopyModalSubmit();
 

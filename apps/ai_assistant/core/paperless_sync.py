@@ -17,18 +17,61 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 19:05:00
+# Updated: 2026-11-19 23:52:00
 # =============================================================================
 
 from __future__ import annotations
 """Импорт документов Paperless-ngx в рабочую область по тегу."""
 
 import functools
+import re
 import time
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from logger import logger
 from apps.ai_assistant.core.paperless_connector import PaperlessConnector, PaperlessError
+
+_INVALID_FILENAME_RE = re.compile(r'[<>:"/\\|?*\x00-\x1f]+')
+_WHITESPACE_RE = re.compile(r"\s+")
+_MAX_TITLE_LEN = 120
+
+
+def build_paperless_doc_id(doc: Dict[str, Any], paperless_id: int) -> str:
+    """Формирует читаемый и уникальный doc_id документа Paperless-ngx для рабочей области.
+
+    Использует заголовок ``title`` (или ``original_file_name`` без расширения),
+    очищая запрещённые символы файловой системы и добавляя суффикс ``_{paperless_id}``
+    для исключения коллизий при одинаковых названиях документов.
+
+    Args:
+        doc: Словарь метаданных документа из API Paperless-ngx.
+        paperless_id: Числовой идентификатор документа в Paperless-ngx.
+
+    Returns:
+        str: Относительный идентификатор вида ``paperless/<название>_<id>``
+        либо ``paperless/<id>``, если заголовок отсутствует.
+    """
+    raw_title = str(doc.get("title") or "").strip()
+    if not raw_title:
+        orig_name = str(doc.get("original_file_name") or "").strip()
+        if orig_name:
+            raw_title = Path(orig_name).stem
+
+    # Сначала очищаем запрещённые символы путей (включая '/' и '\'), чтобы не обрезать часть заголовка
+    safe_title = _INVALID_FILENAME_RE.sub("_", raw_title)
+
+    # Убираем известные расширения файлов, если они попали в title
+    if safe_title and PaperlessConnector.is_supported_file(safe_title):
+        safe_title = Path(safe_title).stem
+
+    safe_title = _WHITESPACE_RE.sub(" ", safe_title).strip(" ._")
+    if len(safe_title) > _MAX_TITLE_LEN:
+        safe_title = safe_title[:_MAX_TITLE_LEN].rstrip(" ._")
+
+    if not safe_title or safe_title == str(paperless_id):
+        return f"paperless/{paperless_id}"
+    return f"paperless/{safe_title}_{paperless_id}"
 
 
 class PaperlessTextResolver:
@@ -81,7 +124,7 @@ def sync_workspace_from_paperless(wm: Any, connector: PaperlessConnector, worksp
                 continue
             wm._persist_and_index_doc(
                 workspace_id=workspace_id,
-                doc_id=f"paperless/{paperless_id}",
+                doc_id=build_paperless_doc_id(doc, paperless_id),
                 file_path_str=f"paperless://{paperless_id}",
                 content=text,
                 commit_hash="",

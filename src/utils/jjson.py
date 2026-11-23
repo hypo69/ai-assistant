@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI-Windows-Admin UTILS - Jjson Module
+# Process Name: AI-Assistant UTILS - Jjson Module
 # =============================================================================
 # Description:
 #   Модуль сериализации и десериализации данных JSON/CSV (`jjson`).
@@ -14,11 +14,11 @@
 #     j_dumps(data, 'config.json')
 #
 # File: jjson.py
-# Project: ai-windows-admin
+# Project: ai-assistant
 # Package: src.utils
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 14:38:00
+# Updated: 2026-11-13 14:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import tempfile
 import threading
 from collections import OrderedDict
@@ -43,7 +44,12 @@ _JJSON_FILE_LOCK = threading.RLock()
 
 
 def _clean_json_string(json_string: str) -> str:
-    """Очищает строку от обрамления Markdown code blocks (```json ... ```).
+    """Очищает строку от обрамления Markdown code blocks (```json ... ```) и извлекает JSON.
+
+    Поддерживает:
+    - Снятие внешних Markdown-блоков с сохранением вложенных блоков кода;
+    - Извлечение JSON при наличии вступительного текста или комментариев модели;
+    - Поиск валидных границ внешних скобок {...} и [...].
 
     Args:
         json_string (str): Исходная строка с JSON или Markdown.
@@ -52,6 +58,10 @@ def _clean_json_string(json_string: str) -> str:
         str: Очищенная JSON-строка.
     """
     s = json_string.strip()
+    if not s:
+        return s
+
+    # 1. Если вся строка обрамлена тройными апострофами, снимаем первую и последнюю строки
     if s.startswith('```'):
         lines = s.splitlines()
         if lines and lines[0].startswith('```'):
@@ -59,7 +69,106 @@ def _clean_json_string(json_string: str) -> str:
         if lines and lines[-1].strip() == '```':
             lines = lines[:-1]
         s = '\n'.join(lines).strip()
-    return s
+
+    # 2. Жадный поиск Markdown-блока ```json ... ``` (сохраняет вложенные блоки кода)
+    if '```' in s:
+        greedy_fence_m = re.search(r"```(?:json)?\s*([\s\S]*)\s*```", s, re.IGNORECASE)
+        if greedy_fence_m:
+            candidate = greedy_fence_m.group(1).strip()
+            if '{' in candidate or '[' in candidate:
+                s = candidate
+
+    # 3. Извлечение по внешним скобкам {...} или [...], если по краям остался текст модели
+    fb = s.find('{')
+    f_bracket = s.find('[')
+    if fb != -1 and (f_bracket == -1 or fb < f_bracket):
+        lb = s.rfind('}')
+        if lb > fb:
+            s = s[fb:lb + 1]
+    elif f_bracket != -1:
+        l_bracket = s.rfind(']')
+        if l_bracket > f_bracket:
+            s = s[f_bracket:l_bracket + 1]
+
+    return s.strip()
+
+
+def _parse_json_string(raw_str: str, ordered: bool = False, exc_info: bool = True, repair: bool = True) -> Optional[Any]:
+    """Многоступенчатый парсинг строкового JSON, оптимизированный для ответов моделей ИИ.
+
+    Последовательно применяет:
+    1. Очистку от Markdown и преамбул модели (_clean_json_string);
+    2. Стандартный строгий json.loads;
+    3. Нестрогий json.loads(..., strict=False) для устойчивости к неэкранированным \\n и управляющим символам;
+    4. Исправление висячих запятых (trailing commas);
+    5. Экранирование путей Windows (C:\\...);
+    6. Специализированное восстановление через json_repair.repair_json (если repair=True);
+    7. Резервный поиск внешних скобок в исходном тексте.
+
+    Args:
+        raw_str (str): Сырая строка данных.
+        ordered (bool): Возвращать OrderedDict при успехе.
+        exc_info (bool): Логировать ли ошибку при полной неудаче.
+        repair (bool): Использовать ли эвристическое восстановление repair_json при неудаче стандартных парсеров.
+
+    Returns:
+        Optional[Any]: Распарсенный dict или list, либо None.
+    """
+    cleaned = _clean_json_string(raw_str)
+    if not cleaned:
+        return None
+
+    # Формируем пул кандидатов
+    candidates: List[str] = [cleaned]
+
+    # Вариант с исправлением висячих запятых
+    cand_no_commas = re.sub(r",\s*([}\]])", r"\1", cleaned)
+    if cand_no_commas != cleaned:
+        candidates.append(cand_no_commas)
+
+    # Вариант с экранированием обратных слэшей (пути Windows)
+    cand_slashes = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', cand_no_commas)
+    if cand_slashes not in candidates:
+        candidates.append(cand_slashes)
+
+    # Резервный кандидат по внешним скобкам из исходной строки
+    fb = raw_str.find('{')
+    lb = raw_str.rfind('}')
+    if fb != -1 and lb > fb:
+        orig_slice = raw_str[fb:lb + 1].strip()
+        if orig_slice not in candidates:
+            candidates.append(orig_slice)
+
+    hook = OrderedDict if ordered else None
+
+    # Попытка 1: строгий и нестрогий парсинг через встроенный json
+    for cand in candidates:
+        try:
+            return json.loads(cand, object_pairs_hook=hook)
+        except Exception:
+            pass
+        try:
+            return json.loads(cand, strict=False, object_pairs_hook=hook)
+        except Exception:
+            pass
+
+    # Попытка 2: восстановление через специализированный repair_json (если разрешено)
+    if repair:
+        for cand in candidates:
+            try:
+                repaired = repair_json(cand, return_objects=True)
+                if isinstance(repaired, list) and '[' not in cand:
+                    continue
+                if isinstance(repaired, dict) and '{' not in cand:
+                    continue
+                if isinstance(repaired, (dict, list)):
+                    return _ensure_ordered(repaired, ordered)
+            except Exception:
+                pass
+
+    if exc_info:
+        logger.error(f'Строка не является валидным JSON: {raw_str[:200]}')
+    return None
 
 
 def _convert_namespaces_to_dict(value: Any) -> Any:
@@ -105,6 +214,7 @@ def j_dumps(
     ensure_ascii: bool = True,
     mode: str = 'w',
     exc_info: bool = True,
+    repair: bool = True,
 ) -> Optional[Dict[str, Any] | List[Any] | Any]:
     """Сериализует данные в JSON-формат, сохраняет в файл или возвращает структуру данных Python.
 
@@ -123,6 +233,8 @@ def j_dumps(
                    для словарей новые ключи перезаписывают существующие.
             Defaults to 'w'.
         exc_info (bool, optional): Если True, логирует исключения со стеком вызовов. Defaults to True.
+        repair (bool, optional): Если True, при ошибке парсинга строки применяет эвристическое
+            восстановление json_repair. Defaults to True.
 
     Returns:
         Optional[Dict[str, Any] | List[Any] | Any]: Результирующая структура данных или None при ошибке.
@@ -134,23 +246,10 @@ def j_dumps(
 
     # Обработка строкового входа
     if isinstance(data, str):
-        cleaned_str = _clean_json_string(data)
-        try:
-            data = json.loads(cleaned_str)
-        except json.JSONDecodeError:
-            try:
-                repaired = repair_json(cleaned_str, return_objects=True)
-                if isinstance(repaired, (dict, list)):
-                    data = repaired
-                else:
-                    logger.error(f'Строка не является валидным JSON: {data[:200]}', exc_info=exc_info)
-                    return None
-            except Exception as ex:
-                logger.error(f'Ошибка восстановления JSON-строки: {ex}', ex=ex, exc_info=exc_info)
-                return None
-        except Exception as ex:
-            logger.error(f'Ошибка парсинга строки данных: {ex}', ex=ex, exc_info=exc_info)
+        parsed = _parse_json_string(data, ordered=False, exc_info=exc_info, repair=repair)
+        if parsed is None:
             return None
+        data = parsed
 
     # Рекурсивное преобразование SimpleNamespace в словари
     data = _convert_namespaces_to_dict(data)
@@ -159,74 +258,65 @@ def j_dumps(
         mode = 'w'
 
     # Чтение существующих данных при режимах объединения и сохранение в файл с атомарной заменой
-    if path:
+    if path is not None:
+        path = path.resolve()
+        parent_dir = path.parent
+        parent_dir.mkdir(parents=True, exist_ok=True)
+
         with _JJSON_FILE_LOCK:
-            if path.exists() and (mode in {'a+', '+a'}):
+            existing_data: Optional[Dict[str, Any] | List[Any]] = None
+            if mode in {'a+', '+a'} and path.exists():
                 try:
-                    content = path.read_text(encoding='utf-8').strip()
-                    if not content:
-                        existing_data: Any = [] if isinstance(data, list) else {}
-                    else:
-                        existing_data = json.loads(content)
-                except json.JSONDecodeError as ex:
-                    logger.error(f'Ошибка декодирования существующего JSON в {path}: {ex}', ex=ex, exc_info=exc_info)
-                    return None
+                    loaded = j_loads(path, ordered=False, exc_info=exc_info)
+                    if isinstance(loaded, (dict, list)):
+                        existing_data = loaded
                 except Exception as ex:
-                    logger.error(f'Ошибка чтения файла {path}: {ex}', ex=ex, exc_info=exc_info)
-                    return None
+                    logger.error(f'Ошибка чтения файла {path} для объединения: {ex}', ex=ex, exc_info=exc_info)
+                    existing_data = None
 
-                # Проверка совместимости типов
-                if isinstance(data, list) and not isinstance(existing_data, list):
-                    logger.error(
-                        f'Несовместимые типы для объединения в {path}: ожидался list, получен {type(existing_data).__name__}',
-                        exc_info=exc_info,
-                    )
-                    return None
-                if isinstance(data, dict) and not isinstance(existing_data, dict):
-                    logger.error(
-                        f'Несовместимые типы для объединения в {path}: ожидался dict, получен {type(existing_data).__name__}',
-                        exc_info=exc_info,
-                    )
-                    return None
-
-                if mode == 'a+':
-                    if isinstance(data, list) and isinstance(existing_data, list):
+            if existing_data is not None:
+                if isinstance(existing_data, list) and isinstance(data, list):
+                    if mode == 'a+':
                         data = data + existing_data
-                    elif isinstance(data, dict) and isinstance(existing_data, dict):
-                        merged = copy.deepcopy(data)
-                        merged.update(existing_data)
+                    else:
+                        data = existing_data + data
+                elif isinstance(existing_data, dict) and isinstance(data, dict):
+                    if mode == 'a+':
+                        merged = copy.deepcopy(existing_data)
+                        for k, v in data.items():
+                            if k not in merged:
+                                merged[k] = v
                         data = merged
-                elif mode == '+a':
-                    if isinstance(data, list) and isinstance(existing_data, list):
-                        existing_data.extend(data)
-                        data = existing_data
-                    elif isinstance(data, dict) and isinstance(existing_data, dict):
-                        existing_data.update(data)
-                        data = existing_data
+                    else:
+                        merged = copy.deepcopy(existing_data)
+                        merged.update(data)
+                        data = merged
+                else:
+                    logger.warning(
+                        f'Несоответствие типов данных для объединения в {path}: '
+                        f'существующий={type(existing_data).__name__}, новый={type(data).__name__}. '
+                        f'Файл будет перезаписан новым значением.'
+                    )
 
-            temp_file = None
+            tmp_file = tempfile.NamedTemporaryFile(
+                mode='w',
+                encoding='utf-8',
+                dir=parent_dir,
+                delete=False,
+                prefix=f'.{path.name}.tmp_',
+            )
             try:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                json_text = json.dumps(data, ensure_ascii=ensure_ascii, indent=4)
-                with tempfile.NamedTemporaryFile(
-                    'w',
-                    dir=str(path.parent),
-                    prefix=f'.{path.name}.',
-                    suffix='.tmp',
-                    delete=False,
-                    encoding='utf-8',
-                ) as tf:
-                    temp_file = Path(tf.name)
-                    tf.write(json_text)
-                    tf.flush()
-                    os.fsync(tf.fileno())
-                os.replace(temp_file, path)
-                return data
+                json.dump(data, tmp_file, ensure_ascii=ensure_ascii, indent=4)
+                tmp_file.flush()
+                os.fsync(tmp_file.fileno())
+                tmp_file.close()
+
+                os.replace(tmp_file.name, path)
             except Exception as ex:
-                if temp_file and temp_file.exists():
+                if os.path.exists(tmp_file.name):
                     try:
-                        temp_file.unlink()
-                    except Exception:
+                        os.remove(tmp_file.name)
+                    except OSError:
                         pass
                 logger.error(f'Ошибка записи в файл {path}: {ex}', ex=ex, exc_info=exc_info)
                 return None
@@ -238,6 +328,7 @@ def j_loads(
     jjson: dict | SimpleNamespace | str | Path | list | Any,
     ordered: bool = True,
     exc_info: bool = True,
+    repair: bool = True,
 ) -> dict | list:
     """Загружает JSON или CSV данные из файла, директории, строки, словаря или SimpleNamespace.
 
@@ -247,6 +338,8 @@ def j_loads(
         ordered (bool, optional): Если True, возвращает OrderedDict для сохранения порядка ключей.
             Если False, возвращает стандартный dict. Defaults to True.
         exc_info (bool, optional): Если True, логирует исключения со стеком вызовов. Defaults to True.
+        repair (bool, optional): Если True, при ошибке парсинга строки применяет эвристическое
+            восстановление json_repair. Defaults to True.
 
     Returns:
         dict | list: Распарсенные данные (словарь, OrderedDict или список).
@@ -315,25 +408,10 @@ def j_loads(
                 except (OSError, ValueError):
                     pass
 
-            cleaned = _clean_json_string(s)
-            if not cleaned:
-                return {}
-
-            hook = OrderedDict if ordered else None
-            try:
-                return json.loads(cleaned, object_pairs_hook=hook)
-            except json.JSONDecodeError as ex:
-                try:
-                    repaired = repair_json(cleaned, return_objects=True)
-                    if isinstance(repaired, (dict, list)):
-                        return _ensure_ordered(repaired, ordered)
-                except Exception:
-                    pass
-                logger.error(f'Ошибка парсинга JSON-строки:\n{jjson}', ex=ex, exc_info=exc_info)
-                return {}
-            except Exception as ex:
-                logger.error(f'Ошибка декодирования JSON: {ex}', ex=ex, exc_info=exc_info)
-                return {}
+            parsed = _parse_json_string(s, ordered=ordered, exc_info=exc_info, repair=repair)
+            if parsed is not None:
+                return parsed
+            return {}
 
     except FileNotFoundError as ex:
         logger.error(f'Файл не найден: {jjson}', ex=ex, exc_info=exc_info)

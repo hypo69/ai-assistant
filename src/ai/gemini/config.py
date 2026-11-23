@@ -16,7 +16,7 @@
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-15 09:18:00
+# Updated: 2026-11-21 11:46:00
 # =============================================================================
 
 
@@ -228,6 +228,7 @@ class GoogleGenerativeAIConfigMixin:
                 f"{history_info}"
             )
             logger.info(log_msg)
+            logger.console(log_msg)
         except Exception as log_ex:
             logger.debug(f'Gemini: Failed to log request payload details: {log_ex}')
 

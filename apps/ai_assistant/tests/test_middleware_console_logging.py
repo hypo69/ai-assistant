@@ -16,7 +16,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-07 00:38:00
+# Updated: 2026-11-15 19:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -37,6 +37,14 @@ def mock_app() -> FastAPI:
     """Создает изолированное FastAPI-приложение для тестирования middleware."""
     test_app = FastAPI()
     test_app.add_middleware(ConsoleStatusLogMiddleware)
+
+    @test_app.get("/api/v1/workspaces")
+    def get_api_v1_workspaces() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @test_app.post("/api/v1/workspaces")
+    def post_api_v1_workspaces() -> dict[str, str]:
+        return {"status": "created"}
 
     @test_app.get("/test/status-200")
     def get_200() -> dict[str, str]:
@@ -128,6 +136,30 @@ def test_logger_color_attributes() -> None:
     assert real_logger.green == "green"
     assert hasattr(real_logger, "red")
     assert real_logger.red == "red"
+    assert hasattr(real_logger, "yellow")
+    assert real_logger.yellow == "yellow"
+
+
+def test_status_200_get_api_v1_logged_in_yellow(mock_app: FastAPI) -> None:
+    """Проверяет, что успешный запрос GET /api/v1/* со статусом 200 логируется в желтом цвете (yellow)."""
+    client = TestClient(mock_app)
+    with patch("apps.ai_assistant.api.middleware.logger") as mock_logger:
+        mock_logger.yellow = "yellow"
+        resp = client.get("/api/v1/workspaces")
+        assert resp.status_code == 200
+        mock_logger.console.assert_called_once()
+        assert mock_logger.console.call_args.kwargs.get("text_color") == "yellow"
+
+
+def test_status_200_post_api_v1_not_yellow(mock_app: FastAPI) -> None:
+    """Проверяет, что POST /api/v1/* со статусом 200 логируется стандартным цветом (не желтым)."""
+    client = TestClient(mock_app)
+    with patch("apps.ai_assistant.api.middleware.logger") as mock_logger:
+        mock_logger.yellow = "yellow"
+        resp = client.post("/api/v1/workspaces")
+        assert resp.status_code == 200
+        mock_logger.console.assert_called_once()
+        assert mock_logger.console.call_args.kwargs.get("text_color") in ("gray", "light_gray")
 
 
 def test_status_with_custom_colors() -> None:

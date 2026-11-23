@@ -55,7 +55,7 @@ class GeminiCliChatBase(BaseChatProvider):
         :param force_refresh: Флаг принудительного обновления кэша.
         :returns: Список доступных идентификаторов моделей.
         """
-        from src.ai.model_manager import get_available_models as _mgr_get_available_models
+        from src.ai.orchestration.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider='gemini_cli', force_refresh=force_refresh)
 
     @classmethod
@@ -261,7 +261,7 @@ class GeminiCliChatBase(BaseChatProvider):
             resp: GeminiCliResponse = await self.provider.generate_async(prompt=prompt, model=self._model_id)
             if not resp.success:
                 logger.warning(f'[GeminiCliChat] Код возврата {resp.return_code}. Stderr: {resp.stderr[:200]}')
-                from src.ai.model_manager import add_unsupported_model
+                from src.ai.orchestration.model_manager import add_unsupported_model
                 from src.ai.orchestration.model_error_hub import record_model_error
                 err_low = resp.stderr.lower()
                 if 'model not found' in err_low or 'not supported' in err_low:

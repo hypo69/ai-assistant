@@ -10,451 +10,397 @@ File: index.html
 Package: apps/ai_assistant/api/webgui/tab_tasks
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-03 16:40:00
+Updated: 2026-11-12 02:30:38
 =============================================================================
 -->
 <div class="container-fluid p-3" id="tab-tasks-container">
-  <!-- Верхняя строка заголовка и глобальных действий -->
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-    <div>
-      <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
-        <span class="fs-4">📋</span>
-        <span data-i18n="ui.tasks.title" id="tasks-heading-title">Умные задачи и поручения</span>
-      </h4>
-      <div class="small text-muted" data-i18n="ui.tasks.subtitle" id="tasks-heading-subtitle">
-        Оркестрация поручений, ИИ-декомпозиция телефонных звонков и координация участников сделок
-      </div>
-    </div>
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1.5 shadow-sm fw-semibold" id="btn-tasks-load-demo" type="button" title="Загрузить тестовый сценарий: Покупка коровы дяди Моше" data-i18n-title="tasks.loadDemoTitle">
-        <i class="bi bi-lightning-charge"></i>
-        <span data-i18n="ui.tasks.btnLoadDemo" id="tasks-span-load-demo">Кейс: Дядя Моше &amp; Корова</span>
-      </button>
-      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 shadow-sm" id="btn-tasks-new-intake" type="button" title="Открыть мастер создания нового поручения" data-i18n-title="tasks.newIntakeTitle">
-        <i class="bi bi-plus-circle"></i>
-        <span data-i18n="ui.tasks.btnNewTask" id="tasks-span-new-task">Новое поручение</span>
-      </button>
-      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 shadow-sm" id="btn-tasks-refresh" title="Обновить список задач" data-i18n-title="tasks.refreshTitle" type="button">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span class="d-none d-sm-inline" data-i18n="common.refresh" id="tasks-span-refresh">Обновить</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Карточки ключевых метрик -->
-  <div class="row g-2 mb-3">
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card shadow-sm border h-100">
-        <div class="card-body p-2.5 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="small text-muted" data-i18n="ui.tasks.statTotal" id="tasks-stat-total-label">Всего дел</div>
-            <div class="fs-4 fw-bold text-body" id="tasks-stat-total-val">0</div>
-          </div>
-          <div class="fs-2 text-primary opacity-50"><i class="bi bi-briefcase"></i></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card shadow-sm border h-100">
-        <div class="card-body p-2.5 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="small text-muted" data-i18n="ui.tasks.statActive" id="tasks-stat-active-label">В работе</div>
-            <div class="fs-4 fw-bold text-warning" id="tasks-stat-active-val">0</div>
-          </div>
-          <div class="fs-2 text-warning opacity-50"><i class="bi bi-hourglass-split"></i></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card shadow-sm border h-100">
-        <div class="card-body p-2.5 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="small text-muted" data-i18n="ui.tasks.statCoordination" id="tasks-stat-coord-label">Осмотры / Выезды</div>
-            <div class="fs-4 fw-bold text-info" id="tasks-stat-coord-val">0</div>
-          </div>
-          <div class="fs-2 text-info opacity-50"><i class="bi bi-calendar2-check"></i></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card shadow-sm border h-100">
-        <div class="card-body p-2.5 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="small text-muted" data-i18n="ui.tasks.statCompleted" id="tasks-stat-completed-label">Завершено</div>
-            <div class="fs-4 fw-bold text-success" id="tasks-stat-completed-val">0</div>
-          </div>
-          <div class="fs-2 text-success opacity-50"><i class="bi bi-check2-circle"></i></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->
-  <div class="d-flex align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-1 flex-wrap" id="tasks-subtabs-nav" role="tablist">
-      <button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-cases"
-              data-panel-id="panel-cases"
-              type="button"
-              data-i18n-title="tasks.subtabs.casesTitle"
-              title="Раздел: Активные дела и поручения">
-        <i class="bi bi-kanban me-1"></i>
-        <span data-i18n="ui.tasks.subtabCases">Дела и Сделки</span>
-      </button>
-
-      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-intake"
-              data-panel-id="panel-intake"
-              type="button"
-              data-i18n-title="tasks.subtabs.intakeTitle"
-              title="Раздел: ИИ-Мастер декомпозиции поручений">
-        <i class="bi bi-magic me-1 text-primary"></i>
-        <span data-i18n="ui.tasks.subtabIntake">ИИ-Разбор разговора</span>
-      </button>
-
-      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-coordination"
-              data-panel-id="panel-coordination"
-              type="button"
-              data-i18n-title="tasks.subtabs.coordinationTitle"
-              title="Раздел: Согласование визитов и календарь">
-        <i class="bi bi-calendar-check me-1 text-success"></i>
-        <span data-i18n="ui.tasks.subtabCoordination">Визиты &amp; Осмотры</span>
-      </button>
-
-      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded"
-              id="btn-subtab-docs"
-              data-panel-id="panel-docs"
-              type="button"
-              data-i18n-title="tasks.subtabs.docsTitle"
-              title="Раздел: Пакет документов и договоры">
-        <i class="bi bi-file-earmark-text me-1 text-info"></i>
-        <span data-i18n="ui.tasks.subtabDocs">Пакет документов</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Содержимое субпанелей -->
-  <div class="tab-content" id="tasks-subtabs-content">
-
-    <!-- Субпанель 1: Активные дела и карточка дела -->
-    <div class="tasks-subpane active" id="tasks-subpane-cases">
-      <div class="row g-3">
-        <!-- Левая колонка: Список дел -->
-        <div class="col-12 col-lg-5">
-          <div class="card shadow-sm h-100">
-            <div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
-              <span class="fw-semibold small d-flex align-items-center gap-1.5">
-                <i class="bi bi-list-task"></i>
-                <span data-i18n="ui.tasks.caseListTitle">Текущие дела</span>
-              </span>
-              <span class="badge bg-primary-subtle text-primary border" id="tasks-cases-badge">0 дел</span>
-            </div>
-            <div class="card-body p-2 overflow-auto" id="tasks-cases-list-container" style="max-height: 560px;">
-              <div class="text-center text-muted py-5" id="tasks-empty-state">
-                <i class="bi bi-inbox fs-1 opacity-50 d-block mb-2"></i>
-                <span data-i18n="ui.tasks.noCases">Нет активных дел. Создайте новое или загрузите пример.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Правая колонка: Детали выбранного дела -->
-        <div class="col-12 col-lg-7">
-          <div class="card shadow-sm h-100" id="tasks-case-detail-card">
-            <div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between flex-wrap gap-2">
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-success-subtle text-success border" id="tasks-detail-status-badge">Активно</span>
-                <span class="badge bg-secondary-subtle text-secondary border" id="tasks-detail-category-badge">Сделка</span>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-xs btn-outline-danger" id="btn-tasks-delete-case" type="button" title="Удалить дело" data-i18n-title="tasks.deleteCaseTitle">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
-            </div>
-            <div class="card-body p-3 overflow-auto" style="max-height: 560px;">
-              <h5 class="fw-bold mb-2" id="tasks-detail-title">Выберите дело из списка слева</h5>
-              <p class="small text-muted mb-3" id="tasks-detail-description">
-                Здесь отображаются участники, декомпозированные шаги, чеклист и документы.
-              </p>
-
-              <!-- Прогресс выполнения -->
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small text-muted mb-1">
-                  <span data-i18n="ui.tasks.progressLabel">Прогресс выполнения</span>
-                  <span id="tasks-detail-progress-text">0%</span>
-                </div>
-                <div class="progress" style="height: 6px;">
-                  <div class="progress-bar bg-success" id="tasks-detail-progress-bar" role="progressbar" style="width: 0%;"></div>
-                </div>
-              </div>
-
-              <!-- Блок участников (Акторов) -->
-              <div class="mb-3 p-2.5 rounded bg-body-tertiary border" id="tasks-detail-actors-box">
-                <div class="small fw-semibold mb-1.5 d-flex align-items-center gap-1.5 text-secondary">
-                  <i class="bi bi-people"></i>
-                  <span data-i18n="ui.tasks.actorsTitle">Участники и роли</span>
-                </div>
-                <div class="d-flex flex-wrap gap-1.5" id="tasks-detail-actors-list">
-                  <span class="badge bg-light text-muted border">—</span>
-                </div>
-              </div>
-
-              <!-- Чек-лист подзадач -->
-              <div>
-                <div class="small fw-semibold mb-2 d-flex align-items-center justify-content-between">
-                  <span class="d-flex align-items-center gap-1.5">
-                    <i class="bi bi-check2-all text-primary"></i>
-                    <span data-i18n="ui.tasks.subtasksTitle">Этапы и подзадачи</span>
-                  </span>
-                  <span class="badge bg-secondary-subtle text-secondary" id="tasks-subtasks-count">0/0</span>
-                </div>
-                <div class="list-group list-group-flush border rounded" id="tasks-items-list-group">
-                  <div class="list-group-item text-muted small text-center py-3">
-                    Нет задач в данном деле
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Субпанель 2: ИИ-Мастер декомпозиции звонков и поручений -->
-    <div class="tasks-subpane d-none" id="tasks-subpane-intake">
-      <div class="row g-3">
-        <div class="col-12 col-lg-6">
-          <div class="card shadow-sm h-100">
-            <div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
-              <span class="fw-semibold small d-flex align-items-center gap-1.5">
-                <i class="bi bi-mic"></i>
-                <span data-i18n="ui.tasks.intakeInputTitle">Входной источник (Транскрипт / Заметка)</span>
-              </span>
-              <button class="btn btn-xs btn-outline-primary" id="btn-tasks-paste-cow-demo" type="button">
-                <span data-i18n="ui.tasks.pasteCowExample">Вставить звонок дяди Моше</span>
-              </button>
-            </div>
-            <div class="card-body p-3">
-              <div class="mb-3">
-                <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.sourceLabel">Тип источника</label>
-                <select class="form-select form-select-sm" id="tasks-intake-source">
-                  <option value="Телефонный разговор" data-i18n="ui.tasks.sourcePhone" selected>Телефонный разговор</option>
-                  <option value="Голосовое сообщение Telegram" data-i18n="ui.tasks.sourceTelegram">Голосовое сообщение Telegram</option>
-                  <option value="Письмо Gmail" data-i18n="ui.tasks.sourceGmail">Письмо Gmail</option>
-                  <option value="Заметка секретаря" data-i18n="ui.tasks.sourceNote">Заметка секретаря</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.textLabel">Текст разговора / расшифровка</label>
-                <textarea class="form-control font-monospace small" id="tasks-intake-text" rows="10" placeholder="Вставьте сюда текст разговора, поручение или расшифровку аудио..."></textarea>
-              </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button class="btn btn-outline-secondary btn-sm" id="btn-tasks-clear-intake" type="button">
-                  <span data-i18n="common.clear">Очистить</span>
-                </button>
-                <button class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 shadow-sm" id="btn-tasks-decompose-action" type="button">
-                  <i class="bi bi-cpu"></i>
-                  <span data-i18n="ui.tasks.btnDecompose">Разобрать с помощью ИИ</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-          <div class="card shadow-sm h-100" id="tasks-preview-card">
-            <div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
-              <span class="fw-semibold small d-flex align-items-center gap-1.5">
-                <i class="bi bi-eye"></i>
-                <span data-i18n="ui.tasks.planPreviewTitle">Сгенерированный план дела</span>
-              </span>
-              <span class="badge bg-info-subtle text-info border" id="tasks-preview-badge">Ожидание</span>
-            </div>
-            <div class="card-body p-3 overflow-auto" style="max-height: 560px;">
-              <div class="text-center text-muted py-5" id="tasks-preview-placeholder">
-                <i class="bi bi-robot fs-1 opacity-50 d-block mb-2"></i>
-                <span data-i18n="ui.tasks.previewHelp">Нажмите «Разобрать с помощью ИИ», чтобы извлечь сущности и шаги сделки</span>
-              </div>
-
-              <div class="d-none" id="tasks-preview-content">
-                <h6 class="fw-bold mb-2 text-primary" id="tasks-preview-title"></h6>
-                <p class="small text-muted mb-3" id="tasks-preview-desc"></p>
-
-                <div class="mb-3">
-                  <div class="small fw-semibold mb-1 text-secondary" data-i18n="ui.tasks.detectedActors">Обнаруженные участники:</div>
-                  <div class="d-flex flex-wrap gap-1.5" id="tasks-preview-actors"></div>
-                </div>
-
-                <div class="mb-3">
-                  <div class="small fw-semibold mb-1 text-secondary" data-i18n="ui.tasks.stepsList">Сформированные этапы:</div>
-                  <div class="list-group list-group-flush border rounded" id="tasks-preview-steps"></div>
-                </div>
-
-                <button class="btn btn-success btn-sm w-100 d-flex align-items-center justify-content-center gap-2 shadow-sm py-2" id="btn-tasks-confirm-create" type="button">
-                  <i class="bi bi-check-lg fs-6"></i>
-                  <span class="fw-semibold" data-i18n="ui.tasks.btnCreateFromPlan">Создать дело и запустить сценарий</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Субпанель 3: Согласование визитов и календарь -->
-    <div class="tasks-subpane d-none" id="tasks-subpane-coordination">
-      <div class="row g-3">
-        <!-- Блок Ветеринарного осмотра -->
-        <div class="col-12 col-md-6">
-          <div class="card shadow-sm h-100">
-            <div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
-              <span class="fw-semibold small d-flex align-items-center gap-1.5 text-success">
-                <i class="bi bi-hospital"></i>
-                <span data-i18n="ui.tasks.vetCoordTitle">Ветеринарный осмотр на месте</span>
-              </span>
-              <span class="badge bg-warning-subtle text-warning border">Требует слота</span>
-            </div>
-            <div class="card-body p-3">
-              <p class="small text-muted mb-3" data-i18n="ui.tasks.vetCoordDesc">
-                Организация выездного осмотра коровы у продавца (Шмулик) перед заключением сделки купли-продажи.
-              </p>
-              <div class="mb-2.5">
-                <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.vetDoctor">Ветеринарный специалист</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
-                  <input type="text" class="form-control" id="tasks-vet-name" value="Д-р Левин (Клиника 'АгроВет')">
-                </div>
-              </div>
-              <div class="mb-2.5">
-                <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.inspectionPlace">Место осмотра</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                  <input type="text" class="form-control" id="tasks-vet-location" value="Хозяйство Шмулика, фермерский сектор">
-                </div>
-              </div>
-              <div class="row g-2 mb-3">
-                <div class="col-6">
-                  <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.date">Дата</label>
-                  <input type="date" class="form-control form-control-sm" id="tasks-vet-date" value="2026-11-05">
-                </div>
-                <div class="col-6">
-                  <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.time">Время</label>
-                  <input type="time" class="form-control form-control-sm" id="tasks-vet-time" value="10:00">
-                </div>
-              </div>
-              <button class="btn btn-outline-success btn-sm w-100 d-flex align-items-center justify-content-center gap-2" id="btn-tasks-sync-vet-calendar" type="button">
-                <i class="bi bi-calendar-plus"></i>
-                <span data-i18n="ui.tasks.btnSyncCalendar">Внести в Google Calendar</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Блок Страхового агента -->
-        <div class="col-12 col-md-6">
-          <div class="card shadow-sm h-100">
-            <div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
-              <span class="fw-semibold small d-flex align-items-center gap-1.5 text-info">
-                <i class="bi bi-shield-check"></i>
-                <span data-i18n="ui.tasks.insuranceCoordTitle">Инспекция страхового агента</span>
-              </span>
-              <span class="badge bg-warning-subtle text-warning border">Требует слота</span>
-            </div>
-            <div class="card-body p-3">
-              <p class="small text-muted mb-3" data-i18n="ui.tasks.insuranceCoordDesc">
-                Оценка состояния животного, опись идентификационных меток и согласование суммы покрытия полиса.
-              </p>
-              <div class="mb-2.5">
-                <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.insuranceAgent">Страховой агент</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text"><i class="bi bi-person-workspace"></i></span>
-                  <input type="text" class="form-control" id="tasks-ins-name" value="Агент 'АгроСтрах' (Давид Коэн)">
-                </div>
-              </div>
-              <div class="mb-2.5">
-                <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.inspectionPlace">Место осмотра</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                  <input type="text" class="form-control" id="tasks-ins-location" value="Хозяйство Шмулика, фермерский сектор">
-                </div>
-              </div>
-              <div class="row g-2 mb-3">
-                <div class="col-6">
-                  <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.date">Дата</label>
-                  <input type="date" class="form-control form-control-sm" id="tasks-ins-date" value="2026-11-06">
-                </div>
-                <div class="col-6">
-                  <label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.time">Время</label>
-                  <input type="time" class="form-control form-control-sm" id="tasks-ins-time" value="14:00">
-                </div>
-              </div>
-              <button class="btn btn-outline-info btn-sm w-100 d-flex align-items-center justify-content-center gap-2" id="btn-tasks-sync-ins-calendar" type="button">
-                <i class="bi bi-calendar-plus"></i>
-                <span data-i18n="ui.tasks.btnSyncCalendar">Внести в Google Calendar</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Субпанель 4: Пакет документов и договоры -->
-    <div class="tasks-subpane d-none" id="tasks-subpane-docs">
-      <div class="card shadow-sm">
-        <div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
-          <span class="fw-semibold small d-flex align-items-center gap-1.5">
-            <i class="bi bi-folder2-open text-primary"></i>
-            <span data-i18n="ui.tasks.docPackageTitle">Комплект документации по сделке купли-продажи</span>
-          </span>
-          <span class="badge bg-secondary-subtle text-secondary border">3 документа</span>
-        </div>
-        <div class="card-body p-3">
-          <div class="list-group list-group-flush border rounded mb-3">
-            <div class="list-group-item d-flex align-items-center justify-content-between py-2.5">
-              <div class="d-flex align-items-center gap-2.5">
-                <i class="bi bi-file-earmark-word fs-4 text-primary"></i>
-                <div>
-                  <div class="fw-semibold small">Договор купли-продажи коровы (Проект)</div>
-                  <div class="small text-muted">Стороны: Шмулик (Продавец) ↔ Дод Моше (Покупатель)</div>
-                </div>
-              </div>
-              <span class="badge bg-warning-subtle text-warning border">Черновик</span>
-            </div>
-
-            <div class="list-group-item d-flex align-items-center justify-content-between py-2.5">
-              <div class="d-flex align-items-center gap-2.5">
-                <i class="bi bi-file-earmark-medical fs-4 text-success"></i>
-                <div>
-                  <div class="fw-semibold small">Ветеринарный паспорт и справка о вакцинации</div>
-                  <div class="small text-muted">Предоставляет продавец (Шмулик) перед осмотром</div>
-                </div>
-              </div>
-              <span class="badge bg-danger-subtle text-danger border">Ожидание файла</span>
-            </div>
-
-            <div class="list-group-item d-flex align-items-center justify-content-between py-2.5">
-              <div class="d-flex align-items-center gap-2.5">
-                <i class="bi bi-file-earmark-check fs-4 text-info"></i>
-                <div>
-                  <div class="fw-semibold small">Полис страхования с/х животных</div>
-                  <div class="small text-muted">Оформляется агентом после осмотра животного</div>
-                </div>
-              </div>
-              <span class="badge bg-secondary-subtle text-secondary border">После осмотра</span>
-            </div>
-          </div>
-
-          <div class="p-2.5 bg-body-tertiary rounded border d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="small text-muted">
-              <i class="bi bi-info-circle me-1"></i>
-              <span data-i18n="ui.tasks.workspaceSyncNote">Все создаваемые документы автоматически привязываются к текущему рабочему пространству.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+<!-- Верхняя строка заголовка и глобальных действий -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+<div>
+<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+<span class="fs-4">📋</span>
+<span data-i18n="ui.tasks.title" id="tasks-heading-title">{{ui.tasks.title}}</span>
+</h4>
+<div class="small text-muted" data-i18n="ui.tasks.subtitle" id="tasks-heading-subtitle">{{ui.tasks.subtitle}}</div>
+</div>
+<div class="d-flex flex-wrap align-items-center gap-2">
+<button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1.5 shadow-sm fw-semibold" data-i18n-title="tasks.loadDemoTitle" id="btn-tasks-load-demo" title="{{tasks.loadDemoTitle}}" type="button">
+<i class="bi bi-lightning-charge"></i>
+<span data-i18n="ui.tasks.btnLoadDemo" id="tasks-span-load-demo">{{ui.tasks.btnLoadDemo}}</span>
+</button>
+<button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="tasks.newIntakeTitle" id="btn-tasks-new-intake" title="{{tasks.newIntakeTitle}}" type="button">
+<i class="bi bi-plus-circle"></i>
+<span data-i18n="ui.tasks.btnNewTask" id="tasks-span-new-task">{{ui.tasks.btnNewTask}}</span>
+</button>
+<button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 shadow-sm" data-i18n-title="tasks.refreshTitle" id="btn-tasks-refresh" title="{{tasks.refreshTitle}}" type="button">
+<i class="bi bi-arrow-clockwise"></i>
+<span class="d-none d-sm-inline" data-i18n="common.refresh" id="tasks-span-refresh">{{common.refresh}}</span>
+</button>
+</div>
+</div>
+<!-- Карточки ключевых метрик -->
+<div class="row g-2 mb-3">
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card shadow-sm border h-100">
+<div class="card-body p-2.5 d-flex align-items-center justify-content-between">
+<div>
+<div class="small text-muted" data-i18n="ui.tasks.statTotal" id="tasks-stat-total-label">{{ui.tasks.statTotal}}</div>
+<div class="fs-4 fw-bold text-body" id="tasks-stat-total-val">0</div>
+</div>
+<div class="fs-2 text-primary opacity-50"><i class="bi bi-briefcase"></i></div>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card shadow-sm border h-100">
+<div class="card-body p-2.5 d-flex align-items-center justify-content-between">
+<div>
+<div class="small text-muted" data-i18n="ui.tasks.statActive" id="tasks-stat-active-label">{{ui.tasks.statActive}}</div>
+<div class="fs-4 fw-bold text-warning" id="tasks-stat-active-val">0</div>
+</div>
+<div class="fs-2 text-warning opacity-50"><i class="bi bi-hourglass-split"></i></div>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card shadow-sm border h-100">
+<div class="card-body p-2.5 d-flex align-items-center justify-content-between">
+<div>
+<div class="small text-muted" data-i18n="ui.tasks.statCoordination" id="tasks-stat-coord-label">{{ui.tasks.statCoordination}}</div>
+<div class="fs-4 fw-bold text-info" id="tasks-stat-coord-val">0</div>
+</div>
+<div class="fs-2 text-info opacity-50"><i class="bi bi-calendar2-check"></i></div>
+</div>
+</div>
+</div>
+<div class="col-12 col-sm-6 col-xl-3">
+<div class="card shadow-sm border h-100">
+<div class="card-body p-2.5 d-flex align-items-center justify-content-between">
+<div>
+<div class="small text-muted" data-i18n="ui.tasks.statCompleted" id="tasks-stat-completed-label">{{ui.tasks.statCompleted}}</div>
+<div class="fs-4 fw-bold text-success" id="tasks-stat-completed-val">0</div>
+</div>
+<div class="fs-2 text-success opacity-50"><i class="bi bi-check2-circle"></i></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Блок меню переключения панелей на вкладке. Выбранная панель добавляется в url -->
+<div class="d-flex align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+<div class="d-flex align-items-center gap-1 flex-wrap" id="tasks-subtabs-nav" role="tablist">
+<button class="btn btn-sm btn-outline-primary active d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-i18n-title="tasks.subtabs.casesTitle" data-panel-id="panel-cases" id="btn-subtab-cases" title="{{tasks.subtabs.casesTitle}}" type="button">
+<i class="bi bi-kanban me-1"></i>
+<span data-i18n="ui.tasks.subtabCases" id="spn-ui-tasks-subtab-cases">{{ui.tasks.subtabCases}}</span>
+</button>
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-i18n-title="tasks.subtabs.intakeTitle" data-panel-id="panel-intake" id="btn-subtab-intake" title="{{tasks.subtabs.intakeTitle}}" type="button">
+<i class="bi bi-magic me-1 text-primary"></i>
+<span data-i18n="ui.tasks.subtabIntake" id="spn-ui-tasks-subtab-intake">{{ui.tasks.subtabIntake}}</span>
+</button>
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-i18n-title="tasks.subtabs.coordinationTitle" data-panel-id="panel-coordination" id="btn-subtab-coordination" title="{{tasks.subtabs.coordinationTitle}}" type="button">
+<i class="bi bi-calendar-check me-1 text-success"></i>
+<span data-i18n="ui.tasks.subtabCoordination" id="spn-ui-tasks-subtab-coordination">{{ui.tasks.subtabCoordination}}</span>
+</button>
+<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2.5 rounded" data-i18n-title="tasks.subtabs.docsTitle" data-panel-id="panel-docs" id="btn-subtab-docs" title="{{tasks.subtabs.docsTitle}}" type="button">
+<i class="bi bi-file-earmark-text me-1 text-info"></i>
+<span data-i18n="ui.tasks.subtabDocs" id="spn-ui-tasks-subtab-docs">{{ui.tasks.subtabDocs}}</span>
+</button>
+</div>
+</div>
+<!-- Содержимое субпанелей -->
+<div class="tab-content" id="tasks-subtabs-content">
+<!-- Субпанель 1: Активные дела и карточка дела -->
+<div class="tasks-subpane active" id="tasks-subpane-cases">
+<div class="row g-3">
+<!-- Левая колонка: Список дел -->
+<div class="col-12 col-lg-5">
+<div class="card shadow-sm h-100">
+<div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
+<span class="fw-semibold small d-flex align-items-center gap-1.5">
+<i class="bi bi-list-task"></i>
+<span data-i18n="ui.tasks.caseListTitle" id="spn-ui-tasks-case-list-title">{{ui.tasks.caseListTitle}}</span>
+</span>
+<span class="badge bg-primary-subtle text-primary border" data-i18n="ui.tasks.txt_50c1c700" id="tasks-cases-badge">{{ui.tasks.txt_50c1c700}}</span>
+</div>
+<div class="card-body p-2 overflow-auto" id="tasks-cases-list-container" style="max-height: 560px;">
+<div class="text-center text-muted py-5" id="tasks-empty-state">
+<i class="bi bi-inbox fs-1 opacity-50 d-block mb-2"></i>
+<span data-i18n="ui.tasks.noCases" id="spn-ui-tasks-no-cases">{{ui.tasks.noCases}}</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Правая колонка: Детали выбранного дела -->
+<div class="col-12 col-lg-7">
+<div class="card shadow-sm h-100" id="tasks-case-detail-card">
+<div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between flex-wrap gap-2">
+<div class="d-flex align-items-center gap-2">
+<span class="badge bg-success-subtle text-success border" data-i18n="ui.ide.txt_87a4286b" id="tasks-detail-status-badge">{{ui.ide.txt_87a4286b}}</span>
+<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.tasks.txt_4f4f8f23" id="tasks-detail-category-badge">{{ui.tasks.txt_4f4f8f23}}</span>
+</div>
+<div class="d-flex align-items-center gap-2">
+<button class="btn btn-xs btn-outline-danger" data-i18n-title="tasks.deleteCaseTitle" id="btn-tasks-delete-case" title="{{tasks.deleteCaseTitle}}" type="button">
+<i class="bi bi-trash"></i>
+</button>
+</div>
+</div>
+<div class="card-body p-3 overflow-auto" style="max-height: 560px;">
+<h5 class="fw-bold mb-2" data-i18n="ui.tasks.txt_3dc6afa1" id="tasks-detail-title">{{ui.tasks.txt_3dc6afa1}}</h5>
+<p class="small text-muted mb-3" data-i18n="ui.tasks.txt_a507d360" id="tasks-detail-description">{{ui.tasks.txt_a507d360}}</p>
+<!-- Прогресс выполнения -->
+<div class="mb-3">
+<div class="d-flex justify-content-between small text-muted mb-1">
+<span data-i18n="ui.tasks.progressLabel" id="spn-ui-tasks-progress-label">{{ui.tasks.progressLabel}}</span>
+<span id="tasks-detail-progress-text">0%</span>
+</div>
+<div class="progress" style="height: 6px;">
+<div class="progress-bar bg-success" id="tasks-detail-progress-bar" role="progressbar" style="width: 0%;"></div>
+</div>
+</div>
+<!-- Блок участников (Акторов) -->
+<div class="mb-3 p-2.5 rounded bg-body-tertiary border" id="tasks-detail-actors-box">
+<div class="small fw-semibold mb-1.5 d-flex align-items-center gap-1.5 text-secondary">
+<i class="bi bi-people"></i>
+<span data-i18n="ui.tasks.actorsTitle" id="spn-ui-tasks-actors-title">{{ui.tasks.actorsTitle}}</span>
+</div>
+<div class="d-flex flex-wrap gap-1.5" id="tasks-detail-actors-list">
+<span class="badge bg-light text-muted border">—</span>
+</div>
+</div>
+<!-- Чек-лист подзадач -->
+<div>
+<div class="small fw-semibold mb-2 d-flex align-items-center justify-content-between">
+<span class="d-flex align-items-center gap-1.5">
+<i class="bi bi-check2-all text-primary"></i>
+<span data-i18n="ui.tasks.subtasksTitle" id="spn-ui-tasks-subtasks-title">{{ui.tasks.subtasksTitle}}</span>
+</span>
+<span class="badge bg-secondary-subtle text-secondary" id="tasks-subtasks-count">0/0</span>
+</div>
+<div class="list-group list-group-flush border rounded" id="tasks-items-list-group">
+<div class="list-group-item text-muted small text-center py-3"><span data-i18n="ui.tasks.txt_5508e1e4" id="spn-ui-tasks-txt-5508e1e4">{{ui.tasks.txt_5508e1e4}}</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Субпанель 2: ИИ-Мастер декомпозиции звонков и поручений -->
+<div class="tasks-subpane d-none" id="tasks-subpane-intake">
+<div class="row g-3">
+<div class="col-12 col-lg-6">
+<div class="card shadow-sm h-100">
+<div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
+<span class="fw-semibold small d-flex align-items-center gap-1.5">
+<i class="bi bi-mic"></i>
+<span data-i18n="ui.tasks.intakeInputTitle" id="spn-ui-tasks-intake-input-title">{{ui.tasks.intakeInputTitle}}</span>
+</span>
+<button class="btn btn-xs btn-outline-primary" id="btn-tasks-paste-cow-demo" type="button">
+<span data-i18n="ui.tasks.pasteCowExample" id="spn-ui-tasks-paste-cow-example">{{ui.tasks.pasteCowExample}}</span>
+</button>
+</div>
+<div class="card-body p-3">
+<div class="mb-3">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.sourceLabel" id="lbl-ui-tasks-source-label">{{ui.tasks.sourceLabel}}</label>
+<select class="form-select form-select-sm" id="tasks-intake-source">
+<option data-i18n="ui.tasks.sourcePhone" id="opt-ui-tasks-source-phone" selected="" value="Телефонный разговор">{{ui.tasks.sourcePhone}}</option>
+<option data-i18n="ui.tasks.sourceTelegram" id="opt-ui-tasks-source-telegram" value="Голосовое сообщение Telegram">{{ui.tasks.sourceTelegram}}</option>
+<option data-i18n="ui.tasks.sourceGmail" id="opt-ui-tasks-source-gmail" value="Письмо Gmail">{{ui.tasks.sourceGmail}}</option>
+<option data-i18n="ui.tasks.sourceNote" id="opt-ui-tasks-source-note" value="Заметка секретаря">{{ui.tasks.sourceNote}}</option>
+</select>
+</div>
+<div class="mb-3">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.textLabel" id="lbl-ui-tasks-text-label">{{ui.tasks.textLabel}}</label>
+<textarea class="form-control font-monospace small" data-i18n-placeholder="placeholders.tasks.txt_4da7c397" id="tasks-intake-text" placeholder="{{placeholders.tasks.txt_4da7c397}}" rows="10"></textarea>
+</div>
+<div class="d-flex justify-content-end gap-2">
+<button class="btn btn-outline-secondary btn-sm" id="btn-tasks-clear-intake" type="button">
+<span data-i18n="common.clear" id="spn-common-clear">{{common.clear}}</span>
+</button>
+<button class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 shadow-sm" id="btn-tasks-decompose-action" type="button">
+<i class="bi bi-cpu"></i>
+<span data-i18n="ui.tasks.btnDecompose" id="spn-ui-tasks-btn-decompose">{{ui.tasks.btnDecompose}}</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="col-12 col-lg-6">
+<div class="card shadow-sm h-100" id="tasks-preview-card">
+<div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
+<span class="fw-semibold small d-flex align-items-center gap-1.5">
+<i class="bi bi-eye"></i>
+<span data-i18n="ui.tasks.planPreviewTitle" id="spn-ui-tasks-plan-preview-title">{{ui.tasks.planPreviewTitle}}</span>
+</span>
+<span class="badge bg-info-subtle text-info border" data-i18n="ui.tml.txt_58743455" id="tasks-preview-badge">{{ui.tml.txt_58743455}}</span>
+</div>
+<div class="card-body p-3 overflow-auto" style="max-height: 560px;">
+<div class="text-center text-muted py-5" id="tasks-preview-placeholder">
+<i class="bi bi-robot fs-1 opacity-50 d-block mb-2"></i>
+<span data-i18n="ui.tasks.previewHelp" id="spn-ui-tasks-preview-help">{{ui.tasks.previewHelp}}</span>
+</div>
+<div class="d-none" id="tasks-preview-content">
+<h6 class="fw-bold mb-2 text-primary" id="tasks-preview-title"></h6>
+<p class="small text-muted mb-3" id="tasks-preview-desc"></p>
+<div class="mb-3">
+<div class="small fw-semibold mb-1 text-secondary" data-i18n="ui.tasks.detectedActors" id="blk-ui-tasks-detected-actors">{{ui.tasks.detectedActors}}</div>
+<div class="d-flex flex-wrap gap-1.5" id="tasks-preview-actors"></div>
+</div>
+<div class="mb-3">
+<div class="small fw-semibold mb-1 text-secondary" data-i18n="ui.tasks.stepsList" id="blk-ui-tasks-steps-list">{{ui.tasks.stepsList}}</div>
+<div class="list-group list-group-flush border rounded" id="tasks-preview-steps"></div>
+</div>
+<button class="btn btn-success btn-sm w-100 d-flex align-items-center justify-content-center gap-2 shadow-sm py-2" id="btn-tasks-confirm-create" type="button">
+<i class="bi bi-check-lg fs-6"></i>
+<span class="fw-semibold" data-i18n="ui.tasks.btnCreateFromPlan" id="spn-ui-tasks-btn-create-from-plan">{{ui.tasks.btnCreateFromPlan}}</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Субпанель 3: Согласование визитов и календарь -->
+<div class="tasks-subpane d-none" id="tasks-subpane-coordination">
+<div class="row g-3">
+<!-- Блок Ветеринарного осмотра -->
+<div class="col-12 col-md-6">
+<div class="card shadow-sm h-100">
+<div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
+<span class="fw-semibold small d-flex align-items-center gap-1.5 text-success">
+<i class="bi bi-hospital"></i>
+<span data-i18n="ui.tasks.vetCoordTitle" id="spn-ui-tasks-vet-coord-title">{{ui.tasks.vetCoordTitle}}</span>
+</span>
+<span class="badge bg-warning-subtle text-warning border" data-i18n="ui.tasks.txt_4aecbbe3" id="spn-ui-tasks-txt-4aecbbe3">{{ui.tasks.txt_4aecbbe3}}</span>
+</div>
+<div class="card-body p-3">
+<p class="small text-muted mb-3" data-i18n="ui.tasks.vetCoordDesc" id="p-ui-tasks-vet-coord-desc">{{ui.tasks.vetCoordDesc}}</p>
+<div class="mb-2.5">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.vetDoctor" id="lbl-ui-tasks-vet-doctor">{{ui.tasks.vetDoctor}}</label>
+<div class="input-group input-group-sm">
+<span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+<input class="form-control" id="tasks-vet-name" type="text" value="Д-р Левин (Клиника 'АгроВет')"/>
+</div>
+</div>
+<div class="mb-2.5">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.inspectionPlace" id="lbl-ui-tasks-inspection-place">{{ui.tasks.inspectionPlace}}</label>
+<div class="input-group input-group-sm">
+<span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+<input class="form-control" id="tasks-vet-location" type="text" value="Хозяйство Шмулика, фермерский сектор"/>
+</div>
+</div>
+<div class="row g-2 mb-3">
+<div class="col-6">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.date" id="lbl-ui-tasks-date">{{ui.tasks.date}}</label>
+<input class="form-control form-control-sm" id="tasks-vet-date" type="date" value="2026-11-05"/>
+</div>
+<div class="col-6">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.time" id="lbl-ui-tasks-time">{{ui.tasks.time}}</label>
+<input class="form-control form-control-sm" id="tasks-vet-time" type="time" value="10:00"/>
+</div>
+</div>
+<button class="btn btn-outline-success btn-sm w-100 d-flex align-items-center justify-content-center gap-2" id="btn-tasks-sync-vet-calendar" type="button">
+<i class="bi bi-calendar-plus"></i>
+<span data-i18n="ui.tasks.btnSyncCalendar" id="spn-ui-tasks-btn-sync-calendar">{{ui.tasks.btnSyncCalendar}}</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Блок Страхового агента -->
+<div class="col-12 col-md-6">
+<div class="card shadow-sm h-100">
+<div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
+<span class="fw-semibold small d-flex align-items-center gap-1.5 text-info">
+<i class="bi bi-shield-check"></i>
+<span data-i18n="ui.tasks.insuranceCoordTitle" id="spn-ui-tasks-insurance-coord-title">{{ui.tasks.insuranceCoordTitle}}</span>
+</span>
+<span class="badge bg-warning-subtle text-warning border" data-i18n="ui.tasks.txt_4aecbbe3" id="spn-ui-tasks-txt-4aecbbe3-2">{{ui.tasks.txt_4aecbbe3}}</span>
+</div>
+<div class="card-body p-3">
+<p class="small text-muted mb-3" data-i18n="ui.tasks.insuranceCoordDesc" id="p-ui-tasks-insurance-coord-desc">{{ui.tasks.insuranceCoordDesc}}</p>
+<div class="mb-2.5">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.insuranceAgent" id="lbl-ui-tasks-insurance-agent">{{ui.tasks.insuranceAgent}}</label>
+<div class="input-group input-group-sm">
+<span class="input-group-text"><i class="bi bi-person-workspace"></i></span>
+<input class="form-control" id="tasks-ins-name" type="text" value="Агент 'АгроСтрах' (Давид Коэн)"/>
+</div>
+</div>
+<div class="mb-2.5">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.inspectionPlace" id="lbl-ui-tasks-inspection-place-2">{{ui.tasks.inspectionPlace}}</label>
+<div class="input-group input-group-sm">
+<span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+<input class="form-control" id="tasks-ins-location" type="text" value="Хозяйство Шмулика, фермерский сектор"/>
+</div>
+</div>
+<div class="row g-2 mb-3">
+<div class="col-6">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.date" id="lbl-ui-tasks-date-2">{{ui.tasks.date}}</label>
+<input class="form-control form-control-sm" id="tasks-ins-date" type="date" value="2026-11-06"/>
+</div>
+<div class="col-6">
+<label class="form-label small fw-semibold text-secondary" data-i18n="ui.tasks.time" id="lbl-ui-tasks-time-2">{{ui.tasks.time}}</label>
+<input class="form-control form-control-sm" id="tasks-ins-time" type="time" value="14:00"/>
+</div>
+</div>
+<button class="btn btn-outline-info btn-sm w-100 d-flex align-items-center justify-content-center gap-2" id="btn-tasks-sync-ins-calendar" type="button">
+<i class="bi bi-calendar-plus"></i>
+<span data-i18n="ui.tasks.btnSyncCalendar" id="spn-ui-tasks-btn-sync-calendar-2">{{ui.tasks.btnSyncCalendar}}</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Субпанель 4: Пакет документов и договоры -->
+<div class="tasks-subpane d-none" id="tasks-subpane-docs">
+<div class="card shadow-sm">
+<div class="card-header bg-transparent py-2.5 d-flex align-items-center justify-content-between">
+<span class="fw-semibold small d-flex align-items-center gap-1.5">
+<i class="bi bi-folder2-open text-primary"></i>
+<span data-i18n="ui.tasks.docPackageTitle" id="spn-ui-tasks-doc-package-title">{{ui.tasks.docPackageTitle}}</span>
+</span>
+<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.tasks.txt_27dcfb3c" id="spn-ui-tasks-txt-27dcfb3c">{{ui.tasks.txt_27dcfb3c}}</span>
+</div>
+<div class="card-body p-3">
+<div class="list-group list-group-flush border rounded mb-3">
+<div class="list-group-item d-flex align-items-center justify-content-between py-2.5">
+<div class="d-flex align-items-center gap-2.5">
+<i class="bi bi-file-earmark-word fs-4 text-primary"></i>
+<div>
+<div class="fw-semibold small"><span data-i18n="ui.tasks.txt_e8017a19" id="spn-ui-tasks-txt-e8017a19">{{ui.tasks.txt_e8017a19}}</span></div>
+<div class="small text-muted"><span data-i18n="ui.tasks.txt_4ba673be" id="spn-ui-tasks-txt-4ba673be">{{ui.tasks.txt_4ba673be}}</span></div>
+</div>
+</div>
+<span class="badge bg-warning-subtle text-warning border" data-i18n="ui.tasks.txt_30ab6155" id="spn-ui-tasks-txt-30ab6155">{{ui.tasks.txt_30ab6155}}</span>
+</div>
+<div class="list-group-item d-flex align-items-center justify-content-between py-2.5">
+<div class="d-flex align-items-center gap-2.5">
+<i class="bi bi-file-earmark-medical fs-4 text-success"></i>
+<div>
+<div class="fw-semibold small"><span data-i18n="ui.tasks.txt_d5430d8f" id="spn-ui-tasks-txt-d5430d8f">{{ui.tasks.txt_d5430d8f}}</span></div>
+<div class="small text-muted"><span data-i18n="ui.tasks.txt_316c3a52" id="spn-ui-tasks-txt-316c3a52">{{ui.tasks.txt_316c3a52}}</span></div>
+</div>
+</div>
+<span class="badge bg-danger-subtle text-danger border" data-i18n="ui.tasks.txt_b12982bb" id="spn-ui-tasks-txt-b12982bb">{{ui.tasks.txt_b12982bb}}</span>
+</div>
+<div class="list-group-item d-flex align-items-center justify-content-between py-2.5">
+<div class="d-flex align-items-center gap-2.5">
+<i class="bi bi-file-earmark-check fs-4 text-info"></i>
+<div>
+<div class="fw-semibold small"><span data-i18n="ui.tasks.txt_fcdcbfe6" id="spn-ui-tasks-txt-fcdcbfe6">{{ui.tasks.txt_fcdcbfe6}}</span></div>
+<div class="small text-muted"><span data-i18n="ui.tasks.txt_0192cea6" id="spn-ui-tasks-txt-0192cea6">{{ui.tasks.txt_0192cea6}}</span></div>
+</div>
+</div>
+<span class="badge bg-secondary-subtle text-secondary border" data-i18n="ui.tasks.txt_e904d651" id="spn-ui-tasks-txt-e904d651">{{ui.tasks.txt_e904d651}}</span>
+</div>
+</div>
+<div class="p-2.5 bg-body-tertiary rounded border d-flex align-items-center justify-content-between flex-wrap gap-2">
+<div class="small text-muted">
+<i class="bi bi-info-circle me-1"></i>
+<span data-i18n="ui.tasks.workspaceSyncNote" id="spn-ui-tasks-workspace-sync-note">{{ui.tasks.workspaceSyncNote}}</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>

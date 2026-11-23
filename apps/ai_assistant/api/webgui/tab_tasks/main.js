@@ -11,7 +11,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_tasks
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-06 23:30:00
+ * Updated: 2026-11-12 02:40:00
  * =============================================================================
  */
 
@@ -69,18 +69,33 @@ function setupSubtabsNavigation() {
     if (!btn) return;
 
     const panelId = btn.getAttribute('data-panel-id');
-    switchSubpane(panelId);
+    const blockId = btn.getAttribute('data-block-id');
+    switchSubpane(panelId, true, blockId);
   });
 }
 
 /**
- * Переключает субпанель по её panelId.
+ * Нормализует panelId к каноническому panel-xxx.
+ * @param {string} panelId
+ * @returns {string}
  */
-function switchSubpane(panelId, updateHash = true) {
+function normalizePanelId(panelId) {
+  if (!panelId) return 'panel-cases';
+  const clean = String(panelId).toLowerCase().trim().replace(/^#/, '');
+  if (clean.startsWith('panel-')) return clean;
+  return `panel-${clean}`;
+}
+
+/**
+ * Переключает субпанель по её panelId и опциональному blockId.
+ */
+function switchSubpane(panelId, updateHash = true, blockId = null) {
+  const canonicalPanel = normalizePanelId(panelId);
+
   // Активируем кнопку в меню
   const navBtns = document.querySelectorAll('#tasks-subtabs-nav button[data-panel-id]');
   navBtns.forEach(b => {
-    if (b.getAttribute('data-panel-id') === panelId) {
+    if (normalizePanelId(b.getAttribute('data-panel-id')) === canonicalPanel) {
       b.classList.add('active');
     } else {
       b.classList.remove('active');
@@ -88,7 +103,7 @@ function switchSubpane(panelId, updateHash = true) {
   });
 
   // Переключаем видимость контейнеров
-  const paneSuffix = panelId.replace('panel-', '');
+  const paneSuffix = canonicalPanel.replace('panel-', '');
   const panes = document.querySelectorAll('.tasks-subpane');
   panes.forEach(p => {
     if (p.id === `tasks-subpane-${paneSuffix}`) {
@@ -101,7 +116,8 @@ function switchSubpane(panelId, updateHash = true) {
   });
 
   if (updateHash && window.history?.replaceState) {
-    window.history.replaceState(null, null, `#tab-tasks#${panelId}`);
+    const blockSuffix = blockId ? (String(blockId).startsWith('#block-') ? String(blockId) : (String(blockId).startsWith('block-') ? `#${blockId}` : `#block-${blockId}`)) : '';
+    window.history.replaceState(null, null, `#tab-tasks#${canonicalPanel}${blockSuffix}`);
   }
 }
 
@@ -111,15 +127,28 @@ function switchSubpane(panelId, updateHash = true) {
 function setupTasksHashRouting() {
   const syncFromHash = () => {
     const rawHash = window.location.hash || '';
-    if (!rawHash.includes('#tab-tasks#')) return;
+    if (!rawHash.includes('#tab-tasks')) return;
 
-    const panelId = rawHash
-      .replace(/^#tab-tasks#/, '')
-      .split('#')[0];
+    const parts = rawHash.replace(/^#/, '').split('#');
+    let panelId = null;
+    let blockId = null;
 
-    if (panelId && document.querySelector(`button[data-panel-id="${panelId}"]`)) {
-      switchSubpane(panelId, false);
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i];
+      if (part.startsWith('panel-')) {
+        panelId = part;
+      } else if (part.startsWith('block-')) {
+        blockId = part;
+      } else if (!panelId && ['cases', 'intake', 'coordination', 'docs'].includes(part.toLowerCase())) {
+        panelId = `panel-${part.toLowerCase()}`;
+      }
     }
+
+    if (!panelId) {
+      panelId = 'panel-cases';
+    }
+
+    switchSubpane(panelId, false, blockId);
   };
 
   window.addEventListener('hashchange', syncFromHash);

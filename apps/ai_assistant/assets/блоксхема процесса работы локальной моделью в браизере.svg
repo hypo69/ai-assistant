@@ -1,0 +1,281 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2625.314833333334 2115.116" width="2625.314833333334" height="2115.116" style="--bg:#18181B;--fg:#F4F4F5;--line:#71717A;--muted:#A1A1AA;--surface:#27272A;--border:#3F3F46;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="User" data-to="UI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1259.6461666666673,315 1259.6461666666673,339 1433.0029166666673,339 1433.0029166666673,363" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="UI" data-to="API_List" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="GET /api/v1/embeddings/models" points="1483.4363166666672,399.9 1483.4363166666672,423.90000000000003 1840.3577500000008,423.90000000000003 1840.3577500000008,498.20000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="UI" data-to="API_Active" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="GET /api/v1/embeddings/active-model" points="1584.3031166666674,399.9 1584.3031166666674,411.90000000000003 2022.9137500000008,411.90000000000003 2022.9137500000006,498.20000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="API_List" data-to="EmbSvc" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1840.3577500000008,535.1 1840.3577500000008,562.1 1931.6357500000006,562.1 1931.6357500000006,589.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="API_Active" data-to="EmbSvc" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="2022.9137500000008,535.1 2022.9137500000008,562.1 1931.6357500000006,562.1 1931.6357500000006,589.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EmbSvc" data-to="Cat" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1931.6357500000008,626 1931.6357500000008,674" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Cat" data-to="Cat_LB" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1931.6357500000008,710.9 1931.6357500000008,728.9 1865.355333333334,728.9 1865.355333333334,746.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Cat" data-to="Cat_Gem" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1931.6357500000008,710.9 1931.6357500000008,728.9 2209.845833333334,728.9 2209.845833333334,746.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Cat" data-to="Cat_Oll" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1931.6357500000008,710.9 1931.6357500000008,728.9 1326.0563333333341,728.9 1326.0563333333341,1800.116" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Cat" data-to="Cat_OAI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1931.6357500000008,710.9 1931.6357500000008,728.9 1549.0228333333341,728.9 1549.0228333333341,746.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Cat" data-to="Cat_Hash" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1931.6357500000008,710.9 1931.6357500000008,728.9 2475.049333333334,728.9 2475.049333333334,746.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="UI" data-to="SaveFlow" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Кнопка Сохранить: POST /api/v1/embeddings/model" points="1281.7027166666674,399.9 1281.7027166666674,411.90000000000003 319.80083333333414,411.90000000000003 319.80083333333414,498.20000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SaveFlow" data-to="CfgFile" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="319.8008333333342,535.1 319.8008333333342,562.1 501.72050000000064,562.1 501.72050000000064,589.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SaveFlow" data-to="UserSettings" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="319.8008333333342,535.1 319.8008333333342,562.1 141.29850000000087,562.1 141.29850000000087,589.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="UI" data-to="ProviderCheck" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Кнопка Тест вектора" points="1382.5695166666674,399.9 1382.5695166666674,423.90000000000003 959.4726666666675,423.90000000000003 959.4726666666675,498.20000000000016" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ProviderCheck" data-to="Client" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="local_bert (Браузер)" points="994.2998333333339,672.3358333333334 994.2998333333339,749.1630000000001 1074.561333333334,749.1630000000001 1074.561333333334,829.4630000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Client" data-to="Worker" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1074.561333333334,866.363 1074.561333333334,914.363" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Worker" data-to="TJS" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1074.561333333334,951.263 1074.561333333334,999.263" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TJS" data-to="CacheCheck" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1074.561333333334,1036.163 1074.5613333333338,1084.163" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CacheCheck" data-to="HF" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Нет (первый запуск)" points="1030.348166666667,1305.2288333333333 1030.348166666667,1385.442 980.713083333334,1385.442 980.713083333334,1465.742" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="HF" data-to="BrowserCache" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="980.713083333334,1502.642 980.713083333334,1538.642 1040.1526666666673,1538.642 1040.1526666666673,1550.642" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CacheCheck" data-to="BrowserCache" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Да (офлайн)" points="1118.7745000000004,1305.2288333333333 1118.7745000000004,1385.442 1168.409583333334,1385.442 1168.409583333334,1538.642 1108.9700000000005,1538.642 1108.9700000000005,1550.642" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="BrowserCache" data-to="ExecDevice" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1074.5613333333338,1601.5420000000001 1074.561333333334,1649.5420000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ExecDevice" data-to="WebGPU" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Да (mode=auto/webgpu)" points="1043.3156666666673,1805.7703333333334 1043.3156666666673,1873.016 957.1500833333339,1873.016 957.1500833333339,1953.316" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ExecDevice" data-to="WASM" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Нет / mode=wasm" points="1105.8070000000007,1805.7703333333334 1105.8070000000007,1873.016 1191.972583333334,1873.016 1191.972583333334,1953.316" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="WebGPU" data-to="BrowserResult" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="957.1500833333339,1990.2160000000001 957.1500833333339,2014.2160000000001 1074.561333333334,2014.2160000000001 1074.561333333334,2038.2160000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="WASM" data-to="BrowserResult" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1191.972583333334,1990.2160000000001 1191.972583333334,2014.2160000000001 1074.561333333334,2014.2160000000001 1074.561333333334,2038.2160000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ProviderCheck" data-to="API_Test" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="gemini / ollama / openai / hash" points="924.6455000000008,672.3358333333334 924.6455000000008,749.163 844.3840000000005,749.163 844.3840000000005,817.463 700.9712166666673,817.463 700.9712166666673,829.463" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="API_Test" data-to="EmbSvcTest" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="629.436883333334,829.463 629.436883333334,664 40.04000000000087,664 40.04000000000087,100.9 1343.9933333333342,100.9 1343.9933333333342,76.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EmbSvcTest" data-to="GemAPI" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="gemini" points="1401.002500000001,76.9 1401.002500000001,112.9 1207.2576666666673,112.9 1207.2576666666673,205.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EmbSvcTest" data-to="OllAPI" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="ollama" points="1458.0116666666675,76.9 1458.0116666666672,205.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EmbSvcTest" data-to="OaiAPI" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="openai" points="1515.0208333333342,76.9 1515.0208333333342,112.9 1711.729666666667,112.9 1711.729666666667,205.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EmbSvcTest" data-to="HashExec" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="hash" points="1572.0300000000007,76.9 1572.0300000000007,100.9 2005.461666666667,100.9 2005.461666666667,205.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="GemAPI" data-to="ServerResult" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1207.2576666666673,242.1 1207.2576666666673,260.1 1606.3596666666672,260.1 1606.3596666666672,278.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="OllAPI" data-to="ServerResult" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1458.0116666666675,242.1 1458.0116666666675,260.1 1606.3596666666672,260.1 1606.3596666666672,278.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="OaiAPI" data-to="ServerResult" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1711.729666666667,242.1 1711.729666666667,260.1 1606.3596666666672,260.1 1606.3596666666672,278.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="HashExec" data-to="ServerResult" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="2005.461666666667,242.1 2005.461666666667,260.1 1606.3596666666672,260.1 1606.3596666666672,278.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ServerResult" data-to="UI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1606.3596666666672,315 1606.3596666666672,339 1433.0029166666673,339 1433.0029166666673,363" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CfgFile" data-to="TextRAG" data-style="dotted" data-arrow-start="false" data-arrow-end="true" data-label="Чтение embedding_model" points="501.7205000000006,640 501.7205000000006,652 358.30771666666715,652 358.3077166666674,746.9" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TextRAG" data-to="FAISS" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="358.3077166666674,783.8 358.3077166666676,829.1999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="UI" data-to="API_List" data-label="GET /api/v1/embeddings/models">
+  <rect x="1757.3577500000008" y="430.90000000000003" width="165.556" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1840.1357500000008" y="446.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">GET /api/v1/embeddings/models</text>
+</g>
+<g class="edge-label" data-from="UI" data-to="API_Active" data-label="GET /api/v1/embeddings/active-model">
+  <rect x="1926.9137500000008" y="430.90000000000003" width="191.09799999999998" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="2022.4627500000008" y="446.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">GET /api/v1/embeddings/active-model</text>
+</g>
+<g class="edge-label" data-from="UI" data-to="SaveFlow" data-label="Кнопка Сохранить: POST /api/v1/embeddings/model">
+  <rect x="188.80083333333414" y="418.90000000000003" width="261.784" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="319.69283333333414" y="434.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Кнопка Сохранить: POST /api/v1/embeddings/model</text>
+</g>
+<g class="edge-label" data-from="UI" data-to="ProviderCheck" data-label="Кнопка Тест вектора">
+  <rect x="897.9726666666675" y="430.90000000000003" width="122.19400000000003" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="959.0696666666674" y="446.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Кнопка Тест вектора</text>
+</g>
+<g class="edge-label" data-from="ProviderCheck" data-to="Client" data-label="local_bert (Браузер)">
+  <rect x="1017.0613333333341" y="756.1630000000001" width="114.47200000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1074.297333333334" y="771.3130000000001" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">local_bert (Браузер)</text>
+</g>
+<g class="edge-label" data-from="CacheCheck" data-to="HF" data-label="Нет (первый запуск)">
+  <rect x="922.213083333334" y="1392.442" width="116.25400000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="980.340083333334" y="1407.592" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Нет (первый запуск)</text>
+</g>
+<g class="edge-label" data-from="CacheCheck" data-to="BrowserCache" data-label="Да (офлайн)">
+  <rect x="1131.909583333334" y="1392.442" width="72.89200000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1168.355583333334" y="1407.592" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Да (офлайн)</text>
+</g>
+<g class="edge-label" data-from="ExecDevice" data-to="WebGPU" data-label="Да (mode=auto/webgpu)">
+  <rect x="892.6500833333339" y="1880.016" width="128.13400000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="956.7170833333339" y="1895.1660000000002" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Да (mode=auto/webgpu)</text>
+</g>
+<g class="edge-label" data-from="ExecDevice" data-to="WASM" data-label="Нет / mode=wasm">
+  <rect x="1141.972583333334" y="1880.016" width="99.028" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1191.4865833333338" y="1895.1660000000002" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Нет / mode=wasm</text>
+</g>
+<g class="edge-label" data-from="ProviderCheck" data-to="API_Test" data-label="gemini / ollama / openai / hash">
+  <rect x="767.8840000000005" y="756.163" width="152.48800000000003" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="844.1280000000005" y="771.313" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">gemini / ollama / openai / hash</text>
+</g>
+<g class="edge-label" data-from="EmbSvcTest" data-to="GemAPI" data-label="gemini">
+  <rect x="1183.2576666666673" y="119.9" width="47.35" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1206.9326666666673" y="135.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">gemini</text>
+</g>
+<g class="edge-label" data-from="EmbSvcTest" data-to="OllAPI" data-label="ollama">
+  <rect x="1434.0116666666672" y="119.9" width="47.35" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1457.6866666666672" y="135.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">ollama</text>
+</g>
+<g class="edge-label" data-from="EmbSvcTest" data-to="OaiAPI" data-label="openai">
+  <rect x="1686.729666666667" y="119.9" width="49.726000000000006" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1711.5926666666671" y="135.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">openai</text>
+</g>
+<g class="edge-label" data-from="EmbSvcTest" data-to="HashExec" data-label="hash">
+  <rect x="1984.461666666667" y="143.9" width="41.41" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="2005.166666666667" y="159.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">hash</text>
+</g>
+<g class="edge-label" data-from="CfgFile" data-to="TextRAG" data-label="Чтение embedding_model">
+  <rect x="288.30771666666715" y="671" width="139.42000000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="358.0177166666672" y="686.15" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Чтение embedding_model</text>
+</g>
+<g class="node" data-id="User" data-label="Пользователь открывает #tab-models" data-shape="stadium">
+  <rect x="1123.4456666666674" y="278.1" width="272.40099999999995" height="36.900000000000006" rx="18.450000000000003" ry="18.450000000000003" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1259.6461666666673" y="296.55" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Пользователь открывает #tab-models</text>
+</g>
+<g class="node" data-id="UI" data-label="WebGUI: панель эмбеддингов (tab_models/panel_embedding_models/panel.js)" data-shape="rectangle">
+  <rect x="1180.8359166666673" y="363" width="504.3339999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1433.0029166666673" y="381.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">WebGUI: панель эмбеддингов (tab_models/panel_embedding_models/panel.js)</text>
+</g>
+<g class="node" data-id="API_List" data-label="FastAPI: router.py" data-shape="rectangle">
+  <rect x="1765.6602500000008" y="498.20000000000005" width="149.395" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1840.3577500000008" y="516.6500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">FastAPI: router.py</text>
+</g>
+<g class="node" data-id="API_Active" data-label="FastAPI: router.py" data-shape="rectangle">
+  <rect x="1948.2162500000009" y="498.20000000000005" width="149.395" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2022.9137500000008" y="516.6500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">FastAPI: router.py</text>
+</g>
+<g class="node" data-id="EmbSvc" data-label="EmbeddingModelsService (apps/common/models/embedding_service.py)" data-shape="rectangle">
+  <rect x="1695.4002500000006" y="589.1" width="472.47099999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1931.6357500000006" y="607.5500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">EmbeddingModelsService (apps/common/models/embedding_service.py)</text>
+</g>
+<g class="node" data-id="Cat" data-label="Каталог моделей (src/ai/orchestration/embedding_models.py)" data-shape="rectangle">
+  <rect x="1726.522250000001" y="674" width="410.2269999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1931.6357500000008" y="692.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Каталог моделей (src/ai/orchestration/embedding_models.py)</text>
+</g>
+<g class="node" data-id="Cat_LB" data-label="local_bert: src/ai/local_bert/catalog.py (6 ONNX-моделей)" data-shape="rectangle">
+  <rect x="1675.802833333334" y="746.9" width="379.105" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1865.355333333334" y="765.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">local_bert: src/ai/local_bert/catalog.py (6 ONNX-моделей)</text>
+</g>
+<g class="node" data-id="Cat_Gem" data-label="gemini: SDK embedContent + fallback" data-shape="rectangle">
+  <rect x="2082.907833333334" y="746.9" width="253.87599999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2209.845833333334" y="765.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">gemini: SDK embedContent + fallback</text>
+</g>
+<g class="node" data-id="Cat_Oll" data-label="ollama: /api/tags + fallback" data-shape="rectangle">
+  <rect x="1229.869833333334" y="1800.116" width="192.373" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1326.0563333333341" y="1818.566" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">ollama: /api/tags + fallback</text>
+</g>
+<g class="node" data-id="Cat_OAI" data-label="openai: text-embedding-3-*" data-shape="rectangle">
+  <rect x="1450.2428333333341" y="746.9" width="197.55999999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1549.0228333333341" y="765.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">openai: text-embedding-3-*</text>
+</g>
+<g class="node" data-id="Cat_Hash" data-label="hash: hash-md5-256 / 384 / 768" data-shape="rectangle">
+  <rect x="2364.783833333334" y="746.9" width="220.53099999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2475.049333333334" y="765.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">hash: hash-md5-256 / 384 / 768</text>
+</g>
+<g class="node" data-id="SaveFlow" data-label="Сохранение активной модели" data-shape="rectangle">
+  <rect x="207.6828333333342" y="498.20000000000005" width="224.236" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="319.8008333333342" y="516.6500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Сохранение активной модели</text>
+</g>
+<g class="node" data-id="CfgFile" data-label="config.json (embedding_provider, embedding_model, embedding_dimension)" data-shape="cylinder">
+  <rect x="259.5570000000007" y="596.1" width="484.3269999999999" height="36.900000000000006" fill="var(--_node-fill)" stroke="none" />
+  <line x1="259.5570000000007" y1="596.1" x2="259.5570000000007" y2="633" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="743.8840000000006" y1="596.1" x2="743.8840000000006" y2="633" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="501.72050000000064" cy="633" rx="242.16349999999994" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="501.72050000000064" cy="596.1" rx="242.16349999999994" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="501.72050000000064" y="614.5500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">config.json (embedding_provider, embedding_model, embedding_dimension)</text>
+</g>
+<g class="node" data-id="UserSettings" data-label="data/user_settings.json" data-shape="cylinder">
+  <rect x="51.04000000000087" y="596.1" width="180.517" height="36.900000000000006" fill="var(--_node-fill)" stroke="none" />
+  <line x1="51.04000000000087" y1="596.1" x2="51.04000000000087" y2="633" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="231.55700000000087" y1="596.1" x2="231.55700000000087" y2="633" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="141.29850000000087" cy="633" rx="90.2585" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="141.29850000000087" cy="596.1" rx="90.2585" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="141.29850000000087" y="614.5500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">data/user_settings.json</text>
+</g>
+<g class="node" data-id="ProviderCheck" data-label="Выбранный провайдер?" data-shape="diamond">
+  <polygon points="959.4726666666674,498.20000000000005 1063.9541666666673,602.6815 959.4726666666674,707.163 854.9911666666674,602.6815" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="959.4726666666674" y="602.6815" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Выбранный провайдер?</text>
+</g>
+<g class="node" data-id="Client" data-label="LocalBertClient (js/local-bert-client.js)" data-shape="rectangle">
+  <rect x="943.918333333334" y="829.4630000000001" width="261.28599999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1074.561333333334" y="847.9130000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">LocalBertClient (js/local-bert-client.js)</text>
+</g>
+<g class="node" data-id="Worker" data-label="Web Worker (js/local-bert-worker.js)" data-shape="rectangle">
+  <rect x="947.2528333333339" y="914.363" width="254.61699999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1074.561333333334" y="932.8130000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Web Worker (js/local-bert-worker.js)</text>
+</g>
+<g class="node" data-id="TJS" data-label="Transformers.js v3 + ONNX Runtime Web" data-shape="rectangle">
+  <rect x="935.0263333333342" y="999.263" width="279.06999999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1074.561333333334" y="1017.7130000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Transformers.js v3 + ONNX Runtime Web</text>
+</g>
+<g class="node" data-id="CacheCheck" data-label="Веса INT8 есть в Cache Storage?" data-shape="diamond">
+  <polygon points="1074.5613333333338,1084.163 1207.2008333333338,1216.8025 1074.5613333333338,1349.442 941.9218333333338,1216.8025" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1074.5613333333338" y="1216.8025" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Веса INT8 есть в Cache Storage?</text>
+</g>
+<g class="node" data-id="HF" data-label="Загрузка ONNX INT8 с Hugging Face Hub (~23-110 МБ)" data-shape="rectangle">
+  <rect x="803.016583333334" y="1465.742" width="355.39299999999986" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="980.7130833333339" y="1484.192" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Загрузка ONNX INT8 с Hugging Face Hub (~23-110 МБ)</text>
+</g>
+<g class="node" data-id="BrowserCache" data-label="Браузерный Cache Storage" data-shape="cylinder">
+  <rect x="971.3353333333339" y="1557.642" width="206.45199999999994" height="36.900000000000006" fill="var(--_node-fill)" stroke="none" />
+  <line x1="971.3353333333339" y1="1557.642" x2="971.3353333333339" y2="1594.5420000000001" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="1177.787333333334" y1="1557.642" x2="1177.787333333334" y2="1594.5420000000001" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1074.5613333333338" cy="1594.5420000000001" rx="103.22599999999997" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1074.5613333333338" cy="1557.642" rx="103.22599999999997" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1074.5613333333338" y="1576.092" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Браузерный Cache Storage</text>
+</g>
+<g class="node" data-id="ExecDevice" data-label="Доступен WebGPU?" data-shape="diamond">
+  <polygon points="1074.561333333334,1649.5420000000001 1168.298333333334,1743.2790000000002 1074.561333333334,1837.0160000000003 980.824333333334,1743.2790000000002" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1074.561333333334" y="1743.2790000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Доступен WebGPU?</text>
+</g>
+<g class="node" data-id="WebGPU" data-label="Инференс на WebGPU" data-shape="rectangle">
+  <rect x="870.5965833333339" y="1953.316" width="173.10699999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="957.1500833333339" y="1971.766" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Инференс на WebGPU</text>
+</g>
+<g class="node" data-id="WASM" data-label="Инференс на WebAssembly (CPU)" data-shape="rectangle">
+  <rect x="1071.7035833333339" y="1953.316" width="240.53799999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1191.972583333334" y="1971.766" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Инференс на WebAssembly (CPU)</text>
+</g>
+<g class="node" data-id="BrowserResult" data-label="Результат в UI: device, latency ms, dim, превью вектора" data-shape="rectangle">
+  <rect x="888.3433333333342" y="2038.2160000000001" width="372.4359999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1074.561333333334" y="2056.666" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Результат в UI: device, latency ms, dim, превью вектора</text>
+</g>
+<g class="node" data-id="API_Test" data-label="POST /api/v1/embeddings/test" data-shape="rectangle">
+  <rect x="557.9025500000007" y="829.463" width="214.60299999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="665.2040500000007" y="847.913" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">POST /api/v1/embeddings/test</text>
+</g>
+<g class="node" data-id="EmbSvcTest" data-label="EmbeddingModelsService.test_embedding_model()" data-shape="rectangle">
+  <rect x="1286.9841666666675" y="40" width="342.0549999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1458.0116666666675" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">EmbeddingModelsService.test_embedding_model()</text>
+</g>
+<g class="node" data-id="GemAPI" data-label="Google Gemini API (ротация ключей)" data-shape="rectangle">
+  <rect x="1079.5786666666672" y="205.2" width="255.35799999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1207.2576666666673" y="223.64999999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Google Gemini API (ротация ключей)</text>
+</g>
+<g class="node" data-id="OllAPI" data-label="Ollama Local (/api/embed)" data-shape="rectangle">
+  <rect x="1362.9366666666674" y="205.2" width="190.14999999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1458.0116666666675" y="223.64999999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Ollama Local (/api/embed)</text>
+</g>
+<g class="node" data-id="OaiAPI" data-label="OpenAI-совместимый /v1/embeddings" data-shape="rectangle">
+  <rect x="1581.086666666667" y="205.2" width="261.28599999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1711.729666666667" y="223.64999999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">OpenAI-совместимый /v1/embeddings</text>
+</g>
+<g class="node" data-id="HashExec" data-label="Детерминированный MD5 хэш-вектор" data-shape="rectangle">
+  <rect x="1870.372666666667" y="205.2" width="270.178" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2005.461666666667" y="223.64999999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Детерминированный MD5 хэш-вектор</text>
+</g>
+<g class="node" data-id="ServerResult" data-label="Ответ JSON: dimensions, vector_preview, duration_ms" data-shape="rectangle">
+  <rect x="1423.8466666666673" y="278.1" width="365.0259999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1606.3596666666672" y="296.55" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Ответ JSON: dimensions, vector_preview, duration_ms</text>
+</g>
+<g class="node" data-id="TextRAG" data-label="TextRAG (src/ai/rag/text_rag.py)" data-shape="rectangle">
+  <rect x="241.0027166666673" y="746.9" width="234.60999999999993" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="358.30771666666726" y="765.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">TextRAG (src/ai/rag/text_rag.py)</text>
+</g>
+<g class="node" data-id="FAISS" data-label="FAISS индекс (.faiss + .json)" data-shape="cylinder">
+  <rect x="254.3407166666675" y="836.1999999999999" width="207.93399999999997" height="36.900000000000006" fill="var(--_node-fill)" stroke="none" />
+  <line x1="254.3407166666675" y1="836.1999999999999" x2="254.3407166666675" y2="873.0999999999999" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="462.2747166666675" y1="836.1999999999999" x2="462.2747166666675" y2="873.0999999999999" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="358.3077166666675" cy="873.0999999999999" rx="103.96699999999998" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="358.3077166666675" cy="836.1999999999999" rx="103.96699999999998" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="358.3077166666675" y="854.65" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">FAISS индекс (.faiss + .json)</text>
+</g>
+</svg>

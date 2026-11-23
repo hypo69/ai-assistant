@@ -1,7 +1,7 @@
 /**
  * Модуль каталога моделей ИИ, избранных чипов и переключения провайдеров.
- * Файл: apps/ai_assistant/api/webgui/tab_models/panel_models_catalog/panel.js
- * Updated: 2026-11-01 17:37:00
+ * Файл: apps/common/webgui/tab_models/panel_models_catalog/panel.js
+ * Updated: 2026-11-16 04:26:00
  */
 
 import { escapeHtml, showModelsNotification } from '../common/ui_utils.js';
@@ -35,7 +35,7 @@ export async function persistSelectedModelAndProvider(selectedModel, selectedPro
   try {
     const fetchFn = (window.api && window.api.fetch) || fetch;
     await Promise.allSettled([
-      fetchFn('/auth/settings', {
+      fetchFn('/api/v1/auth/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: selectedModel, provider: actualProvider })
@@ -201,7 +201,7 @@ export function renderFavoriteModelsChips(modelSelect) {
       e.stopPropagation();
       try {
         const fetchFn = (window.api && window.api.fetch) || fetch;
-        await fetchFn(`/auth/favorites/${encodeURIComponent(modelName)}`, { method: 'DELETE' });
+        await fetchFn(`/api/v1/auth/favorites/${encodeURIComponent(modelName)}`, { method: 'DELETE' });
         delete window.userFavoriteModels[modelName];
         updateModelFavoriteUI(modelSelect);
         updateModelSelectOptions(modelSelect);
@@ -262,12 +262,12 @@ export async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) 
   }
 
   try {
-    const settingsData = await fetchFn('/auth/settings');
+    const settingsData = await fetchFn('/api/v1/auth/settings');
     const sData = typeof settingsData.json === 'function' ? await settingsData.json() : settingsData;
     if (sData && sData.favorite_models) {
       window.userFavoriteModels = sData.favorite_models;
     } else {
-      const favRes = await fetchFn('/auth/favorites');
+      const favRes = await fetchFn('/api/v1/auth/favorites');
       const fData = typeof favRes.json === 'function' ? await favRes.json() : favRes;
       if (fData && fData.favorites) {
         window.userFavoriteModels = fData.favorites;
@@ -360,7 +360,7 @@ export async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) 
     } catch (_) {}
 
     if (!activeModel) {
-      const settingsData = await fetchFn('/auth/settings');
+      const settingsData = await fetchFn('/api/v1/auth/settings');
       const sData = typeof settingsData.json === 'function' ? await settingsData.json() : settingsData;
       if (sData && sData.model) {
         activeModel = sData.model;

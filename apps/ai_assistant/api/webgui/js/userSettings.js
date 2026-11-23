@@ -1,32 +1,62 @@
 /**
  * =============================================================================
- * Process Name: Windows Js - Usersettings Script
+ * Process Name: AI Assistant WebGUI - User Settings Script
  * =============================================================================
  * Description:
  *   Клиентский скрипт управления интерфейсом модуля userSettings.
+ *   Обеспечивает синхронизацию профиля Google OAuth, выбор языка локализации,
+ *   выбор темы оформления, динамическую инициализацию модального окна настроек
+ *   #userSettingsModal, быстрые пользовательские действия, а также настройку
+ *   и тестирование сетевых соединений (Hostinger MariaDB, SQLite, FTP, SSH, SMTP, IMAP).
  *
  * Usage Examples:
  *   HTML Integration:
- *     <script src="/windows/api/webgui/js/userSettings.js?v=20261001_v1" type="module"></script>
+ *     <script src="/html/js/userSettings.js?v=20261116_v2" type="module"></script>
  *
  *   JavaScript Import:
- *     import { executeUserAction, isUserAdmin } from '/windows/api/webgui/js/userSettings.js';
+ *     import { initUserSettings, ensureUserSettingsModal, executeUserAction, isUserAdmin } from '/html/js/userSettings.js';
  *
  * File: userSettings.js
  * Project: ai-assistant
- * Package: windows/api/webgui/js
+ * Package: apps.ai_assistant.api.webgui.js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 20:50:00
+ * Updated: 2026-11-20 02:18:00
  * =============================================================================
  */
 
-/**
- * userSettings.js — User Profile & Settings Management
- * Supports Google OAuth synchronization, profile status, language & theme controls.
- */
-
 'use strict';
+
+/**
+ * Гарантирует наличие модального окна #userSettingsModal в DOM-дереве документа.
+ * Если окно отсутствует, загружает компонент user_settings_modal.html.
+ * @returns {Promise<HTMLElement|null>} Элемент модального окна
+ */
+export async function ensureUserSettingsModal() {
+  const existing = document.getElementById('userSettingsModal');
+  if (existing) {
+    return existing;
+  }
+  try {
+    const res = await fetch('/html/components/user_settings_modal.html');
+    if (res.ok) {
+      const html = await res.text();
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      const modalEl = div.querySelector('#userSettingsModal');
+      if (modalEl) {
+        document.body.appendChild(modalEl);
+        if (window.i18n && typeof window.i18n.translatePage === 'function') {
+          window.i18n.translatePage();
+        }
+        return modalEl;
+      }
+    }
+  } catch (err) {
+    console.warn('[userSettings] Could not dynamically load user_settings_modal.html:', err);
+  }
+  return null;
+}
 
 export function executeUserAction(actionType) {
   // Ensure chat tab is active
@@ -64,27 +94,368 @@ export function executeUserAction(actionType) {
       setTimeout(send, 100);
     }
   } else if (actionType === 'sheets') {
-    const query = prompt('Введите ID таблицы или команду для Google Sheets (например: "Прочитай данные из таблицы ID диапазон A1:D10" или "Добавь строку"):');
+    const query = prompt('Введите ID таблицы или команду для Google Sheets:');
     if (query && query.trim() && msgInput) {
       msgInput.value = `Google Sheets: ${query.trim()}`;
       setTimeout(send, 100);
     }
   } else if (actionType === 'news') {
     if (msgInput) {
-      msgInput.value = 'Подготовь для меня свежий дайджест самых релевантных новостей по моим интересам.';
+      msgInput.value = 'Покажи свежие новости и краткий дайджест.';
       setTimeout(send, 100);
     }
   } else if (actionType === 'facebook') {
-    const text = prompt('Введите текст публикации для Facebook (и при желании ссылку через пробел):');
-    if (text && text.trim() && msgInput) {
-      msgInput.value = `Опубликуй пост в Facebook с текстом: "${text.trim()}".`;
+    if (msgInput) {
+      msgInput.value = 'Сформируй черновик публикации для социальных сетей.';
       setTimeout(send, 100);
     }
   }
 }
 
+/**
+ * Закрывает модальное окно настроек пользователя и выполняет переход на вкладку каталога моделей.
+ */
+export function openModelsTab() {
+  const modalEl = document.getElementById('userSettingsModal');
+  if (modalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+      modalInstance.hide();
+    }
+  }
+  if (typeof window.switchTab === 'function') {
+    window.switchTab('tab-models');
+  } else if (typeof window.switchToTab === 'function') {
+    window.switchToTab('tab-models');
+  }
+}
+
+/**
+ * Активирует вкладку статуса рантайма Electron Shell в модальном окне настроек.
+ */
+export function openElectronTab() {
+  const tabBtn = document.getElementById('user-settings-tab-btn-electron');
+  if (tabBtn && window.bootstrap?.Tab) {
+    bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+  } else if (tabBtn) {
+    tabBtn.click();
+  }
+}
+
+/**
+ * Опрашивает сервер и обновляет бейдж активной модели ИИ в модальном окне настроек.
+ * @returns {Promise<void>}
+ */
+export async function refreshActiveModelBadge() {
+  try {
+    let modelName = 'gemini-2.5-flash';
+    try {
+      const res = await fetch('/api/v1/chat/active-model');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.model_name) modelName = data.model_name;
+      }
+    } catch (_) {
+      try {
+        const authRes = await fetch('/api/v1/auth/settings');
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          if (authData.model_name) modelName = authData.model_name;
+        }
+      } catch (__) {}
+    }
+
+    const displayName = modelName.includes(':') ? modelName.split(':')[1] : modelName;
+
+    document.querySelectorAll('#user-settings-active-model-name, .user-settings-model-val, #modal-header-active-model-name').forEach((el) => {
+      el.textContent = displayName;
+    });
+    document.querySelectorAll('#user-settings-active-model-badge, .user-settings-model-badge, #user-settings-active-model-badge-top').forEach((badge) => {
+      badge.setAttribute('title', `Активная модель: ${modelName} (нажмите для выбора)`);
+    });
+  } catch (err) {
+    console.warn('[userSettings] Could not refresh active model badge:', err);
+  }
+}
+
+/**
+ * Загружает конфигурацию сетевых подключений из бэкенда и заполняет поля формы.
+ * @returns {Promise<void>}
+ */
+export async function loadConnectionsSettings() {
+  try {
+    const res = await fetch('/api/v1/connections/config');
+    if (!res.ok) return;
+    const cfg = await res.json();
+
+    // 1. Hostinger & MariaDB
+    const h = cfg.hostinger_mariadb || {};
+    const engineSel = document.getElementById('conn-db-engine');
+    if (engineSel) engineSel.value = h.connection_type === 'php_api' ? 'hostinger' : (h.enabled ? 'mariadb' : 'sqlite');
+    if (document.getElementById('conn-hostinger-host')) document.getElementById('conn-hostinger-host').value = h.host || 'srv1502.hstgr.io';
+    if (document.getElementById('conn-hostinger-port')) document.getElementById('conn-hostinger-port').value = h.port || 3306;
+    if (document.getElementById('conn-hostinger-db')) document.getElementById('conn-hostinger-db').value = h.database || 'u177424397_comp_knowledge';
+    if (document.getElementById('conn-hostinger-user')) document.getElementById('conn-hostinger-user').value = h.user || 'u177424397_davidka';
+    if (document.getElementById('conn-hostinger-pass')) document.getElementById('conn-hostinger-pass').value = h.password || '@Davidka#1969';
+    if (document.getElementById('conn-hostinger-fallback-ip')) document.getElementById('conn-hostinger-fallback-ip').value = h.ip_fallback || '77.37.35.16';
+    if (document.getElementById('conn-hostinger-api-url')) document.getElementById('conn-hostinger-api-url').value = h.php_api_url || 'https://srv1502.hstgr.io/wikillm_hostinger.php';
+
+    // 2. SQLite
+    const sq = cfg.sqlite || {};
+    if (document.getElementById('conn-sqlite-path')) document.getElementById('conn-sqlite-path').value = sq.path || 'data/ai_instruments/ai_instruments.db';
+
+    // 3. FTP
+    const f = cfg.ftp || {};
+    if (document.getElementById('conn-ftp-protocol')) document.getElementById('conn-ftp-protocol').value = f.protocol || 'ftp';
+    if (document.getElementById('conn-ftp-host')) document.getElementById('conn-ftp-host').value = f.host || '';
+    if (document.getElementById('conn-ftp-port')) document.getElementById('conn-ftp-port').value = f.port || 21;
+    if (document.getElementById('conn-ftp-user')) document.getElementById('conn-ftp-user').value = f.username || '';
+    if (document.getElementById('conn-ftp-pass')) document.getElementById('conn-ftp-pass').value = f.password || '';
+    if (document.getElementById('conn-ftp-remote-dir')) document.getElementById('conn-ftp-remote-dir').value = f.remote_dir || '/';
+
+    // 4. SSH
+    const s = cfg.ssh || {};
+    if (document.getElementById('conn-ssh-host')) document.getElementById('conn-ssh-host').value = s.host || '';
+    if (document.getElementById('conn-ssh-port')) document.getElementById('conn-ssh-port').value = s.port || 22;
+    if (document.getElementById('conn-ssh-user')) document.getElementById('conn-ssh-user').value = s.username || 'root';
+    if (document.getElementById('conn-ssh-auth-type')) document.getElementById('conn-ssh-auth-type').value = s.auth_type || 'password';
+    if (document.getElementById('conn-ssh-pass')) document.getElementById('conn-ssh-pass').value = s.password || '';
+    if (document.getElementById('conn-ssh-key-path')) document.getElementById('conn-ssh-key-path').value = s.key_path || '';
+
+    // 5. Mail (SMTP / IMAP)
+    const sm = cfg.smtp || {};
+    const im = cfg.imap || {};
+    if (document.getElementById('conn-smtp-host')) document.getElementById('conn-smtp-host').value = sm.host || 'smtp.gmail.com';
+    if (document.getElementById('conn-smtp-port')) document.getElementById('conn-smtp-port').value = sm.port || 587;
+    if (document.getElementById('conn-imap-host')) document.getElementById('conn-imap-host').value = im.host || 'imap.gmail.com';
+    if (document.getElementById('conn-imap-port')) document.getElementById('conn-imap-port').value = im.port || 993;
+    if (document.getElementById('conn-mail-user')) document.getElementById('conn-mail-user').value = sm.username || im.username || '';
+    if (document.getElementById('conn-mail-pass')) document.getElementById('conn-mail-pass').value = sm.password || im.password || '';
+  } catch (err) {
+    console.warn('[userSettings] Не удалось загрузить конфигурацию подключений:', err);
+  }
+}
+
+/**
+ * Сохраняет конфигурацию всех сетевых подключений на сервере.
+ * @returns {Promise<boolean>}
+ */
+export async function saveConnectionsSettings() {
+  const feedbackEl = document.getElementById('conn-save-feedback');
+  const getT = (k, fb) => (typeof window !== 'undefined' && window.i18next?.t(k)) || fb;
+
+  const engine = document.getElementById('conn-db-engine')?.value || 'mariadb';
+  const payload = {
+    hostinger_mariadb: {
+      enabled: engine !== 'sqlite',
+      connection_type: engine === 'hostinger' ? 'php_api' : 'direct',
+      host: document.getElementById('conn-hostinger-host')?.value || 'srv1502.hstgr.io',
+      port: parseInt(document.getElementById('conn-hostinger-port')?.value || '3306', 10),
+      database: document.getElementById('conn-hostinger-db')?.value || 'u177424397_comp_knowledge',
+      user: document.getElementById('conn-hostinger-user')?.value || 'u177424397_davidka',
+      password: document.getElementById('conn-hostinger-pass')?.value || '',
+      ip_fallback: document.getElementById('conn-hostinger-fallback-ip')?.value || '77.37.35.16',
+      php_api_url: document.getElementById('conn-hostinger-api-url')?.value || 'https://srv1502.hstgr.io/wikillm_hostinger.php',
+    },
+    sqlite: {
+      path: document.getElementById('conn-sqlite-path')?.value || 'data/ai_instruments/ai_instruments.db',
+    },
+    ftp: {
+      protocol: document.getElementById('conn-ftp-protocol')?.value || 'ftp',
+      host: document.getElementById('conn-ftp-host')?.value || '',
+      port: parseInt(document.getElementById('conn-ftp-port')?.value || '21', 10),
+      username: document.getElementById('conn-ftp-user')?.value || '',
+      password: document.getElementById('conn-ftp-pass')?.value || '',
+      remote_dir: document.getElementById('conn-ftp-remote-dir')?.value || '/',
+      enabled: Boolean(document.getElementById('conn-ftp-host')?.value),
+    },
+    ssh: {
+      host: document.getElementById('conn-ssh-host')?.value || '',
+      port: parseInt(document.getElementById('conn-ssh-port')?.value || '22', 10),
+      username: document.getElementById('conn-ssh-user')?.value || 'root',
+      auth_type: document.getElementById('conn-ssh-auth-type')?.value || 'password',
+      password: document.getElementById('conn-ssh-pass')?.value || '',
+      key_path: document.getElementById('conn-ssh-key-path')?.value || '',
+      enabled: Boolean(document.getElementById('conn-ssh-host')?.value),
+    },
+    smtp: {
+      host: document.getElementById('conn-smtp-host')?.value || 'smtp.gmail.com',
+      port: parseInt(document.getElementById('conn-smtp-port')?.value || '587', 10),
+      username: document.getElementById('conn-mail-user')?.value || '',
+      password: document.getElementById('conn-mail-pass')?.value || '',
+      use_tls: true,
+      enabled: Boolean(document.getElementById('conn-smtp-host')?.value),
+    },
+    imap: {
+      host: document.getElementById('conn-imap-host')?.value || 'imap.gmail.com',
+      port: parseInt(document.getElementById('conn-imap-port')?.value || '993', 10),
+      username: document.getElementById('conn-mail-user')?.value || '',
+      password: document.getElementById('conn-mail-pass')?.value || '',
+      use_ssl: true,
+      enabled: Boolean(document.getElementById('conn-imap-host')?.value),
+    },
+  };
+
+  try {
+    const res = await fetch('/api/v1/connections/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      if (feedbackEl) {
+        feedbackEl.className = 'small text-success';
+        feedbackEl.textContent = getT('userSettings.connSavedSuccess', 'Настройки подключений успешно сохранены!');
+      }
+      return true;
+    } else {
+      throw new Error(`Статус ${res.status}`);
+    }
+  } catch (err) {
+    if (feedbackEl) {
+      feedbackEl.className = 'small text-danger';
+      feedbackEl.textContent = `${getT('userSettings.connSaveError', 'Ошибка сохранения:')} ${err.message}`;
+    }
+    return false;
+  }
+}
+
+/**
+ * Тестирует выбранное подключение через эндпоинт /api/v1/connections/test.
+ * @param {string} serviceType - 'hostinger_mariadb', 'ftp', 'ssh', 'smtp', 'imap'
+ * @param {HTMLElement} badgeEl - элемент бейджа для отображения результата
+ */
+export async function testConnectionAction(serviceType, badgeEl) {
+  if (!badgeEl) return;
+  const getT = (k, fb) => (typeof window !== 'undefined' && window.i18next?.t(k)) || fb;
+  badgeEl.className = 'badge bg-warning-subtle text-warning border border-warning-subtle font-size-75';
+  badgeEl.textContent = getT('userSettings.connTesting', 'Проверка...');
+
+  let config = {};
+  if (serviceType === 'hostinger_mariadb') {
+    config = {
+      host: document.getElementById('conn-hostinger-host')?.value || 'srv1502.hstgr.io',
+      port: parseInt(document.getElementById('conn-hostinger-port')?.value || '3306', 10),
+      database: document.getElementById('conn-hostinger-db')?.value || 'u177424397_comp_knowledge',
+      user: document.getElementById('conn-hostinger-user')?.value || 'u177424397_davidka',
+      password: document.getElementById('conn-hostinger-pass')?.value || '',
+      ip_fallback: document.getElementById('conn-hostinger-fallback-ip')?.value || '77.37.35.16',
+    };
+  } else if (serviceType === 'ftp') {
+    config = {
+      host: document.getElementById('conn-ftp-host')?.value || '',
+      port: parseInt(document.getElementById('conn-ftp-port')?.value || '21', 10),
+      username: document.getElementById('conn-ftp-user')?.value || '',
+      password: document.getElementById('conn-ftp-pass')?.value || '',
+    };
+  } else if (serviceType === 'ssh') {
+    config = {
+      host: document.getElementById('conn-ssh-host')?.value || '',
+      port: parseInt(document.getElementById('conn-ssh-port')?.value || '22', 10),
+      username: document.getElementById('conn-ssh-user')?.value || '',
+      password: document.getElementById('conn-ssh-pass')?.value || '',
+    };
+  } else if (serviceType === 'smtp') {
+    config = {
+      host: document.getElementById('conn-smtp-host')?.value || 'smtp.gmail.com',
+      port: parseInt(document.getElementById('conn-smtp-port')?.value || '587', 10),
+    };
+  }
+
+  try {
+    const res = await fetch('/api/v1/connections/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ service_type: serviceType, config }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      badgeEl.className = 'badge bg-success-subtle text-success border border-success-subtle font-size-75';
+      badgeEl.textContent = `OK (${data.latency_ms} ms)`;
+    } else {
+      badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle font-size-75';
+      badgeEl.textContent = `Сбой: ${data.error ? data.error.slice(0, 30) : 'Ошибка'}`;
+    }
+  } catch (err) {
+    badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle font-size-75';
+    badgeEl.textContent = 'Ошибка сети';
+  }
+}
+
+/**
+ * Привязывает обработчики событий вкладки сетевых подключений.
+ */
+export function bindConnectionsEvents() {
+  const btnTestDb = document.getElementById('btn-test-db-conn');
+  if (btnTestDb && !btnTestDb._bound) {
+    btnTestDb._bound = true;
+    btnTestDb.addEventListener('click', () => {
+      const badge = document.getElementById('test-db-result-badge');
+      testConnectionAction('hostinger_mariadb', badge);
+    });
+  }
+
+  const btnTestFtp = document.getElementById('btn-test-ftp-conn');
+  if (btnTestFtp && !btnTestFtp._bound) {
+    btnTestFtp._bound = true;
+    btnTestFtp.addEventListener('click', () => {
+      const badge = document.getElementById('test-ftp-result-badge');
+      testConnectionAction('ftp', badge);
+    });
+  }
+
+  const btnTestSsh = document.getElementById('btn-test-ssh-conn');
+  if (btnTestSsh && !btnTestSsh._bound) {
+    btnTestSsh._bound = true;
+    btnTestSsh.addEventListener('click', () => {
+      const badge = document.getElementById('test-ssh-result-badge');
+      testConnectionAction('ssh', badge);
+    });
+  }
+
+  const btnTestMail = document.getElementById('btn-test-mail-conn');
+  if (btnTestMail && !btnTestMail._bound) {
+    btnTestMail._bound = true;
+    btnTestMail.addEventListener('click', () => {
+      const badge = document.getElementById('test-mail-result-badge');
+      testConnectionAction('smtp', badge);
+    });
+  }
+
+  const btnSave = document.getElementById('btn-save-connections');
+  if (btnSave && !btnSave._bound) {
+    btnSave._bound = true;
+    btnSave.addEventListener('click', () => {
+      saveConnectionsSettings();
+    });
+  }
+
+  const btnReset = document.getElementById('btn-reset-connections');
+  if (btnReset && !btnReset._bound) {
+    btnReset._bound = true;
+    btnReset.addEventListener('click', () => {
+      loadConnectionsSettings();
+    });
+  }
+
+  const connTabBtn = document.getElementById('user-settings-tab-btn-connections');
+  if (connTabBtn && !connTabBtn._bound) {
+    connTabBtn._bound = true;
+    connTabBtn.addEventListener('shown.bs.tab', () => {
+      loadConnectionsSettings();
+    });
+  }
+}
+
 export async function initUserSettings() {
-  await refreshUserProfile();
+  await ensureUserSettingsModal();
+  // Фоновая загрузка профиля и бейджа модели без блокировки инициализации интерфейса
+  refreshUserProfile().catch(() => {});
+  refreshActiveModelBadge().catch(() => {});
+
+  // Инициализация событий подключений
+  bindConnectionsEvents();
+  loadConnectionsSettings();
 
   // Bind User Menu Action Buttons
   document.querySelectorAll('#user-menu-btn-mail, #nav-btn-check-mail, .action-btn-mail').forEach((btn) => {
@@ -122,21 +493,24 @@ export async function initUserSettings() {
     });
   });
 
-  // Handle Google Login Click
-  document.querySelectorAll('.btn-google-login, #user-settings-google-btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+  // Обработка нажатия на кнопку входа / синхронизации Google OAuth (включая динамические кнопки)
+  if (!document._googleOauthClickDelegated) {
+    document._googleOauthClickDelegated = true;
+    document.addEventListener('click', (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest('.btn-google-login, #user-settings-google-btn') : null;
+      if (!btn) return;
       e.preventDefault();
-      const nextUrl = window.location.pathname + window.location.search;
+      const nextUrl = window.location.pathname + window.location.search + window.location.hash;
       window.location.href = `/auth/google?next=${encodeURIComponent(nextUrl)}`;
     });
-  });
+  }
 
   // Handle Logout Click
   document.querySelectorAll('.btn-user-logout, #user-settings-logout-btn').forEach((btn) => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       try {
-        await fetch('/auth/logout', { method: 'POST' });
+        await fetch('/api/v1/auth/logout', { method: 'POST' });
       } catch (err) {
         console.error('Logout error:', err);
       } finally {
@@ -148,11 +522,9 @@ export async function initUserSettings() {
   // Обработка переключения темы в модальном окне настроек
   document.querySelectorAll('.theme-selector').forEach((sel) => {
     sel.addEventListener('change', (e) => {
-      const mode = e.target.value;
-      if (window.setTheme) {
-        window.setTheme(mode);
-      } else if (window.themeEngine) {
-        window.themeEngine.applyTheme(mode);
+      const theme = e.target.value;
+      if (window.themeEngine && typeof window.themeEngine.applyTheme === 'function') {
+        window.themeEngine.applyTheme(theme);
       }
     });
   });
@@ -161,13 +533,102 @@ export async function initUserSettings() {
   document.querySelectorAll('.lang-selector').forEach((sel) => {
     sel.addEventListener('change', (e) => {
       const lang = e.target.value;
-      if (window.switchLang) {
-        window.switchLang(lang);
-      } else if (window.switchLocale) {
-        window.switchLocale(lang);
+      if (window.i18n && typeof window.i18n.setLanguage === 'function') {
+        window.i18n.setLanguage(lang);
       }
     });
   });
+
+  // Handle Model Ping send
+  const pingBtn = document.getElementById('btn-model-ping-send');
+  const pingInput = document.getElementById('model-ping-input');
+  const pingRespContainer = document.getElementById('model-ping-response-container');
+  const pingResp = document.getElementById('model-ping-response');
+
+  if (pingBtn && pingInput) {
+    pingBtn.addEventListener('click', async () => {
+      const text = pingInput.value.trim();
+      if (!text) return;
+
+      const getT = (k, fb) => (typeof window !== 'undefined' && window.i18next?.t(k)) || fb;
+      const sendingText = getT('userSettings.modelPingSending', 'Отправка...');
+      const sendBtnText = getT('userSettings.modelPingSendBtn', 'Отправить');
+      const waitingText = getT('userSettings.modelPingWaiting', 'Ожидание ответа модели...');
+      const emptyText = getT('userSettings.modelPingEmptyResponse', '[Пустой ответ]');
+
+      pingBtn.disabled = true;
+      const btnSpan = document.getElementById('model-ping-btn-text');
+      if (btnSpan) btnSpan.textContent = sendingText;
+      if (pingRespContainer) pingRespContainer.classList.remove('d-none');
+      if (pingResp) pingResp.textContent = waitingText;
+
+      try {
+        const res = await fetch('/api/v1/chat/ping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (pingResp) pingResp.textContent = data.response || emptyText;
+        } else {
+          if (pingResp) pingResp.textContent = `Ошибка сервера: ${res.status}`;
+        }
+      } catch (err) {
+        if (pingResp) pingResp.textContent = `Ошибка сети: ${err.message}`;
+      } finally {
+        pingBtn.disabled = false;
+        if (btnSpan) btnSpan.textContent = sendBtnText;
+      }
+    });
+  }
+
+  // Handle Open Theme Editor click
+  const openThemeEditorBtn = document.getElementById('modal-btn-open-theme-editor');
+  if (openThemeEditorBtn) {
+    openThemeEditorBtn.addEventListener('click', () => {
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('tab-theme-editor');
+      } else if (typeof window.switchToTab === 'function') {
+        window.switchToTab('tab-theme-editor');
+      }
+    });
+  }
+
+  // Handle Open Tooltips Editor click
+  const openTooltipsEditorBtn = document.getElementById('modal-btn-open-tooltips-editor');
+  if (openTooltipsEditorBtn) {
+    openTooltipsEditorBtn.addEventListener('click', () => {
+      if (typeof window.switchMainTab === 'function') {
+        window.switchMainTab('tab-tooltips');
+      } else if (typeof window.switchTab === 'function') {
+        window.switchTab('tab-tooltips');
+      } else if (typeof window.switchToTab === 'function') {
+        window.switchToTab('tab-tooltips');
+      }
+    });
+  }
+
+  // Handle Tooltips Delay input (0.5s / 500ms default, configurable via localStorage)
+  const tooltipDelayInput = document.getElementById('user-settings-tooltip-delay-input');
+  const tooltipDelayVal = document.getElementById('user-settings-tooltip-delay-val');
+  if (tooltipDelayInput) {
+    const currentDelay = (window.AISmartTooltip && typeof window.AISmartTooltip.getShowDelay === 'function')
+      ? window.AISmartTooltip.getShowDelay()
+      : (parseInt(localStorage.getItem('ai_tooltip_delay_ms') || '500', 10) || 500);
+    tooltipDelayInput.value = currentDelay;
+    if (tooltipDelayVal) tooltipDelayVal.textContent = `${currentDelay} мс (${(currentDelay / 1000).toFixed(1)} сек)`;
+
+    tooltipDelayInput.addEventListener('input', (e) => {
+      const ms = parseInt(e.target.value, 10) || 0;
+      if (tooltipDelayVal) tooltipDelayVal.textContent = `${ms} мс (${(ms / 1000).toFixed(1)} сек)`;
+      if (window.AISmartTooltip && typeof window.AISmartTooltip.setShowDelay === 'function') {
+        window.AISmartTooltip.setShowDelay(ms);
+      } else {
+        localStorage.setItem('ai_tooltip_delay_ms', String(ms));
+      }
+    });
+  }
 
   // Инициализация тумблеров Watchdog (автотранскрибация медиа и авто-коммиты Git)
   async function syncWatchdogToggles() {
@@ -229,12 +690,60 @@ export async function initUserSettings() {
 
   await syncWatchdogToggles();
 
-  // Re-sync modal fields on modal show
+  // Управление расширенным профилем пользователя
+  const toggleEditBtn = document.getElementById('user-settings-toggle-edit-btn');
+  const editCancelBtn = document.getElementById('user-settings-edit-cancel-btn');
+  const editBox = document.getElementById('user-settings-edit-box');
+  if (toggleEditBtn && editBox && !toggleEditBtn._bound) {
+    toggleEditBtn._bound = true;
+    toggleEditBtn.addEventListener('click', () => {
+      editBox.classList.toggle('d-none');
+    });
+  }
+  if (editCancelBtn && editBox && !editCancelBtn._bound) {
+    editCancelBtn._bound = true;
+    editCancelBtn.addEventListener('click', () => {
+      editBox.classList.add('d-none');
+    });
+  }
+  const saveProfileBtn = document.getElementById('user-settings-save-profile-btn');
+  if (saveProfileBtn && !saveProfileBtn._bound) {
+    saveProfileBtn._bound = true;
+    saveProfileBtn.addEventListener('click', async () => {
+      const inFullName = document.getElementById('user-settings-input-fullname');
+      const inAvatar = document.getElementById('user-settings-input-avatar');
+      saveProfileBtn.disabled = true;
+      try {
+        const payload = {};
+        if (inFullName && inFullName.value.trim()) payload.full_name = inFullName.value.trim();
+        if (inAvatar && inAvatar.value.trim()) payload.picture = inAvatar.value.trim();
+        const resp = await fetch('/api/v1/auth/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (resp.ok) {
+          if (editBox) editBox.classList.add('d-none');
+          await refreshUserProfile();
+        }
+      } catch (err) {
+        console.warn('[UserSettings] Ошибка сохранения профиля:', err);
+      } finally {
+        saveProfileBtn.disabled = false;
+      }
+    });
+  }
+
+  // Синхронизация полей при открытии модального окна
   const modalEl = document.getElementById('userSettingsModal');
   if (modalEl) {
     modalEl.addEventListener('show.bs.modal', async () => {
       await refreshUserProfile();
+      await refreshActiveModelBadge();
       await syncWatchdogToggles();
+      if (window.loadElectronStatus) {
+        window.loadElectronStatus();
+      }
       const savedLang = localStorage.getItem('app_locale') || localStorage.getItem('app_language') || 'ru-RU';
       document.querySelectorAll('.lang-selector').forEach((s) => {
         const opt = Array.from(s.options).find(o => 
@@ -242,11 +751,7 @@ export async function initUserSettings() {
           o.value.toLowerCase().startsWith(savedLang.toLowerCase()) ||
           savedLang.toLowerCase().startsWith(o.value.toLowerCase())
         );
-        if (opt) {
-          s.value = opt.value;
-        } else {
-          s.value = savedLang;
-        }
+        if (opt) s.value = opt.value;
       });
       const savedTheme = localStorage.getItem('theme') || 'system';
       document.querySelectorAll('.theme-selector').forEach((s) => {
@@ -255,6 +760,33 @@ export async function initUserSettings() {
       if (window.themeEngine) {
         window.themeEngine.syncSelectInputs(savedTheme);
       }
+    });
+  }
+
+  // Обработка вкладки статуса Electron Shell
+  const electronTabBtn = document.getElementById('user-settings-tab-btn-electron');
+  if (electronTabBtn && !electronTabBtn._bound) {
+    electronTabBtn._bound = true;
+    electronTabBtn.addEventListener('shown.bs.tab', () => {
+      if (window.loadElectronStatus) {
+        window.loadElectronStatus();
+      }
+    });
+  }
+
+  // Обработка кнопки запуска интерактивного тура из модального окна настроек
+  const tourModalBtn = document.getElementById('modal-btn-start-system-tour');
+  if (tourModalBtn && !tourModalBtn._bound) {
+    tourModalBtn._bound = true;
+    tourModalBtn.addEventListener('click', () => {
+      setTimeout(() => {
+        if (window.SystemTour && typeof window.SystemTour.show === 'function') {
+          window.SystemTour.show(0);
+        } else {
+          const mainTourBtn = document.getElementById('btn-start-system-tour');
+          if (mainTourBtn) mainTourBtn.click();
+        }
+      }, 250);
     });
   }
 }
@@ -266,7 +798,10 @@ export function isUserAdmin() {
 
 export async function refreshUserProfile() {
   try {
-    const res = await fetch('/auth/check');
+    const fetchOpts = (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
+      ? { signal: AbortSignal.timeout(5000) }
+      : {};
+    const res = await fetch('/api/v1/auth/check', fetchOpts);
     if (!res.ok) return;
     const data = await res.json();
     window.currentUser = data;
@@ -280,11 +815,9 @@ export async function refreshUserProfile() {
     const navLabel = document.getElementById('nav-user-label');
 
     if (data && data.authenticated) {
-      // User is authenticated
       if (authCard) authCard.classList.remove('d-none');
       if (guestCard) guestCard.classList.add('d-none');
 
-      // Navbar: show user profile pill, hide Google register button
       if (navGoogleBtn) navGoogleBtn.classList.add('d-none');
       if (userSettingsBtn) {
         userSettingsBtn.classList.remove('d-none');
@@ -298,19 +831,29 @@ export async function refreshUserProfile() {
       const role = data.role || (data.is_admin ? 'Admin' : 'User');
       const hasGoogle = Boolean(data.has_google);
 
-      // Update modal fields
       const avatarEl = document.getElementById('user-settings-avatar');
       const nameEl = document.getElementById('user-settings-name');
       const emailEl = document.getElementById('user-settings-email');
       const roleBadge = document.getElementById('user-settings-role-badge');
       const googleBadge = document.getElementById('user-settings-google-badge');
 
+      const avatarFallback = document.getElementById('user-settings-avatar-fallback');
       if (avatarEl) {
         if (picture) {
           avatarEl.src = picture;
+          avatarEl.onload = () => {
+            avatarEl.classList.remove('d-none');
+            if (avatarFallback) avatarFallback.classList.add('d-none');
+          };
+          avatarEl.onerror = () => {
+            avatarEl.classList.add('d-none');
+            if (avatarFallback) avatarFallback.classList.remove('d-none');
+          };
           avatarEl.classList.remove('d-none');
+          if (avatarFallback) avatarFallback.classList.add('d-none');
         } else {
           avatarEl.classList.add('d-none');
+          if (avatarFallback) avatarFallback.classList.remove('d-none');
         }
       }
       if (nameEl) nameEl.textContent = name;
@@ -338,7 +881,6 @@ export async function refreshUserProfile() {
         }
       }
 
-      // Update dropdown header elements if present
       const menuWrapper = document.getElementById('user-menu-dropdown-wrapper');
       const menuDisplayName = document.getElementById('user-menu-display-name');
       const menuDisplayEmail = document.getElementById('user-menu-display-email');
@@ -349,24 +891,71 @@ export async function refreshUserProfile() {
       if (menuDisplayName) menuDisplayName.textContent = name;
       if (menuDisplayEmail) menuDisplayEmail.textContent = email;
 
-      // Update navbar button
-      if (navAvatar && picture) {
-        navAvatar.src = picture;
-        navAvatar.classList.remove('d-none');
-        if (navIcon) navIcon.classList.add('d-none');
+      if (navAvatar) {
+        if (picture) {
+          navAvatar.src = picture;
+          navAvatar.onload = () => {
+            navAvatar.classList.remove('d-none');
+            if (navIcon) navIcon.classList.add('d-none');
+          };
+          navAvatar.onerror = () => {
+            navAvatar.classList.add('d-none');
+            if (navIcon) navIcon.classList.remove('d-none');
+          };
+          navAvatar.classList.remove('d-none');
+          if (navIcon) navIcon.classList.add('d-none');
+        } else {
+          navAvatar.classList.add('d-none');
+          if (navIcon) navIcon.classList.remove('d-none');
+        }
       }
       if (navLabel) {
         const shortName = name.split(' ')[0] || name;
         navLabel.textContent = shortName;
       }
+
+      // Наполнение расширенных сведений о пользователе из data/users.db
+      const profile = (data && data.user_profile) || {};
+      const valUsername = document.getElementById('user-settings-val-username');
+      const valProvider = document.getElementById('user-settings-val-provider');
+      const valId = document.getElementById('user-settings-val-id');
+      const valLastLogin = document.getElementById('user-settings-val-last-login');
+
+      if (valUsername) valUsername.textContent = profile.username || name || '—';
+      if (valProvider) {
+        const isGoogle = profile.auth_provider === 'google' || hasGoogle;
+        valProvider.textContent = isGoogle ? 'Google OAuth 2.0' : (profile.auth_provider || 'Локальный');
+      }
+      if (valId) {
+        valId.textContent = profile.id || '—';
+        valId.title = profile.id || '';
+      }
+      if (valLastLogin) {
+        if (profile.last_login_at) {
+          try {
+            valLastLogin.textContent = new Date(profile.last_login_at).toLocaleString();
+          } catch (_) {
+            valLastLogin.textContent = profile.last_login_at;
+          }
+        } else {
+          valLastLogin.textContent = '—';
+        }
+      }
+
+      const inFullName = document.getElementById('user-settings-input-fullname');
+      const inAvatar = document.getElementById('user-settings-input-avatar');
+      if (inFullName && !inFullName._userTyping) {
+        inFullName.value = profile.full_name || name || '';
+      }
+      if (inAvatar && !inAvatar._userTyping) {
+        inAvatar.value = profile.picture || picture || '';
+      }
     } else {
-      // Guest / unauthenticated
       if (authCard) authCard.classList.add('d-none');
       if (guestCard) guestCard.classList.remove('d-none');
 
       const isOauthEnabled = data && data.oauth_enabled !== false;
 
-      // Navbar: show full Google register/sign-in button only if OAuth is enabled, else show user settings gear/pill
       if (navGoogleBtn) {
         if (isOauthEnabled) {
           navGoogleBtn.classList.remove('d-none');
@@ -396,7 +985,6 @@ export async function refreshUserProfile() {
         }
       }
 
-      // Guest card google login button adjustment
       const guestGoogleBtn = guestCard ? guestCard.querySelector('.btn-google-login') : null;
       if (guestGoogleBtn) {
         if (isOauthEnabled) {
@@ -415,7 +1003,14 @@ export async function refreshUserProfile() {
   }
 }
 
+window.openModelsTab = openModelsTab;
+window.openElectronTab = openElectronTab;
+window.refreshActiveModelBadge = refreshActiveModelBadge;
 window.initUserSettings = initUserSettings;
 window.refreshUserProfile = refreshUserProfile;
 window.isUserAdmin = isUserAdmin;
 window.executeUserAction = executeUserAction;
+window.ensureUserSettingsModal = ensureUserSettingsModal;
+window.loadConnectionsSettings = loadConnectionsSettings;
+window.saveConnectionsSettings = saveConnectionsSettings;
+window.testConnectionAction = testConnectionAction;

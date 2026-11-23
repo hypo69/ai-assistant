@@ -1,10 +1,10 @@
 # 🧠 AI-Assistant — Носимая мультиязычная система управления знаниями, Git-версионирования и гибридного ИИ
 
 **Статус:** ✅ Активно  
-**Версия:** 3.6.0  
+**Версия:** 4.0.0  
 **Язык разработки:** Python 3.12+ / Vanilla JS ES6+  
 **Автор:** hypo69  
-**Updated:** 2026-10-26 00:35:00  
+**Updated:** 2026-11-23 18:20:00  
 
 ---
 
@@ -55,8 +55,8 @@ AI-Assistant/
    - Извлечение фактов действия (`action`) и принадлежности (`possession`, включая конструкции `לדוד משה היתה חווה`).
    - Автоматическое разрешение местоимений 3-го лица (`он`, `она`, `у него`, `הוא`, `היא`, `שלו`, `he`, `she`, `his`) по предыдущему предложению.
    - Грамматически точное склонение кратких ответов по падежам (`Мама.` / `Раму.` / `Мамой.`).
-5. **Гибридный поиск `RagFaissEngine` (FAISS 256D + TF) и SSE-стриминг:**
-   - Сочетание 256-мерного векторного индекса `faiss.IndexFlatIP` с лексическим бустингом (TF) и потоковой выдачей ответов `POST /api/v1/ask/stream`.
+5. **Локальный гибридный RAG (SQLite WAL + `float32 BLOB` + `FTS5 BM25` + `RRF`) и MCP-сервер (`stdio`):**
+   - Бинарное хранение нормализованных векторов в SQLite (`0 МБ RAM` в простое), лексический поиск `FTS5 BM25`, склейка через Reciprocal Rank Fusion (`RRF`), адаптер размерностей на лету, безопасная фильтрация Windows-путей (`INSTR`), единый роутер эмбеддингов (`src/ai/orchestration/embeddings.py`) и локальный MCP-сервер [`apps/ai_assistant/mcp_rag_server.py`](apps/ai_assistant/mcp_rag_server.py).
 6. **Единая IDE-оболочка (WebGUI + Electron / WebView2):**
    - Работает в браузере, десктопном окне **Electron** (`--engine electron`) или **WebView2** (`--engine webview2`) с поддержкой 5 тем оформления и полной RTL-адаптацией для иврита.
 
@@ -79,7 +79,8 @@ py -m pytest apps/ai_assistant/tests -v
 
 ## 📚 Навигация по документации
 
-- **[`apps/ai_assistant/README.md`](apps/ai_assistant/README.md)** — полная документация приложения AI Assistant, REST API и режимов работы.
+- **[`apps/ai_assistant/DOCUMENTATION.md`](apps/ai_assistant/DOCUMENTATION.md)** — **полная техническая документация `ai_assistant`** (архитектурные блок-схемы, математические формулы RRF/BM25/адаптера размерностей/RPM-квот, ER-диаграмма БД, протокол MCP-сервера и примеры использования).
+- **[`apps/ai_assistant/README.md`](apps/ai_assistant/README.md)** — краткий обзор приложения AI Assistant, REST API и режимов работы.
 - **[`apps/ai_assistant/TECHNICAL_SPECIFICATION.md`](apps/ai_assistant/TECHNICAL_SPECIFICATION.md)** — техническое задание и спецификация архитектуры.
 - **[`apps/ai_assistant/core/README.md`](apps/ai_assistant/core/README.md)** — документация вычислительного ядра (Git, носимый режим, NLP, SQLite, FAISS, WikiLLM).
 - **[`apps/ai_assistant/api/webgui/README.md`](apps/ai_assistant/api/webgui/README.md)** — архитектура веб-интерфейса и каталог всех 14 вкладок.

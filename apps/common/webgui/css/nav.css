@@ -14,7 +14,7 @@
  * Package: apps/common/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-01 17:37:00
+ * Updated: 2026-11-20 02:32:00
  * =============================================================================
  */
 
@@ -130,14 +130,9 @@
 }
 
 .nav-tabs .dropdown-item.active {
-  background-color: rgba(37, 99, 235, 0.1);
+  background-color: var(--active-item-bg);
   color: var(--nav-active);
   font-weight: 600;
-}
-
-[data-theme="dark"] .nav-tabs .dropdown-item.active {
-  background-color: rgba(88, 166, 255, 0.12);
-  color: var(--nav-active);
 }
 
 /* ── Разделители и метки групп ───────────────────────────────────────────── */
@@ -186,8 +181,14 @@
 }
 
 .dropdown-item.active {
-  background-color: var(--nav-active);
-  color: #ffffff;
+  background-color: var(--active-item-bg);
+  color: var(--active-item-color);
+}
+
+.dropdown-item.active:hover,
+.dropdown-item.active:focus {
+  background-color: var(--active-item-hover-bg);
+  color: var(--active-item-color);
 }
 
 [data-theme="terminal"] .dropdown-menu {
@@ -375,44 +376,14 @@
 }
 
 .left-drawer-nav .list-group-item.active {
-  background-color: var(--nav-active);
-  border-color: var(--nav-active);
-  color: #ffffff;
+  background-color: var(--active-item-bg);
+  border-color: var(--active-item-border);
+  color: var(--active-item-color);
   font-weight: 600;
 }
 
-[data-theme="brick"] .left-drawer-nav .list-group-item.active {
-  background-color: #b84228;
-  border-color: #b84228;
-  color: #ffffff;
-}
-
-[data-theme="brick"] .left-drawer-nav .list-group-item.active:hover {
-  background-color: #9e341d;
-}
-
-[data-theme="dark"] .left-drawer-nav .list-group-item.active {
-  background-color: #1f6feb;
-  border-color: #1f6feb;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .left-drawer-nav .list-group-item.active:hover {
-  background-color: #388bfd;
-}
-
-[data-theme="terminal"] .left-drawer-nav .list-group-item.active {
-  background-color: #0c3316;
-  border-color: #00ff66;
-  color: #39ff14;
-  box-shadow: 0 0 8px rgba(0, 255, 102, 0.35);
-  text-shadow: 0 0 3px rgba(0, 255, 102, 0.5);
-}
-
-[data-theme="terminal"] .left-drawer-nav .list-group-item.active:hover {
-  background-color: #154c22;
-  border-color: #39ff14;
-  color: #ffffff;
+.left-drawer-nav .list-group-item.active:hover {
+  background-color: var(--active-item-hover-bg);
 }
 
 

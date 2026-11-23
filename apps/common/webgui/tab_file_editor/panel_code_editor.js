@@ -12,7 +12,7 @@
  * Package: apps/common/webgui/tab_file_editor
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-28 17:08:00
+ * Updated: 2026-11-19 20:51:00
  * =============================================================================
  */
 
@@ -114,8 +114,18 @@ export function renderOutlinePanel(content, ext, container, textarea) {
 export function renderMarkdownSplitPreview(markdownText, previewEl) {
   if (!previewEl) return;
   const src = markdownText || '';
+  if (typeof window !== 'undefined' && typeof window.parseMarkdownToHtml === 'function') {
+    previewEl.innerHTML = window.parseMarkdownToHtml(src);
+    if (typeof window.renderMermaidDiagramsInContainer === 'function') {
+      window.renderMermaidDiagramsInContainer(previewEl);
+    }
+    return;
+  }
   if (typeof window !== 'undefined' && window.marked && typeof window.marked.parse === 'function') {
     previewEl.innerHTML = window.marked.parse(src);
+    if (typeof window.renderMermaidDiagramsInContainer === 'function') {
+      window.renderMermaidDiagramsInContainer(previewEl);
+    }
     return;
   }
   // Безопасный встроенный рендерер Markdown при отсутствии внешнего marked

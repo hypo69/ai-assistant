@@ -10,7 +10,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_contacts
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-27 16:30:00
+ * Updated: 2026-11-15 20:05:00
  * =============================================================================
  */
 
@@ -18,6 +18,54 @@
   'use strict';
 
   let allContacts = [];
+
+  const DEMO_FAKE_CONTACTS = [
+    {
+      given_name: 'דּוֹד משה',
+      family_name: '',
+      phone: '+972-50-1234567',
+      email: 'dod.moshe@farm-israel.co.il',
+      organization: 'חווה חקלאית נהלל',
+      title: 'חקלאי ומגדל בקר',
+      notes: 'דוד משה מהחווה בנהלל',
+    },
+    {
+      given_name: 'שמוליק',
+      family_name: 'קיפוד',
+      phone: '+972-52-9876543',
+      email: 'shmulik.hedgehog@woodland.org.il',
+      organization: 'שמוליקיפוד ספרי ילדים בע"מ',
+      title: 'יועץ חברות ותותים',
+      notes: 'מחפש תותים עם גדי',
+    },
+    {
+      given_name: 'ווטרינר בוריס',
+      family_name: 'קפלן',
+      phone: '+972-54-5551234',
+      email: 'dr.boris.vet@petcare.co.il',
+      organization: 'מרפאה וטרינרית 24/7 תל אביב',
+      title: 'וטרינר ראשי ומנתח',
+      notes: 'וטרינר מומחה לחיות בית וחיות משק',
+    },
+    {
+      given_name: 'ע"ד מרק',
+      family_name: 'גולדברג',
+      phone: '+972-3-6789000',
+      email: 'adv.mark.goldberg@law-firm.co.il',
+      organization: "גולדברג ושות' משרד עורכי דין",
+      title: 'עורך דין שותף - מקרקעין וחוזים',
+      notes: 'ייעוץ משפטי, עריכת חוזים ונדל"ן',
+    },
+    {
+      given_name: 'סוכן ביטוח דניאל',
+      family_name: 'לוי',
+      phone: '+972-53-4447890',
+      email: 'daniel.levi@harel-ins.co.il',
+      organization: "סוכנות ביטוח דניאל לוי - הראל ושות'",
+      title: 'סוכן ביטוח פנסיוני ואלמנטרי',
+      notes: 'ביטוחי רכב, דירה, חיים ופנסיה',
+    },
+  ];
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -129,9 +177,14 @@
                     <span class="font-size-75 text-muted font-monospace">${escapeHtml(c.resource_name || '')}</span>
                   </div>
                 </div>
-                <button class="btn btn-sm btn-outline-danger py-0 px-2 btn-delete-contact" data-resource="${escapeHtml(c.resource_name)}" title="Удалить контакт">
-                  <i class="bi bi-trash3"></i>
-                </button>
+                <div class="d-flex align-items-center gap-1">
+                  <button class="btn btn-sm btn-outline-primary py-0 px-2 btn-edit-contact" data-resource="${escapeHtml(c.resource_name)}" data-i18n-title="contacts.btn_edit_title" title="Редактировать контакт">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger py-0 px-2 btn-delete-contact" data-resource="${escapeHtml(c.resource_name)}" title="Удалить контакт">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
               </div>
 
               ${org}
@@ -146,6 +199,32 @@
         </div>
       `;
     }).join('');
+
+    listEl.querySelectorAll('.btn-edit-contact').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const resName = btn.getAttribute('data-resource');
+        const contact = allContacts.find(c => c.resource_name === resName);
+        if (!contact) return;
+
+        const modalEl = document.getElementById('modal-contacts-edit');
+        if (!modalEl) return;
+
+        document.getElementById('cnt-edit-resource-name').value = contact.resource_name || '';
+        document.getElementById('cnt-edit-given-name').value = contact.given_name || '';
+        document.getElementById('cnt-edit-family-name').value = contact.family_name || '';
+        document.getElementById('cnt-edit-phone').value = (contact.phones && contact.phones[0]) ? contact.phones[0].value : '';
+        document.getElementById('cnt-edit-email').value = (contact.emails && contact.emails[0]) ? contact.emails[0].value : '';
+        document.getElementById('cnt-edit-org').value = (contact.organizations && contact.organizations[0]) ? contact.organizations[0].name : '';
+        document.getElementById('cnt-edit-title').value = (contact.organizations && contact.organizations[0]) ? contact.organizations[0].title : '';
+        document.getElementById('cnt-edit-notes').value = contact.notes || '';
+
+        const errBox = document.getElementById('contacts-edit-error');
+        if (errBox) errBox.classList.add('d-none');
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      });
+    });
 
     listEl.querySelectorAll('.btn-delete-contact').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -183,6 +262,76 @@
       btnClear.addEventListener('click', () => {
         qInput.value = '';
         loadContacts();
+      });
+    }
+
+    // Экспорт контактов в JSON
+    const btnExport = document.getElementById('btn-contacts-export');
+    if (btnExport) {
+      btnExport.addEventListener('click', () => {
+        if (!allContacts || allContacts.length === 0) {
+          alert('Нет контактов для экспорта');
+          return;
+        }
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(allContacts, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute('href', dataStr);
+        downloadAnchor.setAttribute('download', `google_contacts_${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      });
+    }
+
+    // Импорт фейковых контактов
+    const btnImportFakes = document.getElementById('btn-contacts-import-fakes');
+    if (btnImportFakes) {
+      btnImportFakes.addEventListener('click', async () => {
+        if (!confirm('Импортировать 5 тестовых контактов в Google People API?')) return;
+        btnImportFakes.disabled = true;
+        try {
+          let count = 0;
+          for (const item of DEMO_FAKE_CONTACTS) {
+            const res = await fetch('/api/v1/contacts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(item),
+            });
+            if (res.ok) count++;
+          }
+          alert(`Успешно импортировано ${count} контактов!`);
+          loadContacts();
+        } catch (err) {
+          alert('Ошибка при импорте: ' + err.message);
+        } finally {
+          btnImportFakes.disabled = false;
+        }
+      });
+    }
+
+    // Очистить все контакты
+    const btnClearAll = document.getElementById('btn-contacts-clear-all');
+    if (btnClearAll) {
+      btnClearAll.addEventListener('click', async () => {
+        if (!allContacts || allContacts.length === 0) {
+          alert('Список контактов уже пуст');
+          return;
+        }
+        if (!confirm('Вы уверены, что хотите удалить ВСЕ контакты из адресной книги Google?')) return;
+        btnClearAll.disabled = true;
+        try {
+          for (const c of allContacts) {
+            if (c.resource_name) {
+              await fetch(`/api/v1/contacts/${encodeURIComponent(c.resource_name)}`, { method: 'DELETE' });
+            }
+          }
+          alert('Все контакты удалены!');
+          loadContacts();
+        } catch (err) {
+          alert('Ошибка при удалении контактов: ' + err.message);
+        } finally {
+          btnClearAll.disabled = false;
+        }
       });
     }
 
@@ -251,6 +400,63 @@
           }
         } finally {
           btnSave.disabled = false;
+        }
+      });
+    }
+
+    // Сохранение отредактированного контакта
+    const btnEditSave = document.getElementById('btn-contacts-edit-save');
+    const modalEditEl = document.getElementById('modal-contacts-edit');
+    if (btnEditSave && modalEditEl) {
+      btnEditSave.addEventListener('click', async () => {
+        const resName = document.getElementById('cnt-edit-resource-name')?.value.trim();
+        const givenName = document.getElementById('cnt-edit-given-name')?.value.trim();
+        const familyName = document.getElementById('cnt-edit-family-name')?.value.trim();
+        const phone = document.getElementById('cnt-edit-phone')?.value.trim();
+        const email = document.getElementById('cnt-edit-email')?.value.trim();
+        const org = document.getElementById('cnt-edit-org')?.value.trim();
+        const title = document.getElementById('cnt-edit-title')?.value.trim();
+        const notes = document.getElementById('cnt-edit-notes')?.value.trim();
+        const errBox = document.getElementById('contacts-edit-error');
+
+        if (!givenName) {
+          if (errBox) {
+            errBox.textContent = 'Пожалуйста, укажите имя контакта';
+            errBox.classList.remove('d-none');
+          }
+          return;
+        }
+
+        try {
+          btnEditSave.disabled = true;
+          const res = await fetch(`/api/v1/contacts/${encodeURIComponent(resName)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              given_name: givenName,
+              family_name: familyName,
+              phone: phone || null,
+              email: email || null,
+              organization: org || null,
+              title: title || null,
+              notes: notes || null,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok || data.status === 'error') {
+            throw new Error(data.detail || data.error || 'Ошибка при сохранении изменений контакта');
+          }
+
+          const modal = bootstrap.Modal.getInstance(modalEditEl);
+          if (modal) modal.hide();
+          loadContacts();
+        } catch (err) {
+          if (errBox) {
+            errBox.textContent = err.message;
+            errBox.classList.remove('d-none');
+          }
+        } finally {
+          btnEditSave.disabled = false;
         }
       });
     }

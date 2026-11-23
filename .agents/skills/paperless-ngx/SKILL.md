@@ -1,9 +1,9 @@
 ---
 name: paperless-ngx
-description: Paperless-ngx DMS integration toolkit for converting diverse formats (PDF, DOCX, XLSX, PPTX, ODT, images, HTML, TXT) to Markdown via Paperless-ngx OCR/Tika, checking server status, listing documents, and syncing missing workspace files without duplicates.
+description: "Paperless-ngx DMS integration toolkit for converting diverse formats (PDF, DOCX, XLSX, PPTX, ODT, images, HTML, TXT) to Markdown via Paperless-ngx OCR/Tika, checking server status, listing documents, and syncing missing workspace files without duplicates."
 description_i18n:
-  en: Paperless-ngx DMS integration toolkit for converting diverse formats (PDF, DOCX, XLSX, PPTX, ODT, images, HTML, TXT) to Markdown via Paperless-ngx OCR/Tika, checking server status, listing documents, and syncing missing workspace files without duplicates.
-  ru: Инструментарий интеграции с Paperless-ngx DMS: конвертация различных форматов (PDF, DOCX, XLSX, PPTX, ODT, изображения, HTML, TXT) в Markdown через встроенный OCR/Tika Paperless-ngx, проверка статуса сервера, просмотр документов и синхронизация рабочих областей без дубликатов.
+  en: "Paperless-ngx DMS integration toolkit for converting diverse formats (PDF, DOCX, XLSX, PPTX, ODT, images, HTML, TXT) to Markdown via Paperless-ngx OCR/Tika, checking server status, listing documents, and syncing missing workspace files without duplicates."
+  ru: "Инструментарий интеграции с Paperless-ngx DMS: конвертация различных форматов (PDF, DOCX, XLSX, PPTX, ODT, изображения, HTML, TXT) в Markdown через встроенный OCR/Tika Paperless-ngx, проверка статуса сервера, просмотр документов и синхронизация рабочих областей без дубликатов."
 ---
 
 # 📄 Paperless-ngx Integration Skill

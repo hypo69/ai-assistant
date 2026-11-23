@@ -17,9 +17,11 @@
  * Package: apps/ai_assistant/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-10 13:16:00
+ * Updated: 2026-11-19 17:44:00
  * =============================================================================
  */
+
+// Канонический префикс маршрутизации панелей: #tab-workspace#panel-files#workspace=
 
 let activeRepoPath = '';
 let activeWorkspaceId = '';
@@ -86,7 +88,7 @@ export function getActiveWorkspaceDisplayName(wsId = null) {
       return found.name.replace(/^Workspace:\s*/i, '');
     }
   }
-  return cleanId;
+  return '';
 }
 
 /**
@@ -100,7 +102,49 @@ export function updateActiveWorkspaceHeaderTitle(wsId = null) {
   if (displayName) {
     titleEl.textContent = displayName;
     titleEl.removeAttribute('data-i18n');
+  } else {
+    let fallback = 'Нет рабочих пространств';
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const trans = window.i18n.t('workspace.noWorkspaces');
+      if (trans && trans !== 'workspace.noWorkspaces') {
+        fallback = trans;
+      }
+    }
+    titleEl.textContent = fallback;
+    titleEl.setAttribute('data-i18n', 'workspace.noWorkspaces');
   }
+}
+
+/**
+ * Устанавливает идентификатор активной рабочей области и синхронизирует состояние в window и хранилище.
+ * @param {string|null} id
+ */
+export function setActiveWorkspaceId(id) {
+  if (!id) {
+    activeWorkspaceId = '';
+    if (typeof window !== 'undefined') {
+      window.currentWorkspaceId = '';
+      window.activeWorkspaceId = '';
+    }
+    try {
+      localStorage.removeItem('ai_assistant_active_workspace');
+    } catch (_) {}
+    return;
+  }
+  let clean = id;
+  try {
+    clean = decodeURIComponent(id);
+  } catch (_) {}
+  clean = String(clean).trim().normalize('NFC');
+  activeWorkspaceId = clean;
+  if (typeof window !== 'undefined') {
+    window.currentWorkspaceId = clean;
+    window.activeWorkspaceId = clean;
+  }
+  try {
+    localStorage.setItem('ai_assistant_active_workspace', clean);
+  } catch (_) {}
+  updateActiveWorkspaceHeaderTitle(clean);
 }
 
 /**
@@ -108,25 +152,74 @@ export function updateActiveWorkspaceHeaderTitle(wsId = null) {
  * @returns {string}
  */
 export function getActiveWorkspaceId() {
-  if (activeWorkspaceId) return activeWorkspaceId;
+  // 1. Приоритет: канонический URL hash (#workspace=<id>)
   if (typeof location !== 'undefined' && location.hash) {
     const match = location.hash.match(/workspace=([^&/#]+)/i);
     if (match && match[1]) {
       try {
-        activeWorkspaceId = decodeURIComponent(match[1]);
+        const decoded = decodeURIComponent(match[1]).trim().normalize('NFC');
+        if (decoded) {
+          activeWorkspaceId = decoded;
+          if (typeof window !== 'undefined') {
+            window.currentWorkspaceId = decoded;
+            window.activeWorkspaceId = decoded;
+          }
+          return activeWorkspaceId;
+        }
       } catch (_) {
-        activeWorkspaceId = match[1];
+        if (match[1]) {
+          activeWorkspaceId = match[1].trim().normalize('NFC');
+          if (typeof window !== 'undefined') {
+            window.currentWorkspaceId = activeWorkspaceId;
+            window.activeWorkspaceId = activeWorkspaceId;
+          }
+          return activeWorkspaceId;
+        }
       }
+    }
+  }
+
+  // 2. Если зафиксировано в памяти
+  if (activeWorkspaceId) return activeWorkspaceId;
+
+  // 3. Проверяем глобальный контекст window
+  if (typeof window !== 'undefined' && window.currentWorkspaceId) {
+    activeWorkspaceId = String(window.currentWorkspaceId).trim().normalize('NFC');
+    return activeWorkspaceId;
+  }
+  if (typeof window !== 'undefined' && window.activeWorkspaceId) {
+    activeWorkspaceId = String(window.activeWorkspaceId).trim().normalize('NFC');
+    return activeWorkspaceId;
+  }
+
+  // 4. Проверяем селектор в DOM (#ws-selector)
+  if (typeof document !== 'undefined') {
+    const selector = document.getElementById('ws-selector');
+    if (selector && selector.value) {
+      activeWorkspaceId = String(selector.value).trim().normalize('NFC');
       return activeWorkspaceId;
     }
   }
+
+  // 5. Проверяем localStorage только при наличии доступных репозиториев
   try {
     const stored = localStorage.getItem('ai_assistant_active_workspace');
     if (stored) {
-      activeWorkspaceId = stored;
-      return activeWorkspaceId;
+      const cleanStored = stored.trim().normalize('NFC');
+      if (Array.isArray(availableRepositories) && availableRepositories.length > 0) {
+        const found = availableRepositories.find((r) => {
+          const rId = (r.workspace_id || (r.id ? r.id.replace(/^ws-/, '') : '')).normalize('NFC').toLowerCase();
+          return rId === cleanStored.toLowerCase();
+        });
+        if (found) {
+          activeWorkspaceId = cleanStored;
+          return activeWorkspaceId;
+        }
+      }
+      localStorage.removeItem('ai_assistant_active_workspace');
     }
   } catch (_) {}
+
   return '';
 }
 
@@ -147,6 +240,7 @@ export function getActiveRepoPath() {
 }
 
 if (typeof window !== 'undefined') {
+  window.setActiveWorkspaceId = setActiveWorkspaceId;
   window.getActiveWorkspaceId = getActiveWorkspaceId;
   window.getActiveRepoPath = getActiveRepoPath;
   window.getActiveWorkspaceDisplayName = getActiveWorkspaceDisplayName;
@@ -190,7 +284,12 @@ export async function fetchAvailableRepositories() {
         if (res.ok) {
           const serverRepos = await res.json();
           if (Array.isArray(serverRepos)) {
-            repos = serverRepos.filter((r) => r.id && r.id.startsWith('ws-'));
+            repos = serverRepos
+              .filter((r) => r.id && r.id.startsWith('ws-'))
+              .map((r) => ({
+                ...r,
+                workspace_id: r.workspace_id || (r.id ? r.id.replace(/^ws-/, '') : ''),
+              }));
           }
         }
       } catch (err) {
@@ -262,12 +361,14 @@ export async function setGlobalActiveRepo(chosenPath, explicitWsId = null) {
       areWorkspacesEqual(wsId, activeWorkspaceId) &&
       normTarget.toLowerCase() === (activeRepoPath || '').toLowerCase()
     ) {
+      if (typeof window.refreshFileTree === 'function') {
+        window.refreshFileTree(wsId || activeWorkspaceId);
+      }
       return;
     }
 
     activeRepoPath = normTarget;
-    activeWorkspaceId = wsId || '';
-    updateActiveWorkspaceHeaderTitle(activeWorkspaceId);
+    setActiveWorkspaceId(wsId || '');
 
     // 1. Сохраняем в localStorage для мгновенного восстановления
     try {
@@ -336,15 +437,38 @@ export async function setGlobalActiveRepo(chosenPath, explicitWsId = null) {
       if (typeof window.selectWorkspaceInTab === 'function') {
         window.selectWorkspaceInTab(wsId);
       }
+      const curTab = (typeof window.getCurrentActiveTabId === 'function' ? window.getCurrentActiveTabId() : null) ||
+                     (typeof location !== 'undefined' ? location.hash.replace(/^#/, '').split('#')[0] : '');
+      const isWsTab = curTab === 'tab-workspace' || curTab === 'workspace';
+      const isChatTab = curTab === 'tab-chat' || curTab === 'chat';
 
-      // 6.1 Формируем канонический URL без паразитного вызова hashchange
-      const currentSub = (typeof window.getWorkspacePanelFromHash === 'function' ? window.getWorkspacePanelFromHash() : null) || 'panel-files';
-      const targetHash = `#tab-workspace#${currentSub}#workspace=${encodeURIComponent(wsId)}`;
-      if (typeof location !== 'undefined' && location.hash !== targetHash) {
-        if (typeof history !== 'undefined' && history.replaceState) {
-          history.replaceState(null, '', `${location.pathname}${location.search || ''}${targetHash}`);
-        } else {
-          location.hash = targetHash;
+      if (isWsTab) {
+        const currentSub = (typeof window.getWorkspacePanelFromHash === 'function' ? window.getWorkspacePanelFromHash() : null) || 'panel-files';
+        if (typeof window.switchWorkspaceSubTab === 'function') {
+          window.switchWorkspaceSubTab('panel-documents', false);
+        }
+
+        // 6.1 Формируем канонический URL стандарта workspace-url-routing
+        const targetHash = `#tab-workspace#${currentSub}#workspace=${encodeURIComponent(wsId)}`;
+        let curDecoded = '';
+        let targetDecoded = '';
+        try { curDecoded = decodeURIComponent(location.hash || ''); } catch (_) {}
+        try { targetDecoded = decodeURIComponent(targetHash); } catch (_) {}
+        if (curDecoded !== targetDecoded) {
+          if (typeof history !== 'undefined' && history.replaceState) {
+            history.replaceState(null, '', `${location.pathname}${location.search || ''}${targetHash}`);
+          } else {
+            location.hash = targetHash;
+          }
+        }
+      } else if (isChatTab) {
+        const targetHash = `#tab-chat#workspace=${encodeURIComponent(wsId)}`;
+        if (typeof location !== 'undefined') {
+          if (typeof history !== 'undefined' && history.replaceState) {
+            history.replaceState(null, '', `${location.pathname}${location.search || ''}${targetHash}`);
+          } else {
+            location.hash = targetHash;
+          }
         }
       }
     }
@@ -353,6 +477,11 @@ export async function setGlobalActiveRepo(chosenPath, explicitWsId = null) {
     const eventDetail = { repoPath: normTarget, workspaceId: wsId };
     document.dispatchEvent(new CustomEvent('workspace:changed', { detail: eventDetail }));
     document.dispatchEvent(new CustomEvent('repo:changed', { detail: eventDetail }));
+
+    // 7.1 Немедленная синхронизация файлового менеджера по выпадающему списку
+    if (typeof window.refreshFileTree === 'function' && wsId) {
+      window.refreshFileTree(wsId);
+    }
 
     // 8. Если открыта вкладка обслуживания Git, обновляем диагностику
     if (typeof window.loadDiagnosis === 'function') {
@@ -375,10 +504,11 @@ export async function updateTopWorkspaceDropdown(wsId) {
   try { decoded = decodeURIComponent(wsId); } catch (_) {}
   const cleanWs = (decoded || '').trim().normalize('NFC');
 
-  // Если уже активно это пространство, избегаем повторных сетевых запросов и каскадов
-  if (areWorkspacesEqual(cleanWs, activeWorkspaceId)) {
-    updateActiveWorkspaceHeaderTitle(cleanWs);
-    return;
+  setActiveWorkspaceId(cleanWs);
+
+  // Синхронизируем файловый менеджер (Primary Side Bar Explorer)
+  if (typeof window.refreshFileTree === 'function') {
+    window.refreshFileTree(cleanWs);
   }
 
   const repos = await fetchAvailableRepositories();
@@ -402,15 +532,24 @@ export async function updateTopWorkspaceDropdown(wsId) {
   }
 
   if (!found) {
-    if (cleanWs) {
-      activeWorkspaceId = cleanWs;
-      updateActiveWorkspaceHeaderTitle(cleanWs);
-    }
+    updateActiveWorkspaceHeaderTitle(cleanWs);
+    try {
+      fetch('/api/v1/workspaces/active', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace_id: cleanWs }),
+      });
+    } catch (_) {}
+    document.dispatchEvent(new CustomEvent('workspace:changed', {
+      detail: { workspaceId: cleanWs, repoPath: '' }
+    }));
     return;
   }
   updateActiveWorkspaceHeaderTitle(cleanWs);
-  if (areWorkspacesEqual(cleanWs, activeWorkspaceId) && (found.path || '').replace(/\\/g, '/').toLowerCase() === (activeRepoPath || '').toLowerCase()) return;
   await setGlobalActiveRepo(found.path, found.workspace_id || cleanWs);
+  if (typeof window.refreshFileTree === 'function') {
+    window.refreshFileTree(cleanWs);
+  }
 }
 window.updateTopWorkspaceDropdown = updateTopWorkspaceDropdown;
 
@@ -428,6 +567,7 @@ export function renderTopRepoSelector(repos, currentPath) {
 
   if (wsRepos.length === 0) {
     select.innerHTML = `<option value="">Нет рабочих пространств с Git</option><option value="__create_new__">+ Создать / Добавить новое рабочее пространство...</option>`;
+    updateActiveWorkspaceHeaderTitle('');
     return;
   }
 
@@ -460,7 +600,12 @@ export async function initTopWorkspaceDropdown() {
   if (!repos || repos.length === 0) {
     activeRepoPath = '';
     activeWorkspaceId = '';
+    try {
+      localStorage.removeItem('ai_assistant_active_workspace');
+      localStorage.removeItem('ai_assistant_active_repo');
+    } catch (_) {}
     renderTopRepoSelector([], '');
+    updateActiveWorkspaceHeaderTitle('');
     return;
   }
 
@@ -551,7 +696,14 @@ export async function initTopWorkspaceDropdown() {
 
   // 5. Применяем глобальную установку для синхронизации всех подсистем только если репозиторий найден в конфиге
   if (initialPath && activeWorkspaceId) {
-    setGlobalActiveRepo(initialPath, activeWorkspaceId);
+    const hasExplicitHash = typeof location !== 'undefined' && Boolean(location.hash && location.hash !== '#');
+    if (!hasExplicitHash) {
+      setGlobalActiveRepo(initialPath, activeWorkspaceId);
+    } else {
+      activeRepoPath = initialPath;
+      setActiveWorkspaceId(activeWorkspaceId);
+      updateActiveWorkspaceHeaderTitle(activeWorkspaceId);
+    }
   }
 }
 

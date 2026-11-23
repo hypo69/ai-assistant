@@ -12,7 +12,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_workspace
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 20:55:00
+ * Updated: 2026-11-20 01:49:00
  * =============================================================================
  */
 
@@ -36,29 +36,29 @@ import {
   getCurrentWorkspaceId,
   setCurrentWorkspaceId,
   deleteCurrentWorkspace,
-} from './panel_workspace_select/panel.js?v=20261107_v1';
+} from './panel_workspace_select/panel.js?v=20261120_v1';
 import {
   initDocumentsPanel,
   loadDocuments,
   loadWorkspaceCommits,
-} from './panel_documents/panel.js';
+} from './panel_documents/panel.js?v=20261119_v1';
 import { initFactsPanel, loadFacts } from './panel_facts/panel.js';
 import { initQaPanel, executeAskQuestion } from './panel_qa/panel.js';
-import { initSourcesPanel, loadSources } from './panel_sources/panel.js?v=20261111_v1';
-import { initChatPanel } from './panel_chat/panel.js?v=20261111_v1';
+import { initSourcesPanel, loadSources } from './panel_sources/panel.js?v=20261119_v1';
+import { initChatPanel, loadActivePurchaseScenario } from './panel_chat/panel.js?v=20261119_v8';
 import {
   initCommitsPanel,
   loadWorkspaceCommitsPanel,
-} from './panel_commits/panel.js';
+} from './panel_commits/panel.js?v=20261119_v1';
 import {
   initTreePanel,
   loadWorkspaceTreePanel,
-} from './panel_tree/panel.js';
+} from './panel_tree/panel.js?v=20261119_v1';
 import {
   initFileEditorTab,
   openDocumentInTab,
   saveActiveDocument,
-} from '/html/tab_file_editor/main.js?v=20261110_v3';
+} from '/html/tab_file_editor/main.js?v=20261119_v2';
 
 let initialized = false;
 
@@ -116,7 +116,8 @@ export async function fetchActiveSubTabOnly(force = false) {
   } else if (activeSub === 'panel-qa') {
     // Шаг 3: QA готов к диалогу (без фонового опроса)
   } else if (activeSub === 'panel-chat') {
-    // Панель Чат: готов к диалогу (без фонового опроса)
+    // Панель Чат: подгружаем активный трекер условий сценария покупки (если активен)
+    await loadActivePurchaseScenario({ postIntroIfEmpty: true });
   } else if (activeSub === 'panel-commits') {
     // API запросы строго для активной панели Коммиты
     await loadWorkspaceCommitsPanel(wsId, force);
@@ -192,8 +193,10 @@ window.switchFilesSubTab = switchFilesSubTab;
  */
 export function switchWorkspaceSubTab(subtabId, updateUrl = true, blockId = null) {
   const canonical = normalizeSubTabId(subtabId);
-  let targetBtnId = 'subtab-ws-step1-btn';
-  let targetPaneId = 'subpane-ws-step1';
+  const getExistingId = (id1, id2) => (document.getElementById(id1) ? id1 : id2);
+
+  let targetBtnId = getExistingId('subtab-ws-files-btn', 'subtab-ws-step1-btn');
+  let targetPaneId = getExistingId('subpane-ws-files', 'subpane-ws-step1');
 
   switch (canonical) {
     case 'panel-file-editor':
@@ -210,16 +213,16 @@ export function switchWorkspaceSubTab(subtabId, updateUrl = true, blockId = null
       targetPaneId = 'subpane-ws-commits';
       break;
     case 'panel-qa':
-      targetBtnId = 'subtab-ws-step3-btn';
-      targetPaneId = 'subpane-ws-step3';
+      targetBtnId = getExistingId('subtab-ws-qa-btn', 'subtab-ws-step3-btn');
+      targetPaneId = getExistingId('subpane-ws-qa', 'subpane-ws-step3');
       break;
     case 'panel-documents':
-      targetBtnId = 'subtab-ws-step2-btn';
-      targetPaneId = 'subpane-ws-step2';
+      targetBtnId = getExistingId('subtab-ws-documents-btn', 'subtab-ws-step2-btn');
+      targetPaneId = getExistingId('subpane-ws-documents', 'subpane-ws-step2');
       break;
     case 'panel-sources':
-      targetBtnId = 'subtab-ws-step1-btn';
-      targetPaneId = 'subpane-ws-step1';
+      targetBtnId = getExistingId('subtab-ws-files-btn', 'subtab-ws-step1-btn');
+      targetPaneId = getExistingId('subpane-ws-files', 'subpane-ws-step1');
       switchFilesSubTab('sources', false);
       break;
     case 'panel-chat':
@@ -227,15 +230,15 @@ export function switchWorkspaceSubTab(subtabId, updateUrl = true, blockId = null
         window.switchTab('tab-chat');
         return;
       }
-      targetBtnId = 'subtab-ws-step1-btn';
-      targetPaneId = 'subpane-ws-step1';
+      targetBtnId = getExistingId('subtab-ws-files-btn', 'subtab-ws-step1-btn');
+      targetPaneId = getExistingId('subpane-ws-files', 'subpane-ws-step1');
       break;
     case 'panel-files':
     case 'panel-workspace':
     case 'panel-workspace-select':
     default:
-      targetBtnId = 'subtab-ws-step1-btn';
-      targetPaneId = 'subpane-ws-step1';
+      targetBtnId = getExistingId('subtab-ws-files-btn', 'subtab-ws-step1-btn');
+      targetPaneId = getExistingId('subpane-ws-files', 'subpane-ws-step1');
       break;
   }
 
@@ -281,7 +284,7 @@ export async function initWorkspaceTab() {
   const editorContainer = document.getElementById('ws-embedded-editor-container');
   if (editorContainer && !editorContainer.hasChildNodes()) {
     try {
-      const res = await fetch('/html/tab_file_editor/index.html?v=20261110_v3');
+      const res = await fetch('/html/tab_file_editor/index.html?v=20261119_v1');
       if (res.ok) {
         editorContainer.innerHTML = await res.text();
       }
@@ -301,6 +304,12 @@ export async function initWorkspaceTab() {
 
   const handleDocSaved = async () => {
     const wsId = getWorkspaceId();
+    if (typeof window.invalidateExplorerFileTreeCache === 'function') {
+      window.invalidateExplorerFileTreeCache(wsId);
+    }
+    document.dispatchEvent(new CustomEvent('workspace:items-changed', {
+      detail: { workspaceId: wsId },
+    }));
     await Promise.all([
       loadDocuments(wsId, true),
       loadWorkspaceCommits(wsId, true),
@@ -312,6 +321,12 @@ export async function initWorkspaceTab() {
 
   const handleSourcesSynced = async () => {
     const wsId = getWorkspaceId();
+    if (typeof window.invalidateExplorerFileTreeCache === 'function') {
+      window.invalidateExplorerFileTreeCache(wsId);
+    }
+    document.dispatchEvent(new CustomEvent('workspace:items-changed', {
+      detail: { workspaceId: wsId },
+    }));
     await Promise.all([
       loadSources(wsId, true),
       loadDirectoryContents(wsId),
@@ -338,6 +353,29 @@ export async function initWorkspaceTab() {
         const blk = btn.getAttribute('data-block-id') || btn.getAttribute('data-bs-target') || 'dir';
         const norm = normalizeBlockId(blk);
         switchFilesSubTab(norm, true);
+      });
+    });
+  }
+
+  // Навигация по внутреннему меню блока «Добавление файлов в слежение» (ws-track-subtabs-nav)
+  const trackSubtabsNav = document.getElementById('ws-track-subtabs-nav');
+  if (trackSubtabsNav) {
+    trackSubtabsNav.querySelectorAll('button[data-bs-toggle="pill"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = (btn.getAttribute('data-bs-target') || '').replace(/^#/, '');
+        if (!targetId) return;
+        if (window.bootstrap && window.bootstrap.Tab) {
+          const tabInst = window.bootstrap.Tab.getInstance(btn) || new window.bootstrap.Tab(btn);
+          tabInst.show();
+        } else {
+          trackSubtabsNav.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelectorAll('#ws-track-subtabs-content > .tab-pane').forEach((p) => {
+            p.classList.remove('show', 'active');
+          });
+          const pane = document.getElementById(targetId);
+          if (pane) pane.classList.add('show', 'active');
+        }
       });
     });
   }

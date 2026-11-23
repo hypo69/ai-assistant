@@ -53,7 +53,7 @@ class AgyChatBase:
         Returns:
             List[str]: List of available model identifiers.
         """
-        from src.ai.model_manager import get_available_models as _mgr_get_available_models
+        from src.ai.orchestration.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider='agy', force_refresh=force_refresh)
 
     @classmethod
@@ -295,7 +295,7 @@ class AgyChatBase:
             return RuntimeError(msg)
 
         if any((x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found'))):
-            from src.ai.model_manager import add_unsupported_model
+            from src.ai.orchestration.model_manager import add_unsupported_model
             add_unsupported_model('agy', self.model_id, reason=err_str)
             add_unsupported_model('gemini', self.model_id, reason=err_str)
 

@@ -1,0 +1,203 @@
+{
+  "default_language": "en",
+  "supported_languages": [
+    "he",
+    "en",
+    "ru",
+    "ua"
+  ],
+  "language_aliases": {
+    "uk": "ua",
+    "ukr": "ua",
+    "ua": "ua",
+    "ukrainian": "ua",
+    "ru": "ru",
+    "rus": "ru",
+    "russian": "ru",
+    "he": "he",
+    "heb": "he",
+    "hebrew": "he",
+    "iw": "he",
+    "en": "en",
+    "eng": "en",
+    "english": "en"
+  },
+  "system_data_dirs": [
+    "ai_assistant",
+    "chromium",
+    "rag",
+    "rag_index",
+    "telegram_rag",
+    "users",
+    "windows_wikillm",
+    "workspaces",
+    "cache",
+    "logs",
+    "temp",
+    "tmp"
+  ],
+  "supported_text_extensions": [
+    ".txt",
+    ".md",
+    ".csv",
+    ".tsv",
+    ".json",
+    ".py",
+    ".html",
+    ".js",
+    ".docx",
+    ".pdf",
+    ".xlsx",
+    ".yaml",
+    ".yml"
+  ],
+  "readme_locales": {
+    "ru": {
+      "title_default": "Рабочее пространство",
+      "desc_header": "Описание",
+      "desc_default": "Рабочее пространство создано в AI-Assistant.",
+      "source_header": "Локальный источник на диске",
+      "path_label": "Путь",
+      "host_label": "Компьютер",
+      "files_count_label": "Файлов обнаружено",
+      "sample_files_label": "Примеры файлов",
+      "tracking_mode_label": "Режим отслеживания",
+      "mode_in_place": "На месте (Git in-place без перемещения)",
+      "mode_copy": "Копирование в assets/",
+      "desc_template": "Рабочее пространство на основе локальной папки '{folder_name}'. Файлов: {total_files}."
+    },
+    "he": {
+      "title_default": "מרחב עבודה",
+      "desc_header": "תיאור",
+      "desc_default": "מרחב עבודה נוצר ב-AI-Assistant.",
+      "source_header": "מקור מקומי בדיסק",
+      "path_label": "נתיב",
+      "host_label": "מחשב",
+      "files_count_label": "קבצים שנמצאו",
+      "sample_files_label": "דוגמאות קבצים",
+      "tracking_mode_label": "מצב מעקב",
+      "mode_in_place": "במקום (Git in-place ללא העברה)",
+      "mode_copy": "העתקה ל-assets/",
+      "desc_template": "מרחב עבודה מבוסס על התיקייה המקומית '{folder_name}'. קבצים: {total_files}."
+    },
+    "en": {
+      "title_default": "Workspace",
+      "desc_header": "Description",
+      "desc_default": "Workspace created in AI-Assistant.",
+      "source_header": "Local Disk Source",
+      "path_label": "Path",
+      "host_label": "Host",
+      "files_count_label": "Files detected",
+      "sample_files_label": "Sample files",
+      "tracking_mode_label": "Tracking mode",
+      "mode_in_place": "In-place (Git without moving files)",
+      "mode_copy": "Copy to assets/",
+      "desc_template": "Workspace grounded on local directory '{folder_name}'. Total files: {total_files}."
+    },
+    "ua": {
+      "title_default": "Робочий простір",
+      "desc_header": "Опис",
+      "desc_default": "Робочий простір створено в AI-Assistant.",
+      "source_header": "Локальне джерело на диску",
+      "path_label": "Шлях",
+      "host_label": "Комп'ютер",
+      "files_count_label": "Файлів виявлено",
+      "sample_files_label": "Приклади файлів",
+      "tracking_mode_label": "Режим відстеження",
+      "mode_in_place": "На місці (Git in-place без переміщення)",
+      "mode_copy": "Копіювання в assets/",
+      "desc_template": "Робочий простір на основі локальної теки '{folder_name}'. Файлів: {total_files}."
+    }
+  },
+  "gitignore_rules": {
+    "temp_and_cache": [
+      "~*",
+      "~$*",
+      "*.tmp",
+      "*.log",
+      "__pycache__/",
+      "*.pyc",
+      ".pytest_cache/",
+      ".DS_Store",
+      "Thumbs.db",
+      "ehthumbs.db",
+      "Desktop.ini",
+      "$RECYCLE.BIN/"
+    ],
+    "infrastructure": [
+      ".workspace/",
+      "faiss_indices/",
+      "*.faiss",
+      "*.db-wal",
+      "*.db-shm"
+    ],
+    "assets": [
+      "assets/"
+    ],
+    "binary_media": [
+      "*.pdf",
+      "*.png",
+      "*.jpg",
+      "*.jpeg",
+      "*.bmp",
+      "*.webp",
+      "*.tiff",
+      "*.gif",
+      "*.wav",
+      "*.mp3",
+      "*.ogg",
+      "*.m4a",
+      "*.flac",
+      "*.aac",
+      "*.mp4",
+      "*.avi",
+      "*.mkv",
+      "*.mov",
+      "*.webm",
+      "*.wmv",
+      "*.flv",
+      "*.m4v",
+      "*.3gp",
+      "*.opus",
+      "*.wma"
+    ],
+    "exceptions": [
+      "!*.md",
+      "!*.txt"
+    ]
+  },
+  "gitignore_comments": {
+    "ru": {
+      "header": "# AI-Assistant - Workspace Git Ignore",
+      "temp_and_cache": "# Временные файлы и системные кэши",
+      "infrastructure": "# Инфраструктура AI-Assistant",
+      "assets": "# Каталог исходников исключен из Git",
+      "binary_media": "# PDF и медиафайлы по умолчанию (хранятся только конвертированные .md)",
+      "exceptions": "# Исключения: сохранять конвертированные companion .md и текстовые файлы"
+    },
+    "he": {
+      "header": "# AI-Assistant - Workspace Git Ignore",
+      "temp_and_cache": "# קבצים זמניים ומטמון מערכת",
+      "infrastructure": "# תשתית AI-Assistant",
+      "assets": "# תיקיית מקורות מוחרגת מ-Git",
+      "binary_media": "# קבצי PDF ומדיה כברירת מחדל (נשמרים רק קבצי .md מומרים)",
+      "exceptions": "# חריגים: שמירת קבצי .md וטקסט מומרים"
+    },
+    "en": {
+      "header": "# AI-Assistant - Workspace Git Ignore",
+      "temp_and_cache": "# Temporary files and system caches",
+      "infrastructure": "# AI-Assistant infrastructure",
+      "assets": "# Source assets directory excluded from Git",
+      "binary_media": "# PDF and media files by default (only converted .md stored)",
+      "exceptions": "# Exceptions: keep converted companion .md and text files"
+    },
+    "ua": {
+      "header": "# AI-Assistant - Workspace Git Ignore",
+      "temp_and_cache": "# Тимчасові файли та системні кеші",
+      "infrastructure": "# Інфраструктура AI-Assistant",
+      "assets": "# Каталог вихідних файлів виключено з Git",
+      "binary_media": "# PDF та медіафайли за замовчуванням (зберігаються лише конвертовані .md)",
+      "exceptions": "# Винятки: зберігати конвертовані companion .md та текстові файли"
+    }
+  }
+}

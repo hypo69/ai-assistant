@@ -20,7 +20,7 @@
  * Package: apps.common.webgui.tab_file_tree
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 13:30:00
+ * Updated: 2026-11-19 20:21:00
  * =============================================================================
  */
 
@@ -56,6 +56,25 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+const HEBREW_CHAR_RE = /[\u0590-\u05FF]/;
+
+/**
+ * Определяет направление текста ('rtl' для иврита, иначе 'ltr').
+ * @param {string} content
+ * @param {string} [fileName='']
+ * @param {string|null} [explicitDir=null]
+ * @returns {'rtl'|'ltr'}
+ */
+function resolveTextDirection(content, fileName = '', explicitDir = null) {
+  if (typeof window !== 'undefined' && typeof window.detectDocumentDirection === 'function') {
+    return window.detectDocumentDirection(content, fileName, explicitDir);
+  }
+  if (explicitDir === 'rtl') return 'rtl';
+  if (content && HEBREW_CHAR_RE.test(String(content))) return 'rtl';
+  if (!content && fileName && HEBREW_CHAR_RE.test(String(fileName))) return 'rtl';
+  return 'ltr';
 }
 
 function getActiveWorkspace() {
@@ -625,8 +644,19 @@ async function openSummaryModal(relPath) {
     if (sizeBadge) sizeBadge.textContent = data.size_formatted;
     if (linesBadge) linesBadge.textContent = data.lines_count !== null ? `${data.lines_count} строк` : 'Бинарный';
     if (langBadge) langBadge.textContent = data.language_id;
-    if (essenceText) essenceText.textContent = data.summary || 'Краткое описание отсутствует.';
-    if (previewPre) previewPre.textContent = data.preview || '';
+    const fileDir = resolveTextDirection(data.preview || data.summary || '', relPath, data.direction);
+    if (essenceText) {
+      essenceText.textContent = data.summary || 'Краткое описание отсутствует.';
+      essenceText.setAttribute('dir', fileDir);
+      essenceText.style.direction = fileDir;
+      essenceText.style.textAlign = fileDir === 'rtl' ? 'right' : 'left';
+    }
+    if (previewPre) {
+      previewPre.textContent = data.preview || '';
+      previewPre.setAttribute('dir', fileDir);
+      previewPre.style.direction = fileDir;
+      previewPre.style.textAlign = fileDir === 'rtl' ? 'right' : 'left';
+    }
 
     if (tagsContainer && Array.isArray(data.tags)) {
       tagsContainer.innerHTML = data.tags.map((t) => `<span class="badge bg-secondary-subtle text-secondary border">${escapeHtml(t)}</span>`).join('');
@@ -657,9 +687,35 @@ function openCreateModal(targetDir = '') {
   if (targetBadge) targetBadge.textContent = cleanDir ? `/${cleanDir}/` : '/ (Корень)';
   if (nameInput) {
     nameInput.value = '';
+    nameInput.setAttribute('dir', 'auto');
+    if (!nameInput._rtlInputBound) {
+      nameInput._rtlInputBound = true;
+      nameInput.addEventListener('input', () => {
+        if (contentInput && !contentInput.value.trim()) {
+          const d = resolveTextDirection('', nameInput.value);
+          contentInput.setAttribute('dir', d);
+          contentInput.style.direction = d;
+          contentInput.style.textAlign = d === 'rtl' ? 'right' : 'left';
+        }
+      });
+    }
     setTimeout(() => nameInput.focus(), 250);
   }
-  if (contentInput) contentInput.value = '';
+  if (contentInput) {
+    contentInput.value = '';
+    contentInput.setAttribute('dir', 'ltr');
+    contentInput.style.direction = 'ltr';
+    contentInput.style.textAlign = 'left';
+    if (!contentInput._rtlInputBound) {
+      contentInput._rtlInputBound = true;
+      contentInput.addEventListener('input', () => {
+        const d = resolveTextDirection(contentInput.value, nameInput?.value || '');
+        contentInput.setAttribute('dir', d);
+        contentInput.style.direction = d;
+        contentInput.style.textAlign = d === 'rtl' ? 'right' : 'left';
+      });
+    }
+  }
   if (commitInput) commitInput.value = '';
   if (radioFile) radioFile.checked = true;
   if (contentGroup) contentGroup.classList.remove('d-none');
@@ -853,6 +909,15 @@ export function initFileTreeTab() {
 
   // Первоначальная загрузка
   browseDirectory('');
+
+  // Слушатель изменения активного рабочего пространства
+  document.addEventListener('workspace:changed', (e) => {
+    const wsId = e.detail?.workspaceId;
+    if (wsId && wsId !== currentWorkspaceId) {
+      currentWorkspaceId = wsId;
+      browseDirectory('');
+    }
+  });
 }
 
 // Экспорт в глобальную область

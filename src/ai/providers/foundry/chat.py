@@ -60,7 +60,7 @@ class FoundryChatBase:
         Returns:
             List[str]: List of available model identifiers.
         """
-        from src.ai.model_manager import get_available_models as _mgr_get_available_models
+        from src.ai.orchestration.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider='foundry', force_refresh=force_refresh)
 
     def __init__(self, model_id: str, temperature: float=0.7, max_tokens: int=2048, system_prompt: str='You are a helpful AI assistant.', api_url: Optional[str]=''):
@@ -167,12 +167,12 @@ class FoundryChatBase:
                     else:
                         load_err = load_result.get('error', '')
                         logger.error(f'Failed to load model {self.model_id}: {load_err}')
-                        from src.ai.model_manager import add_unsupported_model
+                        from src.ai.orchestration.model_manager import add_unsupported_model
                         add_unsupported_model('foundry', self.model_id, reason=f'Load failed: {load_err}')
                         return None
                 error_msg = result.get('error', 'Unknown error')
                 if '404' in error_msg or 'not found' in error_msg.lower():
-                    from src.ai.model_manager import add_unsupported_model
+                    from src.ai.orchestration.model_manager import add_unsupported_model
                     from src.ai.orchestration.model_error_hub import record_model_error
                     record_model_error(provider='foundry', model_name=self.model_id, error=error_msg, status_code=404, attempt=attempt, max_attempts=attempts, action_taken='failed')
                     add_unsupported_model('foundry', self.model_id, reason=error_msg)
@@ -287,7 +287,7 @@ class FoundryChatBase:
                     else:
                         load_err = load_result.get('error', '')
                         logger.error(f'Failed to load model {self.model_id}: {load_err}')
-                        from src.ai.model_manager import add_unsupported_model
+                        from src.ai.orchestration.model_manager import add_unsupported_model
                         add_unsupported_model('foundry', self.model_id, reason=f'Load failed: {load_err}')
                         from src.config import is_debug_mode
                         if is_debug_mode():

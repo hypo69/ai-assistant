@@ -73,6 +73,17 @@
         "order": 5
       },
       {
+        "id": "local-bert",
+        "button_id": "pill-local-bert-tab",
+        "pane_id": "pill-local-bert",
+        "panel_id": "panel-local-bert",
+        "icon": "bi-gpu-card",
+        "label_i18n": "ui.mdl.local_bert_tab",
+        "title_i18n": "models.subtabs.localBertTitle",
+        "default_title": "Раздел: ⚡ Браузерный BERT (WebGPU / WASM)",
+        "order": 6
+      },
+      {
         "id": "gacc-mode-file",
         "button_id": "gacc-mode-file-tab",
         "pane_id": "gacc-mode-file",

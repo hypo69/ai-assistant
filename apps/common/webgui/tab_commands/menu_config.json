@@ -1,0 +1,46 @@
+{
+  "$schema": "webgui-menu-v1",
+  "tab_id": "tab-commands",
+  "draggable": true,
+  "subtabs": {
+    "nav_id": "commands-subtabs-nav",
+    "storage_key": "tab-commands_subtabs_order",
+    "items": [
+      {
+        "id": "cheatsheet",
+        "button_id": "pill-cmd-cheatsheet-tab",
+        "pane_id": "pill-cmd-cheatsheet",
+        "panel_id": "panel-cmd-cheatsheet",
+        "icon": "bi-terminal",
+        "label_i18n": "commands.subtabs.cheatsheetLabel",
+        "title_i18n": "commands.subtabs.cheatsheetTitle",
+        "default_title": "Каталог команд и сниппетов",
+        "order": 0
+      },
+      {
+        "id": "cheatsheet-md",
+        "button_id": "pill-cmd-markdown-tab",
+        "pane_id": "pill-cmd-markdown",
+        "panel_id": "panel-cmd-markdown",
+        "icon": "bi-markdown",
+        "label_i18n": "commands.subtabs.markdownLabel",
+        "title_i18n": "commands.subtabs.markdownTitle",
+        "default_title": "Markdown Шпаргалка",
+        "order": 1
+      }
+    ]
+  },
+  "blocks": {
+    "nav_id": "commands-blocks-nav",
+    "storage_key": "tab-commands_blocks_order",
+    "items": [
+      {
+        "id": "block-cmd-list",
+        "block_id": "block-cmd-list",
+        "title_i18n": "commands.blocks.listTitle",
+        "default_title": "Список команд",
+        "order": 0
+      }
+    ]
+  }
+}

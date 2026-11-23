@@ -11,7 +11,7 @@
  * Package: apps/common/webgui/tab_issues
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 14:41:44
+ * Updated: 2026-11-15 19:44:00
  * =============================================================================
  */
 
@@ -621,10 +621,52 @@
 
   window.initIssuesTab = initIssuesTab;
 
+  /**
+   * Автоматическая синхронизация активной панели вкладки с URL-хэшем.
+   */
+  function initTabUrlHashRouting() {
+    const canonicalTabId = 'tab-issues';
+    const syncFromHash = () => {
+      const raw = window.location.hash || '';
+      if (!raw.includes(canonicalTabId)) return;
+      const parts = raw.replace(/^#/, '').split('#');
+      const panelPart = parts.find((p) => p.startsWith('panel-'));
+      if (panelPart) {
+        const btn = document.querySelector(`button[data-panel-id="${panelPart}"]`) ||
+                    document.querySelector(`button[data-bs-target="#${panelPart}"]`);
+        if (btn && window.bootstrap && window.bootstrap.Tab) {
+          (window.bootstrap.Tab.getInstance?.(btn) || window.bootstrap.Tab.getOrCreateInstance?.(btn) || new window.bootstrap.Tab(btn)).show();
+        }
+      }
+    };
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-panel-id], button[data-bs-toggle="pill"]');
+      if (btn) {
+        const panelId = btn.getAttribute('data-panel-id') || btn.getAttribute('data-bs-target')?.replace('#', '');
+        const blockId = btn.getAttribute('data-block-id');
+        if (panelId) {
+          let hash = `#${canonicalTabId}#${panelId}`;
+          if (blockId) hash += `#${blockId}`;
+          history.replaceState(null, null, hash);
+        }
+      }
+    });
+
+    window.addEventListener('hashchange', syncFromHash);
+    syncFromHash();
+  }
+
+  window.initTabUrlHashRouting = initTabUrlHashRouting;
+
   // Автоматический запуск, если вкладка уже активна в DOM
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initIssuesTab);
+    document.addEventListener('DOMContentLoaded', () => {
+      initIssuesTab();
+      initTabUrlHashRouting();
+    });
   } else {
     initIssuesTab();
+    initTabUrlHashRouting();
   }
 })();

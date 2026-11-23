@@ -21,7 +21,7 @@
 # Package: apps.ai_assistant.core.ai_instruments
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:55:00
+# Updated: 2026-11-13 15:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -36,6 +36,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from logger import logger
+from src.utils.jjson import j_dumps
 from .models import AIInstrument, get_current_iso_time
 
 
@@ -176,7 +177,8 @@ def parse_instruments_from_markdown(content: str) -> List[AIInstrument]:
         schema_match = re.search(r"###\s+Схема параметров\s*```(?:json)?\s*([\s\S]*?)```", sec, re.IGNORECASE)
         if schema_match:
             try:
-                params_schema = json.loads(schema_match.group(1).strip())
+                parsed = j_dumps(schema_match.group(1).strip(), exc_info=False)
+                params_schema = parsed if isinstance(parsed, dict) else {}
             except Exception as exc:
                 logger.warning(f"[markdown_adapter] Ошибка разбора JSON-схемы параметров {tool_id}: {exc}")
                 params_schema = {}

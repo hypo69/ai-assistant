@@ -10,7 +10,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_workspace/panel_documents
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-28 20:05:00
+ * Updated: 2026-11-19 20:21:30
  * =============================================================================
  */
 
@@ -20,6 +20,24 @@ let currentWsId = 'default';
 let onDocSavedCallback = null;
 let docsInFlight = false;
 let commitsInFlight = false;
+const HEBREW_CHAR_RE = /[\u0590-\u05FF]/;
+
+function applyDocEditorDirection(content, docId = '', lang = '') {
+  const contentInput = document.getElementById('doc-content-input');
+  if (!contentInput) return;
+  let dir = 'ltr';
+  const normLang = String(lang || '').trim().toLowerCase().split(/[-_]/)[0];
+  if (['he', 'heb', 'iw'].includes(normLang)) {
+    dir = 'rtl';
+  } else if (typeof window !== 'undefined' && typeof window.detectDocumentDirection === 'function') {
+    dir = window.detectDocumentDirection(content, docId);
+  } else if (HEBREW_CHAR_RE.test(String(content || '')) || (!content && HEBREW_CHAR_RE.test(String(docId || '')))) {
+    dir = 'rtl';
+  }
+  contentInput.setAttribute('dir', dir);
+  contentInput.style.direction = dir;
+  contentInput.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+}
 
 export async function loadDocuments(workspaceId = null, force = false) {
   if (workspaceId) currentWsId = workspaceId;
@@ -74,6 +92,7 @@ export async function loadDocuments(workspaceId = null, force = false) {
           if (fnameInput) fnameInput.value = docObj.document_id;
           if (contentInput) contentInput.value = docObj.content || '';
           if (langInput) langInput.value = docObj.language || '';
+          applyDocEditorDirection(docObj.content || '', docObj.document_id, docObj.language || '');
         }
       });
     });
@@ -120,6 +139,18 @@ export async function loadWorkspaceCommits(workspaceId = null, force = false) {
 export function initDocumentsPanel(onDocSaved) {
   onDocSavedCallback = onDocSaved;
 
+  document.getElementById('doc-content-input')?.addEventListener('input', (e) => {
+    const fname = document.getElementById('doc-filename-input')?.value || '';
+    const lang = document.getElementById('doc-lang-input')?.value || '';
+    applyDocEditorDirection(e.target.value || '', fname, lang);
+  });
+
+  document.getElementById('doc-lang-input')?.addEventListener('change', (e) => {
+    const fname = document.getElementById('doc-filename-input')?.value || '';
+    const content = document.getElementById('doc-content-input')?.value || '';
+    applyDocEditorDirection(content, fname, e.target.value || '');
+  });
+
   document.getElementById('doc-new-clear-btn')?.addEventListener('click', () => {
     const fname = document.getElementById('doc-filename-input');
     const content = document.getElementById('doc-content-input');
@@ -127,6 +158,7 @@ export function initDocumentsPanel(onDocSaved) {
     if (fname) fname.value = 'new_doc.txt';
     if (content) content.value = '';
     if (msg) msg.value = '';
+    applyDocEditorDirection('', 'new_doc.txt', '');
     content?.focus();
   });
 

@@ -12,7 +12,7 @@
  * Package: apps.common.webgui.tab_obsidian
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-30 16:45:00
+ * Updated: 2026-11-19 20:19:30
  * =============================================================================
  */
 
@@ -93,6 +93,18 @@
   tab-size: 2;
   background-color: var(--bs-body-bg);
   color: var(--bs-body-color);
+}
+
+#obs-markdown-textarea[dir="rtl"],
+.obs-rendered-markdown[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+#obs-markdown-textarea[dir="ltr"],
+.obs-rendered-markdown[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
 }
 
 .obs-preview-pane {

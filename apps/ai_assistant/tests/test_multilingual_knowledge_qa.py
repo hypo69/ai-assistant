@@ -425,10 +425,10 @@ async def test_multilingual_mixed_doc_and_markdown_table_extraction(isolated_env
     assert ans_tbl["status"] == "success"
     assert "архитектор" in ans_tbl["answer"].lower()
 
-    # Проверка очистки FAISS-чанков и перевода связей графа в superseded при обновлении документа
+    # Проверка очистки RAG-чанков и перевода связей графа в superseded при обновлении документа
     rag = manager.get_faiss_rag(ws_id)
     prefix = f"{ws_id}:mixed.md:"
-    chunks_before = [m for m in rag.metadatas if str(m.get("id", "")).startswith(prefix)]
+    chunks_before = rag.list_by_prefix(prefix)
     assert len(chunks_before) >= 1
 
     manager.import_document(
@@ -436,7 +436,7 @@ async def test_multilingual_mixed_doc_and_markdown_table_extraction(isolated_env
         document_id="mixed.md",
         content="Кот пил молоко.",
     )
-    chunks_after = [m for m in rag.metadatas if str(m.get("id", "")).startswith(prefix)]
+    chunks_after = rag.list_by_prefix(prefix)
     assert len(chunks_after) == 1
     assert "Кот пил молоко" in chunks_after[0]["text"]
 

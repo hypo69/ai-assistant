@@ -13,15 +13,38 @@
  * Package: apps/ai_assistant/api/webgui/tab_chat
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 20:54:00
+ * Updated: 2026-11-19 22:11:01
  * =============================================================================
  */
 
 import { isTabActive } from '../js/tab-core.js';
-import { getActiveWorkspaceId } from '../js/top_workspace_dropdown.js';
+import { getActiveWorkspaceId } from '../js/top_workspace_dropdown.js?v=20261116_v1';
 
 let isSending = false;
 let isInitialized = false;
+
+/**
+ * Возвращает корневой DOM-контейнер выделенной вкладки диалога с ИИ.
+ * @returns {HTMLElement|null}
+ */
+export function getChatContainer() {
+  return document.getElementById('tab-chat') || document.getElementById('tab-chat-container') || document;
+}
+
+/**
+ * Ищет элемент внутри контейнера чата с fallback на глобальный document.
+ * Предотвращает коллизии идентификаторов при одновременном наличии #tab-workspace.
+ * @param {string} selector - CSS селектор элемента
+ * @returns {HTMLElement|null}
+ */
+export function getChatElement(selector) {
+  const container = getChatContainer();
+  if (container && container !== document) {
+    const el = container.querySelector(selector);
+    if (el) return el;
+  }
+  return document.querySelector(selector);
+}
 
 /**
  * Возвращает текущий активный язык интерфейса с fallback на 'ru'.
@@ -42,7 +65,7 @@ export function getCurrentLanguage() {
  * @param {string} [wsId] - Идентификатор рабочей области
  */
 export async function loadDynamicQuickPrompts(wsId) {
-  const container = document.getElementById('chat-quick-prompts');
+  const container = getChatElement('#chat-quick-prompts');
   if (!container) return;
 
   const targetWs = wsId || resolveCurrentWorkspaceId();
@@ -77,7 +100,7 @@ export async function loadDynamicQuickPrompts(wsId) {
         btn.appendChild(span);
 
         btn.addEventListener('click', () => {
-          const inputEl = document.getElementById('ws-chat-input');
+          const inputEl = getChatElement('#ws-chat-input');
           if (inputEl) {
             inputEl.value = item.text;
             inputEl.focus();
@@ -166,7 +189,7 @@ function renderMessageContent(text) {
  * Прокручивает окно диалога к последнему сообщению.
  */
 function scrollToBottom() {
-  const windowEl = document.getElementById('ws-chat-response-window');
+  const windowEl = getChatElement('#ws-chat-response-window');
   if (windowEl) {
     windowEl.scrollTop = windowEl.scrollHeight;
   }
@@ -215,7 +238,7 @@ export function resolveCurrentWorkspaceId() {
  * Обновляет отображение активной рабочей области в заголовке вкладки чата.
  */
 export function updateWorkspaceBadge() {
-  const badgeEl = document.getElementById('chat-active-ws-name');
+  const badgeEl = getChatElement('#chat-active-ws-name');
   if (badgeEl) {
     const wsId = resolveCurrentWorkspaceId() || 'default';
     badgeEl.textContent = wsId;
@@ -230,8 +253,8 @@ export function updateWorkspaceBadge() {
  * @returns {HTMLElement|null} Созданный DOM-элемент сообщения
  */
 function appendMessage(sender, text, isPending = false) {
-  const container = document.getElementById('ws-chat-messages');
-  const emptyState = document.getElementById('ws-chat-empty-state');
+  const container = getChatElement('#ws-chat-messages');
+  const emptyState = getChatElement('#ws-chat-empty-state');
   if (emptyState) {
     emptyState.classList.add('d-none');
   }
@@ -241,11 +264,17 @@ function appendMessage(sender, text, isPending = false) {
   const isUser = sender === 'user';
 
   msgDiv.className = isUser
-    ? 'align-self-end rounded-3 px-3 py-2 shadow-sm bg-primary text-white'
-    : 'align-self-start rounded-3 px-3 py-2 shadow-sm bg-body border text-body';
+    ? 'align-self-start chat-msg-user shadow-xs'
+    : 'align-self-start chat-msg-bot shadow-xs';
 
-  msgDiv.style.maxWidth = isUser ? '80%' : '92%';
-  msgDiv.style.wordBreak = 'break-word';
+  const isHebrew =
+    document.documentElement.getAttribute('dir') === 'rtl' ||
+    getCurrentLanguage().startsWith('he') ||
+    /[\u0590-\u05FF]/.test(text || '');
+  if (isHebrew) {
+    container.setAttribute('dir', 'rtl');
+    msgDiv.setAttribute('dir', 'rtl');
+  }
 
   if (isPending) {
     msgDiv.setAttribute('data-pending', 'true');
@@ -268,9 +297,9 @@ function appendMessage(sender, text, isPending = false) {
  * Очищает историю сообщений чата и возвращает стартовое состояние.
  */
 export function clearChatHistory() {
-  const container = document.getElementById('ws-chat-messages');
-  const emptyState = document.getElementById('ws-chat-empty-state');
-  const statusEl = document.getElementById('ws-chat-status');
+  const container = getChatElement('#ws-chat-messages');
+  const emptyState = getChatElement('#ws-chat-empty-state');
+  const statusEl = getChatElement('#ws-chat-status');
 
   if (container) {
     container.innerHTML = '';
@@ -290,6 +319,98 @@ export function extractFactCommandText(rawText) {
   return match ? match[1].trim() : null;
 }
 
+export function extractTaskCommandText(rawText) {
+  const trimmed = (rawText || '').trim();
+  const match = trimmed.match(/^(?:\/task|\/задача|\/завдання|task:|задача:|завдання:|משימה:)\s+(.+)$/i);
+  return match ? match[1].trim() : null;
+}
+
+/**
+ * Ставит новую задачу из чата с привязкой к контексту базы знаний рабочей области и календарю.
+ * @param {string|null} [taskOverride=null] - Явный текст задачи (если не передан, берётся из поля ввода).
+ */
+export async function addTaskFromChat(taskOverride = null) {
+  if (isSending) return;
+
+  const inputEl = getChatElement('#ws-chat-input');
+  const sendBtn = getChatElement('#ws-chat-send-btn');
+  const addFactBtn = getChatElement('#chat-add-fact-btn');
+  const addTaskBtn = getChatElement('#chat-add-task-btn');
+  const statusEl = getChatElement('#ws-chat-status');
+
+  const rawText = taskOverride !== null ? String(taskOverride).trim() : (inputEl ? inputEl.value.trim() : '');
+  if (!rawText) {
+    if (inputEl) {
+      inputEl.value = t(
+        'workspace.chatTaskDefaultPrompt',
+        'Связаться с ветеринаром и страховым агентом, согласовать с ними дату и время осмотра',
+      );
+      inputEl.focus();
+    }
+    return;
+  }
+
+  isSending = true;
+  if (taskOverride === null && inputEl) inputEl.value = '';
+  if (sendBtn) sendBtn.disabled = true;
+  if (addFactBtn) addFactBtn.disabled = true;
+  if (addTaskBtn) addTaskBtn.disabled = true;
+  if (statusEl) statusEl.textContent = t('workspace.chatAddingTaskStatus', 'Постановка задачи...');
+
+  appendMessage('user', `🎯 ${rawText}`);
+  const pendingBubble = appendMessage('assistant', '', true);
+  const wsId = resolveCurrentWorkspaceId();
+
+  try {
+    if (!wsId) {
+      throw new Error(t('workspace.chatErrorNoWorkspace', 'Не выбрана рабочая область'));
+    }
+
+    const res = await fetchJson(`/api/v1/workspaces/${encodeURIComponent(wsId)}/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        task_text: rawText,
+        language: getCurrentLanguage(),
+      }),
+    });
+
+    const confirmText =
+      res.summary_markdown ||
+      `✅ **${t('workspace.chatTaskSavedMsg', 'Задача поставлена и сохранена')}:** \`${res.document_id || 'chat_tasks.md'}\`\n\n> ${escapeHtml(res.task_text || rawText)}`;
+
+    if (pendingBubble) {
+      pendingBubble.removeAttribute('data-pending');
+      pendingBubble.innerHTML = renderMessageContent(confirmText);
+    }
+    if (statusEl) {
+      statusEl.textContent = t('workspace.chatTaskSavedStatus', 'Задача поставлена');
+    }
+    document.dispatchEvent(new CustomEvent('workspace:tasksUpdated', { detail: { workspaceId: wsId, result: res } }));
+  } catch (err) {
+    if (pendingBubble) {
+      pendingBubble.removeAttribute('data-pending');
+      const errPrefix = t('workspace.chatTaskAddError', 'Ошибка постановки задачи:');
+      pendingBubble.innerHTML = `
+        <div class="text-danger small d-flex align-items-center gap-1.5">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>${errPrefix} ${escapeHtml(err.message || String(err))}</span>
+        </div>
+      `;
+    }
+    if (statusEl) {
+      statusEl.textContent = t('workspace.chatErrorStatus', 'Ошибка генерации');
+    }
+  } finally {
+    isSending = false;
+    if (sendBtn) sendBtn.disabled = false;
+    if (addFactBtn) addFactBtn.disabled = false;
+    if (addTaskBtn) addTaskBtn.disabled = false;
+    if (inputEl) inputEl.focus();
+    scrollToBottom();
+  }
+}
+
 /**
  * Сохраняет введённое утверждение как новый факт во внутренние файлы рабочей области и базу знаний.
  * @param {string|null} [factOverride=null] - Явный текст факта (если не передан, берётся из поля ввода).
@@ -297,10 +418,10 @@ export function extractFactCommandText(rawText) {
 export async function addFactFromChat(factOverride = null) {
   if (isSending) return;
 
-  const inputEl = document.getElementById('ws-chat-input');
-  const sendBtn = document.getElementById('ws-chat-send-btn');
-  const addFactBtn = document.getElementById('chat-add-fact-btn');
-  const statusEl = document.getElementById('ws-chat-status');
+  const inputEl = getChatElement('#ws-chat-input');
+  const sendBtn = getChatElement('#ws-chat-send-btn');
+  const addFactBtn = getChatElement('#chat-add-fact-btn');
+  const statusEl = getChatElement('#ws-chat-status');
 
   const rawText = factOverride !== null ? String(factOverride).trim() : (inputEl ? inputEl.value.trim() : '');
   if (!rawText) return;
@@ -329,7 +450,8 @@ export async function addFactFromChat(factOverride = null) {
     const docName = res.document_id || 'chat_facts.md';
     const commitShort = (res.commit_hash || 'HEAD').slice(0, 8);
     const savedPrefix = t('workspace.chatFactSavedMsg', 'Факт сохранён во внутренний файл и базу знаний');
-    const confirmText = `✅ **${savedPrefix}:** \`${docName}\` (Git: \`${commitShort}\`, фактов в файле: **${res.facts_count || 1}**)\n\n> ${escapeHtml(res.fact_text || rawText)}`;
+    const factsInFileLabel = t('workspace.chatFactsInFile', 'фактов в файле');
+    const confirmText = `✅ **${savedPrefix}:** \`${docName}\` (Git: \`${commitShort}\`, ${factsInFileLabel}: **${res.facts_count || 1}**)\n\n> ${escapeHtml(res.fact_text || rawText)}`;
 
     if (pendingBubble) {
       pendingBubble.removeAttribute('data-pending');
@@ -368,12 +490,19 @@ export async function addFactFromChat(factOverride = null) {
 export async function sendChatMessage() {
   if (isSending) return;
 
-  const inputEl = document.getElementById('ws-chat-input');
-  const sendBtn = document.getElementById('ws-chat-send-btn');
-  const statusEl = document.getElementById('ws-chat-status');
+  const inputEl = getChatElement('#ws-chat-input');
+  const sendBtn = getChatElement('#ws-chat-send-btn');
+  const statusEl = getChatElement('#ws-chat-status');
 
   const text = inputEl ? inputEl.value.trim() : '';
   if (!text) return;
+
+  const cmdTask = extractTaskCommandText(text);
+  if (cmdTask) {
+    if (inputEl) inputEl.value = '';
+    await addTaskFromChat(cmdTask);
+    return;
+  }
 
   const cmdFact = extractFactCommandText(text);
   if (cmdFact) {
@@ -409,6 +538,7 @@ export async function sendChatMessage() {
       body: JSON.stringify({
         question: text,
         workspace_id: wsId,
+        language: getCurrentLanguage(),
         mode: 'local_first',
       }),
     });
@@ -448,7 +578,7 @@ export async function sendChatMessage() {
           qBtn.type = 'button';
           qBtn.innerHTML = `<i class="bi bi-arrow-right-short"></i><span>${escapeHtml(qText)}</span>`;
           qBtn.onclick = () => {
-            const inp = document.getElementById('ws-chat-input');
+            const inp = getChatElement('#ws-chat-input');
             if (inp) {
               inp.value = qText;
               inp.focus();
@@ -461,7 +591,8 @@ export async function sendChatMessage() {
     }
     if (statusEl) {
       const succText = t('workspace.chatSuccessStatus', 'Ответ получен');
-      statusEl.textContent = durationMs > 0 ? `${succText} (${durationMs} мс)` : succText;
+      const msLabel = t('common.ms', 'мс');
+      statusEl.textContent = durationMs > 0 ? `${succText} (${durationMs} ${msLabel})` : succText;
     }
   } catch (err) {
     if (pendingBubble) {
@@ -480,7 +611,10 @@ export async function sendChatMessage() {
   } finally {
     isSending = false;
     if (sendBtn) sendBtn.disabled = false;
-    if (inputEl) inputEl.focus();
+    if (inputEl) {
+      inputEl.value = '';
+      inputEl.focus();
+    }
     scrollToBottom();
   }
 }
@@ -488,27 +622,15 @@ export async function sendChatMessage() {
 /**
  * Инициализирует вкладку диалога с ИИ (tab-chat).
  */
-/**
- * Возвращает корневой DOM-контейнер выделенной вкладки диалога с ИИ.
- * @returns {HTMLElement|null}
- */
-export function getChatContainer() {
-  return document.getElementById('tab-chat') || document;
-}
-
 export function initChatTab() {
   updateWorkspaceBadge();
 
-  if (isInitialized) {
-    return;
-  }
-  isInitialized = true;
-
   const container = getChatContainer();
-  const sendBtn = container ? container.querySelector('#ws-chat-send-btn') : null;
-  const addFactBtn = container ? container.querySelector('#chat-add-fact-btn') : null;
-  const inputEl = container ? container.querySelector('#ws-chat-input') : null;
-  const clearBtn = container ? container.querySelector('#ws-chat-clear-btn') : null;
+  const sendBtn = getChatElement('#ws-chat-send-btn');
+  const addFactBtn = getChatElement('#chat-add-fact-btn');
+  const addTaskBtn = getChatElement('#chat-add-task-btn');
+  const inputEl = getChatElement('#ws-chat-input');
+  const clearBtn = getChatElement('#ws-chat-clear-btn');
 
   if (sendBtn) {
     sendBtn.onclick = () => sendChatMessage();
@@ -516,8 +638,12 @@ export function initChatTab() {
   if (addFactBtn) {
     addFactBtn.onclick = () => addFactFromChat();
   }
+  if (addTaskBtn) {
+    addTaskBtn.onclick = () => addTaskFromChat();
+  }
 
-  if (inputEl) {
+  if (inputEl && !inputEl.dataset.chatBound) {
+    inputEl.dataset.chatBound = 'true';
     inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -531,27 +657,36 @@ export function initChatTab() {
   }
 
   // Обработка клика по быстрым шаблонам запросов (Prompt Chips)
-  document.querySelectorAll('.chat-prompt-chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const span = chip.querySelector('span[data-i18n]');
-      const promptText = span ? span.textContent.trim() : (chip.getAttribute('data-prompt') || chip.textContent.trim());
-      if (promptText && inputEl) {
-        inputEl.value = promptText;
-        inputEl.focus();
-      }
-    });
+  const chipsRoot = container && container !== document ? container : document;
+  chipsRoot.querySelectorAll('.chat-prompt-chip').forEach((chip) => {
+    if (!chip.dataset.chipBound) {
+      chip.dataset.chipBound = 'true';
+      chip.addEventListener('click', () => {
+        const span = chip.querySelector('span[data-i18n]');
+        const promptText = span ? span.textContent.trim() : (chip.getAttribute('data-prompt') || chip.textContent.trim());
+        const curInput = getChatElement('#ws-chat-input');
+        if (promptText && curInput) {
+          curInput.value = promptText;
+          curInput.focus();
+        }
+      });
+    }
   });
 
-  // Синхронизация при смене рабочей области через верхнее меню
-  const onWorkspaceUpdate = () => {
-    updateWorkspaceBadge();
-    loadDynamicQuickPrompts();
-  };
-  document.addEventListener('context:changed', onWorkspaceUpdate);
-  document.addEventListener('workspace:changed', onWorkspaceUpdate);
-  document.addEventListener('repo:changed', onWorkspaceUpdate);
-  window.addEventListener('i18n:languageChanged', () => loadDynamicQuickPrompts());
-  window.addEventListener('languageChanged', () => loadDynamicQuickPrompts());
+  if (!isInitialized) {
+    isInitialized = true;
+    // Синхронизация при смене рабочей области через верхнее меню
+    const onWorkspaceUpdate = () => {
+      updateWorkspaceBadge();
+      loadDynamicQuickPrompts();
+    };
+    document.addEventListener('context:changed', onWorkspaceUpdate);
+    document.addEventListener('workspace:changed', onWorkspaceUpdate);
+    document.addEventListener('repo:changed', onWorkspaceUpdate);
+    window.addEventListener('i18n:languageChanged', () => loadDynamicQuickPrompts());
+    window.addEventListener('languageChanged', () => loadDynamicQuickPrompts());
+  }
+
   loadDynamicQuickPrompts();
 }
 
@@ -568,8 +703,11 @@ if (typeof window !== 'undefined') {
   window.deactivateChatTab = deactivateChatTab;
   window.sendChatMessage = sendChatMessage;
   window.addFactFromChat = addFactFromChat;
+  window.addTaskFromChat = addTaskFromChat;
   window.clearChatHistory = clearChatHistory;
   window.loadDynamicQuickPrompts = loadDynamicQuickPrompts;
+  window.getChatElement = getChatElement;
+  window.getChatContainer = getChatContainer;
 }
 
 if (document.readyState === 'loading') {

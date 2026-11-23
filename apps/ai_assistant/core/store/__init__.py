@@ -10,7 +10,7 @@
 # Package: apps.ai_assistant.core.store
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-20 12:20:00
+# Updated: 2026-11-20 02:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -19,7 +19,11 @@ from __future__ import annotations
 from apps.ai_assistant.core.store.document_fact_repo import DocumentFactRepoMixin, compute_sha256
 from apps.ai_assistant.core.store.schema import KNOWLEDGE_STORE_DDL
 from apps.ai_assistant.core.store.telemetry_repo import TelemetryRepoMixin
-from apps.ai_assistant.core.store.workspace_repo import WorkspaceRepoMixin, get_utc_now_iso
+from apps.ai_assistant.core.store.workspace_repo import (
+    WorkspaceRepoMixin,
+    get_utc_now_iso,
+    run_sqlite_with_retry,
+)
 
 __all__ = [
     "KNOWLEDGE_STORE_DDL",
@@ -28,4 +32,5 @@ __all__ = [
     "TelemetryRepoMixin",
     "compute_sha256",
     "get_utc_now_iso",
+    "run_sqlite_with_retry",
 ]

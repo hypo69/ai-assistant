@@ -14,7 +14,7 @@ File: SUBTABS_AND_BLOCKS_MENU.md
 Package: .ai/instructions/standards
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-11 21:25:00
+Updated: 2026-11-12 02:40:00
 =============================================================================
 -->
 
@@ -34,8 +34,11 @@ Updated: 2026-11-11 21:25:00
 Каждое переключение обязано синхронизироваться с адресной строкой браузера:
 
 ```text
-# Одноуровневая субпанель:
-http://localhost:8002/#tab-<tabId>#<panelId>
+# Одноуровневая субпанель (Панель 1-го уровня):
+http://localhost:8002/#tab-<tabId>#panel-<panelId>
+
+# Вложенный блок субпанели (Блок 2-го уровня):
+http://localhost:8002/#tab-<tabId>#panel-<panelId>#block-<blockId>
 
 # Субпанель с рабочим пространством:
 http://localhost:8002/#tab-workspace#panel-files#workspace=<workspace_id>

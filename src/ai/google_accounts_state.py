@@ -17,7 +17,7 @@
 # Package: src.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 16:46:00
+# Updated: 2026-11-20 02:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -38,6 +38,9 @@ _ACCOUNTS_FILE: Path = _SECRETS_DIR / 'google_accounts.json'
 _DAY_SECONDS: float = 86400.0
 _STATE_LOCK = threading.RLock()
 DEFAULT_SCOPES = [
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/gmail.readonly',
     'https://www.googleapis.com/auth/gmail.compose',
     'https://www.googleapis.com/auth/gmail.modify',
@@ -50,6 +53,30 @@ DEFAULT_SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/documents',
 ]
+
+def resolve_project_path(raw_path: Any) -> Path:
+    """Нормализует путь с Windows/POSIX-разделителями и разрешает его относительно корня проекта.
+
+    Args:
+        raw_path (Any): Относительный или абсолютный путь строкой или объектом Path.
+
+    Returns:
+        Path: Кроссплатформенный объект Path, корректно работающий на Windows и в Linux/Docker.
+    """
+    normalized = str(raw_path or "").strip().replace("\\", "/")
+    p = Path(normalized)
+    if p.is_absolute():
+        return p
+    return __root__ / p
+
+
+def _to_rel_posix(path: Path) -> str:
+    """Преобразует путь в относительный POSIX-формат с прямыми слешами '/'."""
+    try:
+        return path.resolve().relative_to(__root__.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
 
 def _ensure_dirs() -> None:
     """Ensure secrets and tokens directories exist."""
@@ -113,19 +140,19 @@ def _bootstrap_from_existing_files() -> Dict[str, Any]:
             if not acc_name:
                 acc_name = f.stem
             token_cand = _TOKENS_DIR / f'{acc_name}_token.json'
-            accounts[acc_name] = {'name': acc_name, 'email': '', 'type': 'oauth2', 'credentials_file': str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f), 'token_file': str(token_cand.relative_to(__root__)) if str(token_cand).startswith(str(__root__)) else str(token_cand), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
+            accounts[acc_name] = {'name': acc_name, 'email': '', 'type': 'oauth2', 'credentials_file': _to_rel_posix(f), 'token_file': _to_rel_posix(token_cand), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
     if _TOKENS_DIR.exists():
         for f in _TOKENS_DIR.glob('*_token.json'):
             acc_name = f.stem.removesuffix('_token')
             if acc_name not in accounts:
                 secret_cand = _OAUTH_FILES_DIR / f'{acc_name}_secret.json'
-                accounts[acc_name] = {'name': acc_name, 'email': '', 'type': 'oauth2', 'credentials_file': str(secret_cand.relative_to(__root__)) if str(secret_cand).startswith(str(__root__)) else str(secret_cand), 'token_file': str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
+                accounts[acc_name] = {'name': acc_name, 'email': '', 'type': 'oauth2', 'credentials_file': _to_rel_posix(secret_cand), 'token_file': _to_rel_posix(f), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
     candidates = [(_SECRETS_DIR / 'credentials.json', 'oauth2'), (_SECRETS_DIR / 'service_account.json', 'service_account'), (__root__ / 'credentials.json', 'oauth2'), (__root__ / 'service_account.json', 'service_account')]
     for cand_path, acc_type in candidates:
         if cand_path.exists():
             acc_name = 'default' if 'default' not in accounts else cand_path.stem
             if acc_name not in accounts:
-                accounts[acc_name] = {'name': acc_name, 'email': '', 'type': acc_type, 'credentials_file': str(cand_path.relative_to(__root__)) if str(cand_path).startswith(str(__root__)) else str(cand_path), 'token_file': str((_TOKENS_DIR / f'{acc_name}_token.json').relative_to(__root__)) if str(_TOKENS_DIR).startswith(str(__root__)) else str(_TOKENS_DIR / f'{acc_name}_token.json'), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
+                accounts[acc_name] = {'name': acc_name, 'email': '', 'type': acc_type, 'credentials_file': _to_rel_posix(cand_path), 'token_file': _to_rel_posix(_TOKENS_DIR / f'{acc_name}_token.json'), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
     default_name = next(iter(accounts.keys()), '')
     return {'default_account': default_name, 'accounts': accounts}
 
@@ -223,9 +250,7 @@ def save_google_account(account_name: str, credentials_path_or_dict: Any, accoun
             tmp_dest.write_text(json.dumps(credentials_path_or_dict, indent=2, ensure_ascii=False), encoding='utf-8')
             os.replace(tmp_dest, dest_file)
         elif isinstance(credentials_path_or_dict, (str, Path)):
-            src_path = Path(credentials_path_or_dict)
-            if not src_path.is_absolute():
-                src_path = __root__ / src_path
+            src_path = resolve_project_path(credentials_path_or_dict)
             if src_path.exists() and src_path.resolve() != dest_file:
                 tmp_dest = dest_file.with_suffix('.json.tmp')
                 tmp_dest.write_bytes(src_path.read_bytes())
@@ -235,14 +260,8 @@ def save_google_account(account_name: str, credentials_path_or_dict: Any, accoun
                 return False
         token_filename = f'{clean_name}_token.json'
         token_file = _TOKENS_DIR / token_filename
-        try:
-            creds_rel_path = str(dest_file.relative_to(__root__))
-        except ValueError:
-            creds_rel_path = str(dest_file)
-        try:
-            token_rel_path = str(token_file.relative_to(__root__))
-        except ValueError:
-            token_rel_path = str(token_file)
+        creds_rel_path = _to_rel_posix(dest_file)
+        token_rel_path = _to_rel_posix(token_file)
         accounts[clean_name] = {'name': clean_name, 'email': email or accounts.get(clean_name, {}).get('email', ''), 'type': account_type, 'credentials_file': creds_rel_path, 'token_file': token_rel_path, 'status': 'active', 'last_run': '', 'exhausted_at': ''}
         if set_as_default or not data.get('default_account'):
             data['default_account'] = clean_name
@@ -259,11 +278,7 @@ def delete_google_account(account_name: str) -> bool:
         data['default_account'] = next(iter(accounts.keys()), '')
     token_str = deleted.get('token_file', '')
     if token_str:
-        token_path = Path(token_str)
-        if not token_path.is_absolute():
-            token_file = __root__ / token_path
-        else:
-            token_file = token_path
+        token_file = resolve_project_path(token_str)
         if token_file.exists():
             try:
                 token_file.unlink()
@@ -300,15 +315,68 @@ def reset_account_status(account_name: str) -> bool:
         return _save_accounts_data(data)
     return False
 
-def load_account_credentials(account_name: Optional[str]=None, scopes: Optional[List[str]]=None):
-    """Retrieve authentic Google Credentials object for specified or active pool account.
+def save_account_credentials(account_name: str, creds: Any) -> Dict[str, Any]:
+    """Атомарно сохраняет OAuth-токен на диск и синхронизирует профиль пользователя в google_accounts.json и users.db.
 
     Args:
-        account_name: Optional explicit account name in pool.
-        scopes: Requested OAuth scopes.
+        account_name (str): Имя аккаунта в пуле Google.
+        creds (Any): Объект учетных данных Google OAuth 2.0 (Credentials).
 
     Returns:
-        Google Credentials instance or None.
+        Dict[str, Any]: Извлеченный профиль пользователя (email, name, picture).
+    """
+    acc_info = get_account_info(account_name)
+    name = (acc_info or {}).get("name") or account_name or "default"
+    token_rel = (acc_info or {}).get("token_file", "")
+    token_path = resolve_project_path(token_rel) if token_rel else (_TOKENS_DIR / f"{name}_token.json")
+
+    try:
+        token_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_tok = token_path.with_suffix(".json.tmp")
+        tmp_tok.write_text(creds.to_json(), encoding="utf-8")
+        os.replace(tmp_tok, token_path)
+        logger.info(f"Сохранен OAuth токен для аккаунта '{name}' в {token_path}")
+    except Exception as exc:
+        logger.error(f"Ошибка сохранения файла токена для '{name}': {exc}")
+        raise
+
+    prof = fetch_user_profile_from_google(creds)
+    with _STATE_LOCK:
+        data = _load_accounts_data()
+        if name in data.get("accounts", {}):
+            acc_entry = data["accounts"][name]
+            acc_entry["last_run"] = _now_iso()
+            acc_entry["token_file"] = _to_rel_posix(token_path)
+            if acc_entry.get("credentials_file"):
+                acc_entry["credentials_file"] = _to_rel_posix(resolve_project_path(acc_entry["credentials_file"]))
+            if prof.get("email"):
+                acc_entry["email"] = prof["email"]
+            _save_accounts_data(data)
+
+    try:
+        from apps.ai_assistant.core.users import user_service
+        user_service.get_or_sync_active_user(
+            username=name,
+            email=prof.get("email") or (acc_info or {}).get("email", ""),
+            picture=prof.get("picture", ""),
+            full_name=prof.get("name", ""),
+            has_google=True,
+        )
+    except Exception as exc:
+        logger.warning(f"Не удалось синхронизировать профиль пользователя в users.db: {exc}")
+
+    return prof
+
+
+def load_account_credentials(account_name: Optional[str]=None, scopes: Optional[List[str]]=None):
+    """Загружает и при необходимости обновляет Google Credentials для выбранного аккаунта.
+
+    Args:
+        account_name: Явное имя аккаунта в пуле (или аккаунт по умолчанию).
+        scopes: Запрашиваемые OAuth-разрешения (scopes).
+
+    Returns:
+        Объект Google Credentials или None.
     """
     try:
         from google.auth.transport.requests import Request
@@ -316,7 +384,7 @@ def load_account_credentials(account_name: Optional[str]=None, scopes: Optional[
         from google.oauth2 import service_account
         from google_auth_oauthlib.flow import InstalledAppFlow
     except ImportError:
-        logger.error('Google Auth libraries are not installed.')
+        logger.error('Библиотеки Google Auth не установлены.')
         return None
     active_scopes = scopes or DEFAULT_SCOPES
     acc_info = get_account_info(account_name)
@@ -326,60 +394,90 @@ def load_account_credentials(account_name: Optional[str]=None, scopes: Optional[
     token_rel = acc_info.get('token_file', '')
     acc_type = acc_info.get('type', 'oauth2')
     name = acc_info.get('name', 'default')
-    if creds_rel:
-        p = Path(creds_rel)
-        creds_path = p if p.is_absolute() else __root__ / p
-    else:
-        creds_path = None
-    if token_rel:
-        p = Path(token_rel)
-        token_path = p if p.is_absolute() else __root__ / p
-    else:
-        token_path = _TOKENS_DIR / f'{name}_token.json'
+    creds_path = resolve_project_path(creds_rel) if creds_rel else None
+    token_path = resolve_project_path(token_rel) if token_rel else (_TOKENS_DIR / f'{name}_token.json')
     if acc_type == 'service_account' and creds_path and creds_path.exists():
         try:
             return service_account.Credentials.from_service_account_file(str(creds_path), scopes=active_scopes)
         except Exception as e:
-            logger.error(f'Failed to load Service Account for {name}: {e}')
+            logger.error(f'Не удалось загрузить Service Account для {name}: {e}')
             return None
     creds = None
     if token_path and token_path.exists():
         try:
             creds = Credentials.from_authorized_user_file(str(token_path), active_scopes)
         except Exception as e:
-            logger.warning(f'Failed to load cached OAuth token for {name}: {e}')
+            logger.warning(f'Не удалось загрузить кешированный OAuth токен для {name}: {e}')
             creds = None
+    refreshed_or_new = False
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             try:
-                logger.info(f"Refreshing expired OAuth token for Google account '{name}'...")
+                logger.info(f"Обновление истекшего OAuth токена для Google аккаунта '{name}'...")
                 creds.refresh(Request())
+                refreshed_or_new = True
             except Exception as e:
-                logger.warning(f'Token refresh failed for {name}: {e}')
+                logger.warning(f'Не удалось обновить токен для {name}: {e}')
                 creds = None
         if not creds:
             if not creds_path or not creds_path.exists():
-                logger.error(f"No credentials file found for Google account '{name}' at {creds_path}. Please place credentials JSON in src/secrets.")
+                logger.error(f"Файл credentials не найден для Google аккаунта '{name}' по пути {creds_path}.")
+                return None
+            if os.environ.get("AI_ASSISTANT_IN_DOCKER") == "1":
+                logger.error(
+                    f"Запуск локального браузера OAuth невозможен внутри Docker для '{name}'. "
+                    "Пройдите авторизацию через WebGUI (/auth/google)."
+                )
                 return None
             try:
-                logger.info(f"Starting OAuth consent flow for account '{name}' ({creds_path})...")
+                logger.info(f"Запуск локального OAuth consent flow для аккаунта '{name}' ({creds_path})...")
                 flow = InstalledAppFlow.from_client_secrets_file(str(creds_path), active_scopes)
-                creds = flow.run_local_server(port=0)
+                creds = flow.run_local_server(port=0, timeout_seconds=180)
+                refreshed_or_new = True
             except Exception as e:
-                logger.error(f'Error during OAuth flow for {name}: {e}')
+                logger.error(f'Ошибка OAuth flow для {name}: {e}')
                 return None
-        if creds and token_path:
-            try:
-                token_path.parent.mkdir(parents=True, exist_ok=True)
-                tmp_tok = token_path.with_suffix('.json.tmp')
-                tmp_tok.write_text(creds.to_json(), encoding='utf-8')
-                os.replace(tmp_tok, token_path)
-                logger.info(f"Saved OAuth token for account '{name}' to {token_path}")
-            except Exception as e:
-                logger.error(f'Failed to save token file for {name}: {e}')
-    if creds:
-        data = _load_accounts_data()
-        if name in data.get('accounts', {}):
-            data['accounts'][name]['last_run'] = _now_iso()
-            _save_accounts_data(data)
+    if creds and refreshed_or_new:
+        save_account_credentials(name, creds)
     return creds
+
+
+def fetch_user_profile_from_google(creds: Any) -> Dict[str, Any]:
+    """Извлекает информацию о профиле (email, name, picture) из Google учетных данных."""
+    info: Dict[str, Any] = {"email": "", "name": "", "picture": ""}
+    if not creds:
+        return info
+
+    id_token_jwt = getattr(creds, "id_token", None)
+    if id_token_jwt and isinstance(id_token_jwt, str):
+        try:
+            import base64
+            parts = id_token_jwt.split(".")
+            if len(parts) >= 2:
+                payload = parts[1]
+                payload += "=" * ((4 - len(payload) % 4) % 4)
+                decoded = json.loads(base64.urlsafe_b64decode(payload.encode("utf-8")).decode("utf-8"))
+                info["email"] = decoded.get("email") or info["email"]
+                info["name"] = decoded.get("name") or info["name"]
+                info["picture"] = decoded.get("picture") or info["picture"]
+        except Exception:
+            pass
+
+    token = getattr(creds, "token", None)
+    if token and not info.get("picture"):
+        try:
+            import requests
+            resp = requests.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=5.0,
+            )
+            if resp.status_code == 200:
+                uinfo = resp.json()
+                info["email"] = uinfo.get("email") or info["email"]
+                info["name"] = uinfo.get("name") or info["name"]
+                info["picture"] = uinfo.get("picture") or info["picture"]
+        except Exception:
+            pass
+
+    return info

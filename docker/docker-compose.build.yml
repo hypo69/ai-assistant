@@ -1,0 +1,8 @@
+# Updated: 2026-11-12 00:30:00
+# Сборка образа Paperless-ngx из локальных исходников разработки (каталог не изменяется).
+services:
+  webserver:
+    image: paperless-ngx-local:dev
+    build:
+      context: ../paperless-ngx
+      dockerfile: Dockerfile

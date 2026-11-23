@@ -13,15 +13,26 @@
 # Package: apps.common.file_editor
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 20:20:00
+# Updated: 2026-11-19 20:15:00
 # =============================================================================
 
 from __future__ import annotations
 """Каталог всех типов файлов и режимов редактирования VS Code."""
 
 from pathlib import Path
+import re
 from typing import Dict, List, Optional, Union
 from apps.common.file_editor.models import EditorMode, FileTypeDescriptor
+
+_RE_HEBREW_CHARS = re.compile(r"[\u0590-\u05FF]")
+_RE_CYRILLIC_CHARS = re.compile(r"[\u0400-\u04FF]")
+_RE_LATIN_CHARS = re.compile(r"[a-zA-Z]")
+_RE_FRONTMATTER_BLOCK = re.compile(r"^---\r?\n([\s\S]*?)\r?\n---\r?\n?")
+_RE_LANG_DIRECTIVE = re.compile(
+    r"^\s*(?:<!--\s*)?(?:lang\s*=|language\s*:)\s*['\"]?([a-zA-Z\-_]+)['\"]?(?:\s*-->)?\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+_RE_LANG_TAG = re.compile(r"^\s*-\s*lang/([a-zA-Z\-_]+)\s*$", re.IGNORECASE | re.MULTILINE)
 
 
 def _code_desc(
@@ -476,6 +487,85 @@ class SupportedFileCatalog:
             is_binary_default=False,
             supports_formatting=False,
         )
+
+    @classmethod
+    def detect_text_direction(
+        cls,
+        content: Union[str, bytes, None],
+        file_name: str = "",
+        language: Optional[str] = None,
+    ) -> str:
+        """Определяет направление текста документа ('rtl' для иврита, иначе 'ltr').
+
+        Учитывает:
+        1. Явно переданный код языка (`language='he'`).
+        2. Директивы `lang=he`, `language: he` и теги `- lang/he` в YAML Frontmatter или начале файла.
+        3. Частоту символов иврита (`\\u0590-\\u05FF`) в теле документа (без учёта технических ключей Frontmatter).
+        4. Наличие иврита в имени/пути файла, если содержимое файла пустое или не содержит букв.
+
+        Args:
+            content: Текстовое или байтовое содержимое документа.
+            file_name: Имя или относительный путь к файлу.
+            language: Явно известный код языка документа или рабочей области (опционально).
+
+        Returns:
+            Строка `'rtl'` для документов на иврите или `'ltr'` по умолчанию.
+        """
+        raw_lang = (language or "").strip().lower().replace("_", "-").split("-")[0]
+        if raw_lang in {"he", "heb", "iw"}:
+            return "rtl"
+
+        text = ""
+        if isinstance(content, bytes):
+            text = content[:32768].decode("utf-8", errors="replace")
+        elif content is not None:
+            text = str(content)[:32768]
+
+        if text:
+            head = text[:2048]
+            m_dir = _RE_LANG_DIRECTIVE.search(head)
+            if m_dir:
+                dir_lang = m_dir.group(1).strip().lower().replace("_", "-").split("-")[0]
+                if dir_lang in {"he", "heb", "iw"}:
+                    return "rtl"
+                if dir_lang in {"ru", "en", "uk", "ua"}:
+                    return "ltr"
+
+            m_tag = _RE_LANG_TAG.search(head)
+            if m_tag:
+                tag_lang = m_tag.group(1).strip().lower().replace("_", "-").split("-")[0]
+                if tag_lang in {"he", "heb", "iw"}:
+                    return "rtl"
+
+            # Исключаем технические латинские ключи YAML Frontmatter при подсчёте символов тела документа
+            body = text
+            fm_match = _RE_FRONTMATTER_BLOCK.match(text)
+            if fm_match:
+                body = text[fm_match.end() :]
+
+            sample = body if body.strip() else text
+            he_count = len(_RE_HEBREW_CHARS.findall(sample))
+            if he_count > 0:
+                cyr_count = len(_RE_CYRILLIC_CHARS.findall(sample))
+                lat_count = len(_RE_LATIN_CHARS.findall(sample))
+                # Если иврит преобладает или составляет заметную долю текста документа (>= 20% букв)
+                total_letters = he_count + cyr_count + lat_count
+                if he_count >= cyr_count and (he_count >= lat_count or (total_letters > 0 and he_count / total_letters >= 0.2)):
+                    return "rtl"
+                # Если в первой содержательной строке тела документа есть иврит
+                for line in sample.splitlines():
+                    clean_line = line.strip().lstrip("#>-*+0123456789. []()")
+                    if clean_line:
+                        if _RE_HEBREW_CHARS.search(clean_line):
+                            return "rtl"
+                        break
+
+        # Если файл пустой или не содержит букв, проверяем имя/путь файла на иврит
+        if file_name and _RE_HEBREW_CHARS.search(str(file_name)):
+            if not text or (not _RE_CYRILLIC_CHARS.search(text) and not _RE_LATIN_CHARS.search(text)):
+                return "rtl"
+
+        return "ltr"
 
     @classmethod
     def list_all(cls) -> List[Dict[str, object]]:

@@ -12,7 +12,7 @@ Project: ai-windows-admin
 Package: .ai/instructions/standards
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-11 21:25:00
+Updated: 2026-11-15 19:55:00
 =============================================================================
 -->
 
@@ -95,11 +95,21 @@ apps/ai_assistant/api/webgui/
     └── README.md                # Документация модуля на русском языке
 ```
 
-Общие вкладки и компоненты в `apps/common/webgui/`:
+Общие вкладки и компоненты в `apps/common/webgui/` (обслуживаются через `SmartMultiDirStaticFiles` с приоритетом разрешения `apps/ai_assistant/api/webgui/` → `apps/common/webgui/`):
+- `components/` — общие HTML-шаблоны модальных окон (`user_settings_modal.html`, `universal_ai_table_modal.html`);
+- `ai_modal_dialog/` — общее универсальное модальное окно ИИ-анализа и WikiLLM;
 - `tab_file_editor/` — встроенный редактор файлов и кода;
 - `tab_file_tree/` — дерево каталогов и файлов;
+- `tab_instruments/` — реестр и среда тестирования ИИ-инструментов;
+- `tab_issues/` — встроенный трекер задач, ошибок и бэклога;
+- `tab_models/` — управление провайдерами ИИ, пулами ключей и системной инструкцией;
 - `tab_obsidian/` — просмотр и управление заметками Obsidian Vault;
-- `tab_theme_editor/` — интерактивный редактор токенов тем оформления.
+- `tab_theme_editor/` — интерактивный редактор токенов тем оформления;
+- `locales/` — общий зеркальный набор словарей переводов (`ru.json`, `en.json`, `he.json`, `uk.json`), который **MUST** быть полностью синхронизирован с `apps/ai_assistant/api/webgui/locales/`.
+
+> [!IMPORTANT]
+> **Правило обязательного двустороннего аудита (`apps/ai_assistant/api/webgui` + `apps/common/webgui`):**
+> Любая ревизия кода WebGUI, миграция на шаблоны `{{key}}`, проверка тултипов или аудит меню (`migrate_html_i18n.py`, `menu_auditor.py`) **MUST** выполняться одновременно по обоим каталогам: `apps/ai_assistant/api/webgui/` и `apps/common/webgui/`. Недопустимо обновлять шаблон в одном каталоге, оставляя устаревшую копию или несинхронизированный словарь `locales/*.json` во втором!
 
 ---
 
@@ -123,6 +133,15 @@ apps/ai_assistant/api/webgui/
 ### 3.2 Контейнеры вкладок
 - Панель вкладки **MUST** иметь атрибуты: `id="tab-<name>"` и класс `class="tab-pane fade"`.
 - Контейнер всех панелей: `<div id="mainTabContent" class="tab-content">`.
+
+### 3.3 Двухуровневая маршрутизация URL (#tab-<tabId>#panel-<panelId>#block-<blockId>)
+Все составные экраны (вкладки с субпанелями и внутренними блоками) **MUST** следовать канонической URL-маршрутизации:
+- **Уровень 1 (Панели):** `#tab-<tabId>#panel-<panelId>` (например `#tab-tasks#panel-cases`, `#tab-models#panel-gemini`, `#tab-plugins#panel-installed`).
+- **Уровень 2 (Блоки):** `#tab-<tabId>#panel-<panelId>#block-<blockId>` (например `#tab-tooltips#panel-editor#block-ru`, `#tab-models#panel-google-accounts#block-file`, `#tab-plugins#panel-installed#block-developer`).
+- **Рабочие области:** `#tab-workspace#panel-files#block-dir#workspace=<id>` (см. [`WORKSPACE_ROUTING.md`](WORKSPACE_ROUTING.md)).
+- **Разметка:** Кнопки и контейнеры 1-го уровня содержат `data-panel-id="<panelId>"`, а подэлементы 2-го уровня содержат `data-panel-id="<panelId>"` и `data-block-id="block-<blockId>"`.
+- **Подсказки (Тултипы):** Тексты всплывающих подсказок **MUST** формулироваться статически на этапе верстки (без обращения к AI-модели), см. [`SUBTABS_AND_BLOCKS_MENU.md`](SUBTABS_AND_BLOCKS_MENU.md).
+- **Контроллер:** Контроллер вкладки обязан реализовывать функции `normalizeSubTabId`, `normalizeBlockId`, `getBlockFromHash`, `updateUrlWithPanel` и слушать события `hashchange` и `tab:activated`.
 
 ---
 

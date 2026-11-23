@@ -4,7 +4,7 @@
 **Версия:** 3.6.0  
 **Пакет:** `apps.ai_assistant.api.webgui.js`  
 **Автор:** hypo69  
-**Updated:** 2026-11-01 18:30:00  
+**Updated:** 2026-11-15 20:45:00  
 
 ---
 
@@ -22,7 +22,6 @@
 | [`ide_extensions_sidebar.js`](ide_extensions_sidebar.js) | Боковая панель расширений и быстрого доступа к плагинам. |
 | [`top_workspace_dropdown.js`](top_workspace_dropdown.js) | Верхний выпадающий список быстрого переключения активной рабочей области. |
 | [`drawer_workspaces.js`](drawer_workspaces.js) | Управление списком рабочих областей в нижней выдвижной панели (Drawer). |
-| [`workspace_wizard.js`](workspace_wizard.js) | Пошаговый мастер создания рабочей области с поддержкой слежения без копирования (`copy_to_workspace = false`) и путей `\\<HOST>\<PATH>`. |
 | [`wikillm_editor.js`](wikillm_editor.js) | Интерактивный редактор заметок и сущностей базы знаний WikiLLM / Obsidian Vault. |
 | [`theme.js`](theme.js) и [`theme-engine.js`](theme-engine.js) | Движок цветовых тем (`light`, `dark`, `brick`, `terminal`, `system`) и динамического применения CSS-токенов. |
 | [`i18n.js`](i18n.js) и [`global-i18n.js`](global-i18n.js) | Мультиязычная локализация (`ru`, `en`, `he`), автоматическое включение `dir="rtl"` для иврита и перевод динамических DOM-узлов. |

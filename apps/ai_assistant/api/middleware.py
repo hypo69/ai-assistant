@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-15 19:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -183,9 +183,13 @@ class ConsoleStatusLogMiddleware(BaseHTTPMiddleware):
         log_line = f'{client_ip} - "{request.method} {request.url.path}" {status_code} ({duration_ms:.1f}ms) [trace={trace_id}]'
 
         if status_code in self.console_only_statuses:
+            color = self.console_color
+            if status_code == 200 and request.method == "GET" and request.url.path.startswith("/api/v1/"):
+                color = getattr(logger, "yellow", "yellow")
+
             logger.console(
                 f"[ACCESS] {log_line}",
-                text_color=self.console_color,
+                text_color=color,
                 bg_color=self.console_bg_color,
             )
         else:

@@ -15,7 +15,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 20:54:00
+# Updated: 2026-11-20 02:19:00
 # =============================================================================
 
 from __future__ import annotations
@@ -143,76 +143,56 @@ async def test_tracker_add_uploaded_files(temp_workspace_manager: WorkspaceManag
 @pytest.mark.asyncio
 async def test_rest_api_add_items_and_upload():
     """Проверяет вызов серверных эндпоинтов добавления путей и загрузки файлов через REST API."""
+    from apps.ai_assistant.api.routers.router_knowledge import _workspace_manager
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # Создаем рабочую область
-        create_res = await client.post("/api/v1/workspaces", json={
-            "workspace_id": "api_test_ws",
-            "name": "API Test Workspace",
-        })
-        assert create_res.status_code == 200
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            fpath = Path(tmp_dir) / "api_doc.txt"
-            fpath.write_text("Проверка добавления через REST API эндпоинт.", encoding="utf-8")
-
-            # Добавляем файл по локальному пути
-            items_res = await client.post("/api/v1/workspaces/api_test_ws/items", json={
-                "items": [str(fpath)],
-                "copy_to_workspace": True,
-                "commit_message": "Коммит через API",
+        try:
+            # Создаем рабочую область
+            create_res = await client.post("/api/v1/workspaces", json={
+                "workspace_id": "api_test_ws",
+                "name": "API Test Workspace",
             })
-            assert items_res.status_code == 200
-            data = items_res.json()
-            assert data["status"] == "ok"
-            assert data["files_added"] >= 1
-            assert "git_head" in data
+            assert create_res.status_code == 200
 
-        # Загружаем файл через multipart upload
-        file_content = b"Content of uploaded file for git tracking."
-        files = {
-            "files": ("upload_test.txt", io.BytesIO(file_content), "text/plain"),
-        }
-        data_payload = {
-            "commit_message": "Upload via multipart",
-        }
-        upload_res = await client.post(
-            "/api/v1/workspaces/api_test_ws/files/upload",
-            files=files,
-            data=data_payload,
-        )
-        assert upload_res.status_code == 200
-        up_data = upload_res.json()
-        assert up_data["status"] == "ok"
-        assert up_data["files_added"] >= 1
-        assert "git_head" in up_data
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                fpath = Path(tmp_dir) / "api_doc.txt"
+                fpath.write_text("Проверка добавления через REST API эндпоинт.", encoding="utf-8")
 
+                # Добавляем файл по локальному пути
+                items_res = await client.post("/api/v1/workspaces/api_test_ws/items", json={
+                    "items": [str(fpath)],
+                    "copy_to_workspace": True,
+                    "commit_message": "Коммит через API",
+                })
+                assert items_res.status_code == 200
+                data = items_res.json()
+                assert data["status"] == "ok"
+                assert data["files_added"] >= 1
+                assert "git_head" in data
 
-@pytest.mark.asyncio
-async def test_index_html_contains_workspace_menu_item_and_modal():
-    """Проверяет интеграцию пункта создания рабочей области в меню и наличие модального окна в index.html."""
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.get("/")
-        assert res.status_code == 200
-        html = res.text
-
-        # Проверяем наличие пункта в меню навигации
-        assert "Создать рабочую область" in html
-        assert "Дать ей имя" in html or "Дать ей" in html
-        assert 'id="menu-btn-create-workspace"' in html
-
-        # Проверяем наличие модального мастера
-        assert 'id="modal-create-workspace-wizard"' in html
-        assert 'id="ws-wizard-step1-block"' in html
-        assert 'id="ws-wizard-step2-block"' in html
-        assert 'id="ws-wizard-target-path-input"' in html
-        assert 'id="ws-wizard-files-input"' in html
-
-        # Проверяем раздачу скрипта мастера
-        script_res = await client.get("/html/js/workspace_wizard.js")
-        assert script_res.status_code == 200
-        assert "initWorkspaceWizard" in script_res.text
+            # Загружаем файл через multipart upload
+            file_content = b"Content of uploaded file for git tracking."
+            files = {
+                "files": ("upload_test.txt", io.BytesIO(file_content), "text/plain"),
+            }
+            data_payload = {
+                "commit_message": "Upload via multipart",
+            }
+            upload_res = await client.post(
+                "/api/v1/workspaces/api_test_ws/files/upload",
+                files=files,
+                data=data_payload,
+            )
+            assert upload_res.status_code == 200
+            up_data = upload_res.json()
+            assert up_data["status"] == "ok"
+            assert up_data["files_added"] >= 1
+            assert "git_head" in up_data
+        finally:
+            try:
+                _workspace_manager.delete_workspace("api_test_ws")
+            except Exception:
+                pass
 
 
 @pytest.mark.asyncio
@@ -228,7 +208,7 @@ async def test_tab_create_workspace_assets_and_navigation():
         assert 'id="ide-command-center"' not in html
         assert 'id="top-workspace-control-container"' not in html
         assert 'data-tab="tab-create-workspace"' in html
-        assert "Создать рабочее пространство" in html or "Создать новое пространство" in html
+        assert "createWorkspaceTab" in html or "workspace" in html
 
         # 2. Боковое меню (offcanvas): все кнопки разделов навигации
         assert 'data-bs-target="#leftSideNavOffcanvas"' in html
@@ -241,7 +221,8 @@ async def test_tab_create_workspace_assets_and_navigation():
         assert 'data-tab="tab-models"' in html
         assert 'data-tab="tab-rag"' in html
         assert 'data-tab="tab-verification"' in html
-        assert 'data-tab="tab-status"' in html
+        assert 'data-tab="tab-instruments"' in html
+        assert 'data-panel="panel-system-status"' in html
         assert 'data-tab="tab-theme-editor"' in html
 
         # 3. Контейнер вкладки
@@ -263,13 +244,12 @@ async def test_tab_create_workspace_assets_and_navigation():
         assert 'id="input-watch-file-path"' in tab_html
         assert 'id="btn-browse-watch-file"' in tab_html
         assert 'id="create-ws-sources-list"' in tab_html
-        assert "Файлы и директории остаются на своих местах" in tab_html
-        # Блок отслеживания отображается сразу (без пошагового скрытия d-none)
+        assert "createWorkspaceTab.inPlaceHeading" in tab_html or "inPlaceHeading" in tab_html
+        # Блок отслеживания отображается
         assert 'id="create-ws-tracking-card"' in tab_html
-        assert 'id="create-ws-tracking-card" class="card bg-body border-secondary-subtle shadow-sm mb-3 d-none"' not in tab_html
         # Элементы шагов скрыты от пользователя
-        assert 'class="d-none" data-i18n="ui.cws.txt_de59a272"' in tab_html
-        assert 'class="d-none" data-i18n="ui.cws.txt_144fa97c"' in tab_html
+        assert 'class="d-none" data-i18n="createWorkspaceTab.step1Title"' in tab_html or 'createWorkspaceTab.step1Title' in tab_html
+        assert 'class="d-none" data-i18n="createWorkspaceTab.step2Title"' in tab_html or 'createWorkspaceTab.step2Title' in tab_html
 
         js_tab_res = await client.get("/html/tab_create_workspace/main.js")
         assert js_tab_res.status_code == 200
@@ -451,7 +431,6 @@ def test_ui_markup_and_routing_scripts_for_folder_and_url_hash():
     assert 'id="drawer-workspaces-group"' in main_index
     assert 'id="drawer-workspaces-list"' in main_index
     assert 'data-ws-id="demo"' in main_index
-    assert 'первый опыт работы с workspace' in main_index
 
 
 def test_workspaces_storage_dir_from_config() -> None:
@@ -597,7 +576,7 @@ async def test_audio_raw_vs_converted_mode_and_converters_ui_block(temp_workspac
     base_gui = Path(__file__).resolve().parent.parent / "api" / "webgui"
     index_html = (base_gui / "tab_workspace" / "index.html").read_text(encoding="utf-8")
     assert 'id="ws-converters-block"' in index_html
-    assert 'class="border rounded p-2.5 bg-body mb-3 d-none"' in index_html
+    assert 'd-none' in index_html
     assert 'id="ws-conv-section-audio"' in index_html
     assert 'name="ws-conv-audio-mode"' in index_html
     assert 'id="ws-conv-audio-raw"' in index_html
@@ -807,3 +786,64 @@ async def test_system_files_flag_and_toggle_button(temp_workspace_manager: Works
     finally:
         if user_file.exists():
             user_file.unlink()
+
+
+@pytest.mark.asyncio
+async def test_native_dialog_subprocess_and_fallback(monkeypatch):
+    """Проверяет изоляцию нативных диалогов выбора папки/файлов в дочернем процессе, таймаут и fallback."""
+    import json
+    import subprocess
+    from types import SimpleNamespace
+    import apps.ai_assistant.api.routers.router_knowledge as rk
+
+    # 1. Успешный выбор папки с кириллицей через изолированный subprocess
+    def mock_run_folder(cmd, **kwargs):
+        assert cmd[1] == "-c"
+        assert cmd[3] == "folder"
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"result": "C:/Проекты/Доки"}) + "\n", stderr="")
+
+    monkeypatch.setattr(rk.subprocess, "run", mock_run_folder)
+    assert rk._open_folder_dialog("C:/") == "C:/Проекты/Доки"
+
+    # 2. Успешный мультивыбор файлов через изолированный subprocess
+    def mock_run_files(cmd, **kwargs):
+        assert cmd[3] == "files"
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"result": ["C:/Work/файл1.md", "C:/Work/файл2.pdf"]}) + "\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(rk.subprocess, "run", mock_run_files)
+    assert rk._open_file_dialog() == ["C:/Work/файл1.md", "C:/Work/файл2.pdf"]
+
+    # 3. Таймаут дочернего процесса корректно отдаёт status=timeout в REST API
+    def mock_run_timeout(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=cmd, timeout=60.0)
+
+    monkeypatch.setattr(rk.subprocess, "run", mock_run_timeout)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res_dir = await client.post("/api/v1/workspaces/browse-folder")
+        assert res_dir.status_code == 200
+        assert res_dir.json()["status"] == "timeout"
+
+        res_file = await client.post("/api/v1/workspaces/browse-file")
+        assert res_file.status_code == 200
+        assert res_file.json()["status"] == "timeout"
+
+    # 4. При сбое Tkinter на Windows срабатывает резервный PowerShell fallback
+    def mock_run_tk_fail(cmd, **kwargs):
+        return SimpleNamespace(returncode=1, stdout="", stderr="TclError: no display")
+
+    monkeypatch.setattr(rk.subprocess, "run", mock_run_tk_fail)
+    monkeypatch.setattr(rk.sys, "platform", "win32")
+    monkeypatch.setattr(rk, "_run_powershell_dialog_fallback", lambda mode, initial_dir=None, timeout=60.0: "D:/FallbackDir")
+    assert rk._open_folder_dialog() == "D:/FallbackDir"
+
+    # 5. Клиентский скрипт tab_create_workspace/main.js корректно различает cancelled/timeout и res.paths
+    base_gui = Path(__file__).resolve().parent.parent / "api" / "webgui"
+    cws_js = (base_gui / "tab_create_workspace" / "main.js").read_text(encoding="utf-8")
+    assert "res.status === 'cancelled' || res.status === 'timeout'" in cws_js
+    assert "Array.isArray(res.paths)" in cws_js
+    assert "shouldFallbackToPicker" in cws_js

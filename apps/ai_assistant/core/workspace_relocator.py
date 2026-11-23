@@ -30,12 +30,13 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-20 02:04:00
 # =============================================================================
 
 from __future__ import annotations
 """Сверка перемещений файлов в Git и умной рекомендательной системе знаний."""
 
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -43,7 +44,7 @@ import shutil
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from logger import logger
-from apps.ai_assistant.core.obsidian_vault import strip_obsidian_enrichment
+from apps.ai_assistant.core.obsidian_vault import ObsidianVaultBuilder, strip_obsidian_enrichment
 from apps.ai_assistant.core.store.document_fact_repo import compute_sha256
 
 if TYPE_CHECKING:
@@ -190,44 +191,22 @@ class WorkspaceRelocator:
         if not old_doc_id or old_doc_id == new_doc_id:
             return
 
-        # 1. Обновление метаданных в векторном индексе FAISS без потери эмбеддингов
+        # 1. Обновление метаданных в векторном индексе SQLite без пересчёта эмбеддингов
         try:
             rag = wm.get_faiss_rag(workspace_id)
-            old_prefix = f"{workspace_id}:{old_doc_id}:"
-            new_prefix = f"{workspace_id}:{new_doc_id}:"
-            updated_any = False
-            deduped_metas: List[Dict[str, Any]] = []
-            seen_ids = set()
-
-            for meta in rag.metadatas:
-                m_id = str(meta.get("id", ""))
-                if m_id.startswith(old_prefix):
-                    suffix = m_id[len(old_prefix):]
-                    new_id = f"{new_prefix}{suffix}"
-                    meta["id"] = new_id
-                    meta["document_id"] = new_doc_id
-                    if commit_hash:
-                        meta["commit_hash"] = commit_hash
-                    if original_path:
-                        meta["original_path"] = original_path
-                    if host_name:
-                        meta["host_name"] = host_name
-                    if qualified_path:
-                        meta["qualified_path"] = qualified_path
-                    updated_any = True
-                    if new_id not in seen_ids:
-                        seen_ids.add(new_id)
-                        deduped_metas.append(meta)
-                else:
-                    if m_id not in seen_ids:
-                        seen_ids.add(m_id)
-                        deduped_metas.append(meta)
-
-            if updated_any:
-                rag.metadatas = deduped_metas
-                rag._save()
+            rag.rename_prefix(
+                old_prefix=f"{workspace_id}:{old_doc_id}:",
+                new_prefix=f"{workspace_id}:{new_doc_id}:",
+                meta_updates={
+                    "document_id": new_doc_id,
+                    "commit_hash": commit_hash,
+                    "original_path": original_path,
+                    "host_name": host_name,
+                    "qualified_path": qualified_path,
+                },
+            )
         except Exception as faiss_exc:
-            logger.warning(f"[WorkspaceRelocator] Ошибка миграции FAISS для {old_doc_id} -> {new_doc_id}: {faiss_exc}")
+            logger.warning(f"[WorkspaceRelocator] Ошибка миграции RAG-индекса для {old_doc_id} -> {new_doc_id}: {faiss_exc}")
 
         # 2. Перепривязка в изолированном темпоральном графе знаний рабочей области
         try:
@@ -269,39 +248,42 @@ class WorkspaceRelocator:
         if not manifest_file.exists():
             return []
 
-        try:
-            manifest_data: Dict[str, Any] = json.loads(manifest_file.read_text(encoding="utf-8"))
-        except Exception:
-            return []
+        lock_ctx = wm.get_manifest_lock(ws_path) if hasattr(wm, "get_manifest_lock") else contextlib.nullcontext()
+        with lock_ctx:
+            try:
+                manifest_data: Dict[str, Any] = json.loads(manifest_file.read_text(encoding="utf-8"))
+            except Exception:
+                return []
 
-        removed_docs: List[str] = []
-        host_upper = current_host.upper()
+            removed_docs: List[str] = []
+            host_upper = current_host.upper()
 
-        for doc_id, meta in list(manifest_data.items()):
-            if doc_id in active_doc_ids:
-                continue
-            entry_host = str(meta.get("host_name") or current_host).upper()
-            if entry_host != host_upper:
-                continue
-            fp_str = str(meta.get("file_path") or "")
-            if fp_str and not Path(fp_str).exists():
-                # Файл отсутствует на диске и не был сопоставлен ни с одним новым файлом при синхронизации
-                manifest_data.pop(doc_id, None)
-                snap_rel = meta.get("snapshot")
-                if snap_rel and (ws_path / str(snap_rel)).exists():
-                    wm._run_git(ws_path, ["rm", "-f", str(snap_rel)])
-                wm.store.mark_document_deleted(workspace_id=workspace_id, document_id=doc_id)
-                removed_docs.append(doc_id)
+            for doc_id, meta in list(manifest_data.items()):
+                if doc_id in active_doc_ids:
+                    continue
+                entry_host = str(meta.get("host_name") or current_host).upper()
+                if entry_host != host_upper:
+                    continue
+                fp_str = str(meta.get("file_path") or "")
+                if fp_str and not Path(fp_str).exists():
+                    # Файл отсутствует на диске и не был сопоставлен ни с одним новым файлом при синхронизации
+                    manifest_data.pop(doc_id, None)
+                    snap_rel = meta.get("snapshot")
+                    if snap_rel and (ws_path / str(snap_rel)).exists():
+                        wm._run_git(ws_path, ["rm", "-f", str(snap_rel)])
+                    wm.store.mark_document_deleted(workspace_id=workspace_id, document_id=doc_id)
+                    removed_docs.append(doc_id)
 
-        if removed_docs:
-            tmp_manifest = manifest_file.with_suffix(".json.tmp")
-            tmp_manifest.write_text(json.dumps(manifest_data, indent=2, ensure_ascii=False), encoding="utf-8")
-            os.replace(tmp_manifest, manifest_file)
-            wm._run_git(ws_path, ["add", ".tracked_sources.json"])
-            if wm._run_git(ws_path, ["status", "--porcelain"]):
-                wm._run_git(
-                    ws_path,
-                    ["commit", "-m", f"Очистка удалённых внешних файлов: {', '.join(removed_docs[:5])}"],
+            if removed_docs:
+                ObsidianVaultBuilder._atomic_write_text(
+                    manifest_file,
+                    json.dumps(manifest_data, indent=2, ensure_ascii=False),
                 )
+                wm._run_git(ws_path, ["add", ".tracked_sources.json"])
+                if wm._run_git(ws_path, ["status", "--porcelain"]):
+                    wm._run_git(
+                        ws_path,
+                        ["commit", "-m", f"Очистка удалённых внешних файлов: {', '.join(removed_docs[:5])}"],
+                    )
 
-        return removed_docs
+            return removed_docs

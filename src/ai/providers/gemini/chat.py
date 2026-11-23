@@ -53,7 +53,7 @@ class GeminiChatBase(BaseChatProvider):
         Returns:
             List[str]: List of available Gemini model identifiers.
         """
-        from src.ai.model_manager import get_available_models as _mgr_get_available_models
+        from src.ai.orchestration.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider='gemini', force_refresh=force_refresh)
 
     @classmethod

@@ -17,7 +17,7 @@
 # Package: src
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 18:11:00
+# Updated: 2026-11-15 18:22:00
 # =============================================================================
 
 """Модуль основной системы (`config`)."""
@@ -133,20 +133,6 @@ logging_cfg = getattr(global_settings, 'logging', SimpleNamespace())
 pprint_cfg = getattr(global_settings, 'pprint', getattr(global_settings, 'printer', SimpleNamespace()))
 printer_cfg = pprint_cfg
 storage_cfg = getattr(global_settings, 'storage', SimpleNamespace())
-
-# Устанавливаем значение по умолчанию, если users_dir не задан
-if not getattr(storage_cfg, 'users_dir', None):
-    storage_cfg.users_dir = str(DATA_DIR / 'users')
-
-raw_dir = getattr(storage_cfg, 'users_dir', None)
-if isinstance(raw_dir, str):
-    if '%APPDATA%' in raw_dir:
-        raw_dir = raw_dir.replace('%APPDATA%', str(APPDATA_DIR))
-    if '%LOCALAPPDATA%' in raw_dir:
-        raw_dir = raw_dir.replace('%LOCALAPPDATA%', str(LOCALAPPDATA_DIR))
-    storage_cfg.users_dir = raw_dir
-    logger.info(f'Директория пользователей (users_dir) установлена: {raw_dir}')
-
 plugins_cfg = getattr(global_settings, 'plugins', SimpleNamespace())
 schedulers_cfg = getattr(global_settings, 'schedulers', getattr(global_settings, 'scheduler', SimpleNamespace()))
 apps_cfg = getattr(global_settings, 'apps', SimpleNamespace())

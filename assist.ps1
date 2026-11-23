@@ -11,13 +11,11 @@ Description:
   apps.ai_assistant.
 
 Usage Examples:
-  .\assist.ps1
-  .\assist.ps1 --engine electron
-  .\assist.ps1 -c            # Подключиться к запущенному процессору и открыть GUI
-  .\assist.ps1 -r            # Перезапустить: завершить процесс на порту и поднять новый
-  .\assist.ps1 -NoPaperless  # Запуск без открытия отдельного окна Paperless
+  .\assist.ps1 -c --engine electron  # Канонический запуск по умолчанию (безопасное подключение)
+  .\assist.ps1                       # Быстрый запуск (автоматически -c --engine electron)
+  .\assist.ps1 -NoPaperless          # Запуск без открытия отдельного окна Paperless
+  .\assist.ps1 -r                    # ВНИМАНИЕ: Перезапуск с убийством процессов! Только с подтверждения!
   .\assist.ps1 serve --connect
-  .\assist.ps1 serve --restart
   .\assist.ps1 status
   .\assist.ps1 query "Когда был последний коммит?"
 
@@ -25,7 +23,7 @@ File: assist.ps1
 Project: ai-windows-admin
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-11-11 19:45:00
+Updated: 2026-11-15 19:15:00
 =============================================================================
 #>
 
@@ -46,13 +44,7 @@ function Start-PaperlessConsoleWindow {
     param (
         [string]$ProjectRoot
     )
-    $paperlessDir = Join-Path $ProjectRoot "paperless-ngx\runtime"
-    if (-not (Test-Path $paperlessDir)) {
-        $altDir = Join-Path $ProjectRoot "paperless-ngx\docker\compose"
-        if (Test-Path $altDir) {
-            $paperlessDir = $altDir
-        }
-    }
+    $paperlessDir = Join-Path $ProjectRoot "docker"
 
     $paperlessScript = @"
 `$host.UI.RawUI.WindowTitle = 'Paperless-ngx (Docker)'
@@ -67,7 +59,7 @@ if (-not (Get-Command 'docker' -ErrorAction SilentlyContinue)) {
     }
 }
 
-`$running = docker ps --filter "name=paperless" --format "{{.Names}}" 2>`$null
+`$running = docker ps --filter "name=ai-assistant-webserver" --format "{{.Names}}" 2>`$null
 if (`$running) {
     Write-Host '[INFO] Обнаружены работающие контейнеры Paperless-ngx:' -ForegroundColor Green
     `$running | ForEach-Object { Write-Host "  - `$_" -ForegroundColor DarkCyan }
@@ -78,9 +70,9 @@ if (`$running) {
 } else {
     Write-Host '[INFO] Запуск стека Paperless-ngx через Docker Compose...' -ForegroundColor Yellow
     Set-Location '$paperlessDir'
-    docker compose up -d
+    docker compose up -d webserver
     Write-Host '[INFO] Контейнеры запущены. Вывод логов (Ctrl+C для выхода к консоли)...' -ForegroundColor Green
-    docker compose logs -f --tail 50
+    docker compose logs -f --tail 50 webserver
 }
 "@
 
@@ -97,6 +89,12 @@ foreach ($arg in $Args) {
     } else {
         $filteredArgs += $arg
     }
+}
+
+# Канонический безопасный запуск по умолчанию: -c (connect) и --engine electron
+# Гарантирует подключение без принудительного убийства фоновых длительных процессов
+if ($filteredArgs.Count -eq 0) {
+    $filteredArgs = @("-c", "--engine", "electron")
 }
 
 # Проверка: является ли запуск разовой CLI-командой

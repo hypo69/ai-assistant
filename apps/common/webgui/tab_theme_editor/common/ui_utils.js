@@ -11,9 +11,23 @@
  * Package: apps/windows/api/webgui/tab_theme_editor/common
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-20 11:15:00
+ * Updated: 2026-11-19 17:55:00
  * =============================================================================
  */
+
+/**
+ * Возвращает локализованную строку через глобальный i18n с безопасным фоллбэком.
+ * @param {string} key - Ключ локализации.
+ * @param {string} fallback - Текст по умолчанию.
+ * @returns {string}
+ */
+export function t(key, fallback) {
+  try {
+    const val = window.i18n?.t?.(key);
+    if (val && val !== key) return val;
+  } catch (_) {}
+  return fallback;
+}
 
 /**
  * Список пар элементов (колорпикер и текстовое hex-поле).
@@ -37,6 +51,12 @@ export const COLOR_PAIRS = [
   { picker: 'picker-panel-header-bg', text: 'color-panel-header-bg' },
   { picker: 'picker-tab-header-text', text: 'color-tab-header-text' },
   { picker: 'picker-tab-header-sub', text: 'color-tab-header-sub' },
+  { picker: 'picker-alert-light-bg', text: 'color-alert-light-bg' },
+  { picker: 'picker-alert-light-border', text: 'color-alert-light-border' },
+  { picker: 'picker-alert-light-text', text: 'color-alert-light-text' },
+  { picker: 'picker-input-bg', text: 'color-input-bg' },
+  { picker: 'picker-input-text', text: 'color-input-text' },
+  { picker: 'picker-input-border', text: 'color-input-border' },
 ];
 
 /**

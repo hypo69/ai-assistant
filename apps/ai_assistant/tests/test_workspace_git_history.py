@@ -136,13 +136,13 @@ def test_git_maintenance_active_repo_endpoints(tmp_path: Path) -> None:
 
 
 def test_panel_router_workspace_id_integration(tmp_path: Path) -> None:
-    """Проверяет эндпоинт GET /v1/panel/panel-commits с передачей workspace_id."""
+    """Проверяет эндпоинт GET /api/v1/panel/panel-commits с передачей workspace_id."""
     app = FastAPI()
     app.include_router(panel_router)
     client = TestClient(app)
 
     # Запрос данных панели с фиктивным workspace_id
-    response = client.get("/v1/panel/panel-commits?limit=5&workspace_id=demo")
+    response = client.get("/api/v1/panel/panel-commits?limit=5&workspace_id=demo")
     assert response.status_code == 200
     data = response.json()
 

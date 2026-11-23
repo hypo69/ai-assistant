@@ -11,21 +11,61 @@
 # Package: apps.ai_assistant.core.store
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:52:00
+# Updated: 2026-11-20 02:35:00
 # =============================================================================
 
 from __future__ import annotations
 """Репозиторий состояния активного пространства и статистики индекса знаний."""
 
 from datetime import datetime, timezone
-from typing import Dict, Optional
+import random
+import sqlite3
+import time
+from typing import Callable, Dict, Optional, TypeVar
 
 from logger import logger
+
+_T = TypeVar("_T")
 
 
 def get_utc_now_iso() -> str:
     """Возвращает текущее время UTC в формате ISO 8601."""
     return datetime.now(timezone.utc).isoformat()
+
+
+def run_sqlite_with_retry(
+    operation: Callable[[], _T],
+    *,
+    max_attempts: int = 5,
+    base_delay: float = 0.05,
+    context: str = "SQLite",
+) -> _T:
+    """Выполняет операцию SQLite с экспоненциальным повтором и джиттером при блокировке БД.
+
+    Args:
+        operation: Функция без аргументов, выполняющая запрос/транзакцию SQLite.
+        max_attempts: Максимальное число попыток при ошибке `database is locked` / `busy`.
+        base_delay: Базовая задержка в секундах перед повтором.
+        context: Метка подсистемы для диагностического логирования.
+
+    Returns:
+        Результат выполнения `operation()`.
+    """
+    for attempt in range(1, max(1, max_attempts) + 1):
+        try:
+            return operation()
+        except sqlite3.OperationalError as exc:
+            msg = str(exc).lower()
+            is_lock_err = "locked" in msg or "busy" in msg
+            if not is_lock_err or attempt >= max_attempts:
+                raise
+            delay = base_delay * (2 ** (attempt - 1)) + random.uniform(0.0, base_delay)
+            logger.debug(
+                f"[{context}] БД временно заблокирована (попытка {attempt}/{max_attempts}), "
+                f"повтор через {delay:.3f} с: {exc}"
+            )
+            time.sleep(delay)
+    raise RuntimeError(f"[{context}] Недостижимое завершение цикла повторов SQLite")
 
 
 class WorkspaceRepoMixin:

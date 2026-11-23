@@ -13,12 +13,12 @@
  * Package: apps/ai_assistant/api/webgui/tab_workspace/panel_workspace_select
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-10 13:18:00
+ * Updated: 2026-11-20 01:47:00
  * =============================================================================
  */
 
 import { fetchJson, t, areWorkspacesEqual } from '../common/ui_utils.js?v=20261110_v1';
-import { initTrackingController, loadTrackedItemsList } from './tracking_controller.js?v=20261107_v1';
+import { initTrackingController, loadTrackedItemsList } from './tracking_controller.js?v=20261120_v1';
 
 function matchWorkspace(list, target) {
   if (!target || !Array.isArray(list) || list.length === 0) return null;
@@ -43,6 +43,7 @@ let currentWorkspaceId = '';
 let isLoadingWorkspaces = false;
 let onWorkspaceChangeCallback = null;
 let telegramScenarioPollTimer = null;
+let telegramScenarioWatchTimer = null;
 let lastCompletedScenarioRunId = null;
 
 /**
@@ -83,13 +84,27 @@ export async function pollTelegramScenarioStatus() {
       banner.classList.add('d-none');
       banner.classList.remove('d-flex');
     }
+    if (telegramScenarioWatchTimer) {
+      clearInterval(telegramScenarioWatchTimer);
+      telegramScenarioWatchTimer = null;
+    }
     return false;
   }
 
   try {
     const res = await fetchJson('/api/v1/workspaces/telegram-scenario/status');
     const scen = res.scenario || {};
+    const cfg = res.config || {};
     const status = scen.status || 'idle';
+
+    // Поддерживаем лёгкое наблюдение за Telegram-событиями, пока открыта рабочая область דוד משה
+    if (cfg.enabled && !telegramScenarioWatchTimer) {
+      telegramScenarioWatchTimer = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible' && isDavidMosheWorkspace(currentWorkspaceId)) {
+          pollTelegramScenarioStatus();
+        }
+      }, 3000);
+    }
 
     if (status === 'processing') {
       if (banner) {
@@ -121,9 +136,17 @@ export async function pollTelegramScenarioStatus() {
         }));
         const toastMsg = (window.i18n && typeof window.i18n.t === 'function'
           ? window.i18n.t('workspace.telegramScenarioCompletedToast')
-          : '') || `Файл "${scen.target_file_path || 'שיחה בין דוד משה לשמוליק.md'}" добавлен в рабочую область דוד משה`;
+          : '') || `Файл "${scen.target_file_path || 'file.md'}" успешно добавлен в рабочую область`;
         if (typeof window.showToast === 'function') {
           window.showToast(toastMsg, 'success');
+        }
+        if (scen.open_chat || (scen.chat_scenario && scen.chat_scenario.open_chat)) {
+          if (typeof window.switchWorkspaceSubTab === 'function') {
+            window.switchWorkspaceSubTab('panel-chat');
+          }
+          document.dispatchEvent(new CustomEvent('workspace:scenarioChatStart', {
+            detail: { scenario: scen }
+          }));
         }
       }
       return false;
@@ -169,7 +192,7 @@ export async function triggerDavidMosheTelegramScenario(triggerFileName = 'שי�
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        workspace_id: currentWorkspaceId || 'דוד_משה',
+        workspace_id: currentWorkspaceId || '',
         trigger_file_name: triggerFileName,
         trigger_source: 'webgui',
       }),
@@ -464,7 +487,7 @@ export async function loadDirectoryContents(wsId = null) {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center py-3 text-danger font-sans-serif">
-          <i class="bi bi-exclamation-triangle me-1"></i>Ошибка загрузки содержимого папки: ${err.message}
+          <i class="bi bi-exclamation-triangle me-1"></i>${t('workspace.dirLoadError', 'Ошибка загрузки содержимого папки:')} ${err.message}
         </td>
       </tr>
     `;
@@ -499,21 +522,21 @@ export async function checkAndDisplayFolderStatus(wsId, fallbackPath = '') {
       if (status.exists && status.has_git) {
         badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
         const headShort = status.git_head ? status.git_head.slice(0, 8) : 'init';
-        badge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Папка создана (.git: ${headShort})`;
+        badge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>${t('workspace.folderCreatedBadge', 'Папка создана')} (.git: ${headShort})`;
         if (createBtn) createBtn.classList.add('d-none');
       } else if (status.exists && !status.has_git) {
         badge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle';
-        badge.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Папка есть, без Git';
+        badge.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>${t('workspace.folderNoGitBadge', 'Папка есть, без Git')}`;
         if (createBtn) {
           createBtn.classList.remove('d-none');
-          createBtn.innerHTML = '<i class="bi bi-git me-1"></i>Инициализировать Git';
+          createBtn.innerHTML = `<i class="bi bi-git me-1"></i>${t('workspace.initGitBtn', 'Инициализировать Git')}`;
         }
       } else {
         badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
-        badge.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i>Папка не найдена на диске';
+        badge.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i>${t('workspace.folderMissingBadge', 'Папка не найдена на диске')}`;
         if (createBtn) {
           createBtn.classList.remove('d-none');
-          createBtn.innerHTML = '<i class="bi bi-folder-plus me-1"></i>Создать рабочую папку';
+          createBtn.innerHTML = `<i class="bi bi-folder-plus me-1"></i>${t('workspace.createWorkspaceFolderBtn', 'Создать рабочую папку')}`;
         }
       }
     }
@@ -522,7 +545,7 @@ export async function checkAndDisplayFolderStatus(wsId, fallbackPath = '') {
     console.warn('[WorkspaceSelectPanel] Ошибка проверки статуса папки:', err);
     if (badge) {
       badge.className = 'badge bg-secondary-subtle text-secondary border';
-      badge.innerHTML = '<i class="bi bi-question-circle me-1"></i>Статус неизвестен';
+      badge.innerHTML = `<i class="bi bi-question-circle me-1"></i>${t('workspace.folderStatusUnknown', 'Статус неизвестен')}`;
     }
     return null;
   }
@@ -539,9 +562,9 @@ export function updateWorkspaceHeader(ws) {
     const shortHead = ws.git_head ? ws.git_head.slice(0, 8) : 'init';
     gitBadge.textContent = `Git HEAD: ${shortHead}`;
   }
-  if (docsBadge) docsBadge.textContent = `${ws.documents_count || 0} документов`;
-  if (factsBadge) factsBadge.textContent = `${ws.active_facts_count || 0} активных фактов`;
-  if (step2Badge) step2Badge.textContent = `Область: ${ws.name || ws.workspace_id}`;
+  if (docsBadge) docsBadge.textContent = `${ws.documents_count || 0} ${t('workspace.docsCountSuffix', 'документов')}`;
+  if (factsBadge) factsBadge.textContent = `${ws.active_facts_count || 0} ${t('workspace.activeFactsSuffix', 'активных фактов')}`;
+  if (step2Badge) step2Badge.textContent = `${t('workspace.workspacePrefix', 'Область:')} ${ws.name || ws.workspace_id}`;
 
   checkAndDisplayFolderStatus(ws.workspace_id, ws.path || '');
   loadObsidianAndEngineStatus(ws.workspace_id);
@@ -562,12 +585,12 @@ export async function loadObsidianAndEngineStatus(wsId = null) {
     if (typeof window !== 'undefined' && window.aiEngineBridge && typeof window.aiEngineBridge.getEngineInfo === 'function') {
       const info = await window.aiEngineBridge.getEngineInfo();
       if (engineBadge && info) {
-        engineBadge.textContent = `Движок: Electron (${info.electronVersion || 'Chromium + Node.js'})`;
+        engineBadge.textContent = `${t('workspace.enginePrefix', 'Движок:')} Electron (${info.electronVersion || 'Chromium + Node.js'})`;
       }
     } else if (engineBadge) {
       const engRes = await fetchJson('/api/v1/engine/status');
       const pref = (engRes.preferred_engine || 'electron').toUpperCase();
-      engineBadge.textContent = `Движок: ${pref} (Dual-Engine API)`;
+      engineBadge.textContent = `${t('workspace.enginePrefix', 'Движок:')} ${pref} (Dual-Engine API)`;
     }
   } catch (_) {}
 
@@ -576,11 +599,11 @@ export async function loadObsidianAndEngineStatus(wsId = null) {
     if (obsBadge) {
       const mdCount = obsRes.markdown_files_count || 0;
       const tCount = obsRes.topics_count || 0;
-      obsBadge.textContent = `Obsidian Vault: ${mdCount} .md | Тем: ${tCount}`;
+      obsBadge.textContent = `Obsidian Vault: ${mdCount} .md | ${t('workspace.topicsPrefix', 'Тем:')} ${tCount}`;
     }
     if (topicsSpan) {
       const topics = obsRes.topics || [];
-      topicsSpan.textContent = topics.length > 0 ? `Конспекты (_Topics): ${topics.join(', ')}` : '';
+      topicsSpan.textContent = topics.length > 0 ? `${t('workspace.topicsSummariesPrefix', 'Конспекты (_Topics):')} ${topics.join(', ')}` : '';
     }
   } catch (err) {
     console.debug('[WorkspaceSelectPanel] Статус Obsidian Vault недоступен:', err);
@@ -682,10 +705,11 @@ export async function loadWorkspaces(selectId = null, triggerCallback = false) {
 /**
  * Выбор рабочего пространства из внешних скриптов.
  * @param {string} wsId 
+ * @param {boolean} [force=false]
  */
-export async function selectWorkspaceInTab(wsId) {
+export async function selectWorkspaceInTab(wsId, force = false) {
   if (!wsId) return;
-  if (areWorkspacesEqual(wsId, currentWorkspaceId)) return;
+  if (!force && areWorkspacesEqual(wsId, currentWorkspaceId)) return;
   currentWorkspaceId = wsId;
   const selector = document.getElementById('ws-selector');
   if (selector && selector.value !== wsId) {
@@ -824,9 +848,9 @@ export async function openWorkspaceFileInEditor(relPath, rowElement = null, forc
   } catch (err) {
     console.error(`[WorkspaceSelectPanel] Ошибка открытия файла '${relPath}':`, err);
     if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
-      window.showToast(`Ошибка открытия файла: ${err.message}`, 'danger');
+      window.showToast(`${t('workspace.fileOpenError', 'Ошибка открытия файла:')} ${err.message}`, 'danger');
     } else {
-      alert(`Не удалось открыть файл '${relPath}': ${err.message}`);
+      alert(`${t('workspace.fileOpenFailed', 'Не удалось открыть файл')} '${relPath}': ${err.message}`);
     }
   } finally {
     if (rowElement) {
@@ -871,7 +895,17 @@ export async function deleteCurrentWorkspace() {
       const targetHash = `#tab-workspace#panel-chat#workspace=${encodeURIComponent(nextId)}`;
       try {
         if (typeof location !== 'undefined') {
-          location.hash = targetHash;
+          let curDecoded = '';
+          let targetDecoded = '';
+          try { curDecoded = decodeURIComponent(location.hash || ''); } catch (_) {}
+          try { targetDecoded = decodeURIComponent(targetHash); } catch (_) {}
+          if (curDecoded !== targetDecoded) {
+            if (typeof history !== 'undefined' && history.replaceState) {
+              history.replaceState(null, '', `${location.pathname}${location.search || ''}${targetHash}`);
+            } else {
+              location.hash = targetHash;
+            }
+          }
         }
       } catch (_) {}
     } else {
@@ -910,21 +944,43 @@ export function initWorkspaceSelectPanel(onWorkspaceChanged, onAskDemoQuestion) 
 
   // Смена активного пространства в селекторе
   document.getElementById('ws-selector')?.addEventListener('change', async (e) => {
-    currentWorkspaceId = e.target.value;
-    const targetHash = `#tab-workspace#panel-files#workspace=${encodeURIComponent(currentWorkspaceId)}`;
+    const selectedWs = e.target.value;
+    if (!selectedWs) return;
+    currentWorkspaceId = selectedWs;
+    if (typeof window.setActiveWorkspaceId === 'function') {
+      window.setActiveWorkspaceId(selectedWs);
+    }
+    const targetHash = `#tab-workspace#panel-files#workspace=${encodeURIComponent(selectedWs)}`;
     try {
-      if (typeof location !== 'undefined' && location.hash !== targetHash) {
-        location.hash = targetHash;
+      if (typeof location !== 'undefined') {
+        let curDecoded = '';
+        let targetDecoded = '';
+        try { curDecoded = decodeURIComponent(location.hash || ''); } catch (_) {}
+        try { targetDecoded = decodeURIComponent(targetHash); } catch (_) {}
+        if (curDecoded !== targetDecoded) {
+          if (typeof history !== 'undefined' && history.replaceState) {
+            history.replaceState(null, '', `${location.pathname}${location.search || ''}${targetHash}`);
+          } else {
+            location.hash = targetHash;
+          }
+        }
       }
     } catch (_) {}
     if (typeof window.selectWorkspaceInTab === 'function') {
-      await window.selectWorkspaceInTab(currentWorkspaceId);
+      await window.selectWorkspaceInTab(selectedWs, true);
     } else {
-      await loadWorkspaces(currentWorkspaceId, false);
+      await loadWorkspaces(selectedWs, false);
     }
     if (typeof window.updateTopWorkspaceDropdown === 'function') {
-      window.updateTopWorkspaceDropdown(currentWorkspaceId);
+      await window.updateTopWorkspaceDropdown(selectedWs);
     }
+    // КРИТИЧНО: Синхронизация файлового менеджера по выпадающему списку
+    if (typeof window.refreshFileTree === 'function') {
+      await window.refreshFileTree(selectedWs);
+    }
+    document.dispatchEvent(new CustomEvent('workspace:changed', {
+      detail: { workspaceId: selectedWs }
+    }));
   });
 
   // Кнопка обновления содержимого папки
@@ -970,7 +1026,7 @@ export function initWorkspaceSelectPanel(onWorkspaceChanged, onAskDemoQuestion) 
   document.getElementById('btn-refresh-dir-contents')?.addEventListener('click', async () => {
     await loadDirectoryContents(currentWorkspaceId);
     if (typeof window.showToast === 'function') {
-      window.showToast('Содержимое папки обновлено', 'info');
+      window.showToast(t('workspace.dirRefreshedToast', 'Содержимое папки обновлено'), 'info');
     }
   });
 
@@ -979,10 +1035,22 @@ export function initWorkspaceSelectPanel(onWorkspaceChanged, onAskDemoQuestion) 
     const idVal = document.getElementById('ws-new-id-input')?.value.trim();
     const pathVal = document.getElementById('ws-new-path-input')?.value.trim();
     if (!idVal) {
-      alert('Укажите идентификатор или имя новой рабочей области.');
+      alert(t('workspace.alertSpecifyWorkspaceId', 'Укажите идентификатор или имя новой рабочей области.'));
       return;
     }
     try {
+      const detectLang = (txt) => {
+        if (/[\u0590-\u05FF]/.test(txt)) return 'he';
+        if (/[іїєґІЇЄҐ]/.test(txt)) return 'ua';
+        if (/[а-яА-ЯёЁ]/.test(txt)) return 'ru';
+        if (/[a-zA-Z]/.test(txt)) return 'en';
+        return null;
+      };
+      const uiLang = (typeof window !== 'undefined' && window.i18n?.lang)
+        || document.documentElement?.getAttribute('lang')
+        || localStorage.getItem('app_language')
+        || null;
+      const resolvedLang = pathVal ? null : (detectLang(idVal) || (uiLang === 'uk' ? 'ua' : uiLang));
       const res = await fetchJson('/api/v1/workspaces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -990,6 +1058,7 @@ export function initWorkspaceSelectPanel(onWorkspaceChanged, onAskDemoQuestion) 
           workspace_id: idVal,
           name: idVal,
           custom_path: pathVal || null,
+          language: resolvedLang,
         }),
       });
       await loadWorkspaces(res.workspace?.workspace_id || idVal);
@@ -997,7 +1066,7 @@ export function initWorkspaceSelectPanel(onWorkspaceChanged, onAskDemoQuestion) 
         window.updateTopWorkspaceDropdown(res.workspace?.workspace_id || idVal);
       }
     } catch (err) {
-      alert(`Ошибка создания рабочей области: ${err.message}`);
+      alert(`${t('workspace.createWorkspaceError', 'Ошибка создания рабочей области:')} ${err.message}`);
     }
   });
 

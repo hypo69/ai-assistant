@@ -1,0 +1,9 @@
+# Updated: 2026-11-19 23:22:00
+# Корневая точка входа Docker Compose для всего проекта AI-Assistant.
+# Позволяет выполнять `docker compose up -d`, `docker compose ps`, `docker compose logs -f`
+# напрямую из корня репозитория без указания флага `-f docker/docker-compose.yml`.
+
+name: ai-assistant
+
+include:
+  - docker/docker-compose.yml

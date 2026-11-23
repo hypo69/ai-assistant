@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-11 20:54:00
+ * Updated: 2026-11-20 02:32:00
  * =============================================================================
  */
 
@@ -27,10 +27,71 @@
 .main-nav-container {
   background-color: var(--nav-bg);
   border-bottom: 1px solid var(--border-color);
-  min-height: 34px;
+  min-height: 40px;
   max-width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1050;
+}
+
+/* ── Выпадающий селектор рабочих областей в верхней панели ────────────────── */
+#top-workspace-dropdown-wrapper {
+  position: relative;
+  z-index: 1055;
+  display: inline-flex;
+  align-items: center;
+}
+
+#top-workspace-dropdown-btn {
+  min-width: 280px;
+  max-width: 520px;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  transition: all 0.15s ease-in-out;
+}
+
+#top-workspace-dropdown-btn:hover,
+#top-workspace-dropdown-btn:focus,
+#top-workspace-dropdown-btn[aria-expanded="true"] {
+  background-color: var(--surface-2);
+  border-color: var(--nav-active);
+  color: var(--text-color);
+  box-shadow: 0 0 0 2px var(--active-item-border);
+}
+
+#top-workspace-dropdown-menu {
+  position: absolute;
+  z-index: 1065 !important;
+  min-width: 380px;
+  max-width: 560px;
+  width: max-content;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+#top-workspace-dropdown-menu .top-ws-item {
+  transition: background-color 0.12s ease-in-out;
+  cursor: pointer;
+  background-color: transparent;
+  color: var(--text-color);
+  border-inline-start: 3px solid transparent;
+}
+
+#top-workspace-dropdown-menu .top-ws-item:hover {
+  background-color: var(--nav-hover-bg);
+}
+
+#top-workspace-dropdown-menu .top-ws-item.active {
+  background-color: var(--active-item-bg) !important;
+  border-inline-start: 3px solid var(--ui-success) !important;
 }
 
 /* ── Ссылка брендинга и логотипа приложения ───────────────────────────────── */
@@ -130,14 +191,9 @@
 }
 
 .nav-tabs .dropdown-item.active {
-  background-color: rgba(37, 99, 235, 0.1);
+  background-color: var(--active-item-bg);
   color: var(--nav-active);
   font-weight: 600;
-}
-
-[data-theme="dark"] .nav-tabs .dropdown-item.active {
-  background-color: rgba(88, 166, 255, 0.12);
-  color: var(--nav-active);
 }
 
 /* ── Разделители и метки групп ───────────────────────────────────────────── */
@@ -186,8 +242,14 @@
 }
 
 .dropdown-item.active {
-  background-color: var(--nav-active);
-  color: #ffffff;
+  background-color: var(--active-item-bg);
+  color: var(--active-item-color);
+}
+
+.dropdown-item.active:hover,
+.dropdown-item.active:focus {
+  background-color: var(--active-item-hover-bg);
+  color: var(--active-item-color);
 }
 
 [data-theme="terminal"] .dropdown-menu {
@@ -375,44 +437,14 @@
 }
 
 .left-drawer-nav .list-group-item.active {
-  background-color: var(--nav-active);
-  border-color: var(--nav-active);
-  color: #ffffff;
+  background-color: var(--active-item-bg);
+  border-color: var(--active-item-border);
+  color: var(--active-item-color);
   font-weight: 600;
 }
 
-[data-theme="brick"] .left-drawer-nav .list-group-item.active {
-  background-color: #b84228;
-  border-color: #b84228;
-  color: #ffffff;
-}
-
-[data-theme="brick"] .left-drawer-nav .list-group-item.active:hover {
-  background-color: #9e341d;
-}
-
-[data-theme="dark"] .left-drawer-nav .list-group-item.active {
-  background-color: #1f6feb;
-  border-color: #1f6feb;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .left-drawer-nav .list-group-item.active:hover {
-  background-color: #388bfd;
-}
-
-[data-theme="terminal"] .left-drawer-nav .list-group-item.active {
-  background-color: #0c3316;
-  border-color: #00ff66;
-  color: #39ff14;
-  box-shadow: 0 0 8px rgba(0, 255, 102, 0.35);
-  text-shadow: 0 0 3px rgba(0, 255, 102, 0.5);
-}
-
-[data-theme="terminal"] .left-drawer-nav .list-group-item.active:hover {
-  background-color: #154c22;
-  border-color: #39ff14;
-  color: #ffffff;
+.left-drawer-nav .list-group-item.active:hover {
+  background-color: var(--active-item-hover-bg);
 }
 
 

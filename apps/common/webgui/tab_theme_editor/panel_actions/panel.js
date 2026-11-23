@@ -12,11 +12,11 @@
  * Package: apps/windows/api/webgui/tab_theme_editor/panel_actions
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-20 13:00:00
+ * Updated: 2026-11-19 18:02:00
  * =============================================================================
  */
 
-import { showToast } from '../common/ui_utils.js';
+import { showToast, t } from '../common/ui_utils.js';
 import { PRESETS, loadPreset, getPreset } from '../panel_presets/panel.js';
 import {
   collectTokensFromUI,
@@ -43,40 +43,108 @@ export function loadCurrentThemeState(onUpdate) {
 }
 
 /**
- * Открывает модальное окно создания дочерней темы.
+ * Отрисовывает предпросмотр цветовых кружков (swatches) выбранной базовой темы в модалке создания.
+ * @param {string} baseThemeId - ID базовой темы.
+ */
+function renderBaseThemeSwatches(baseThemeId) {
+  const container = document.getElementById('child-theme-base-swatches');
+  if (!container) return;
+
+  const preset = getPreset(baseThemeId);
+  const c = preset?.colors || {};
+  const swatches = [
+    { color: c.bgBase, label: t('ui.thm.txt_7bbb3019', 'Фон') },
+    { color: c.bgSurface, label: t('ui.thm.txt_63d2f25c', 'Карточка') },
+    { color: c.bgElevated, label: t('ui.thm.txt_11a013e2', 'Панель') },
+    { color: c.textPrimary, label: t('ui.thm.txt_0b2b38e4', 'Текст') },
+    { color: c.accent, label: t('ui.thm.txt_a9c64f76', 'Акцент') },
+    { color: c.success, label: t('ui.thm.txt_3d9aab48', 'Успех') },
+  ].filter((s) => Boolean(s.color));
+
+  container.innerHTML = '';
+  swatches.forEach(({ color, label }) => {
+    const chip = document.createElement('span');
+    chip.className = 'd-inline-flex align-items-center gap-1 border rounded px-1.5 py-0.5 small font-monospace';
+    chip.title = `${label}: ${color}`;
+
+    const dot = document.createElement('span');
+    dot.className = 'd-inline-block rounded-circle border';
+    dot.style.width = '12px';
+    dot.style.height = '12px';
+    dot.style.backgroundColor = color;
+
+    const text = document.createElement('span');
+    text.textContent = label;
+    chip.appendChild(dot);
+    chip.appendChild(text);
+    container.appendChild(chip);
+  });
+}
+
+/**
+ * Открывает модальное окно создания своей темы на основе любой существующей темы.
  * @param {string} [defaultParentId] - ID базовой родительской темы.
  */
 export function openCreateChildModal(defaultParentId) {
   const presetSelect = document.getElementById('theme-preset-select');
   const currentKey = defaultParentId || presetSelect?.value || 'theme-dark-slate';
-
-  let parentId = currentKey;
-  if (window.themeEngine?.isChildTheme(currentKey)) {
-    const currentChild = window.themeEngine.getChildTheme(currentKey);
-    parentId = currentChild?.parentId || 'theme-dark-slate';
-  }
+  const parentId = currentKey;
 
   const parentTheme = window.themeEngine?.getTheme(parentId) || window.themeEngine?.getTheme('theme-dark-slate');
   const parentName = parentTheme?.name || parentId;
 
-  // Наполнение селектора базовых тем в модальном окне
+  // Наполнение селектора базовых тем в модальном окне (стандартные + пользовательские)
   const parentSelect = document.getElementById('child-theme-parent-select');
   if (parentSelect && window.themeEngine) {
+    const customThemes = window.themeEngine.getCustomThemes();
     const standardThemes = window.themeEngine.getStandardThemes();
-    parentSelect.innerHTML = standardThemes
-      .map((t) => `<option value="${t.id}"${t.id === parentId ? ' selected' : ''}>${t.name}</option>`)
-      .join('\n');
+    const darkThemes = standardThemes.filter((x) => x.category === 'dark');
+    const lightThemes = standardThemes.filter((x) => x.category === 'light');
+
+    let optionsHtml = '';
+    if (customThemes.length > 0) {
+      optionsHtml += `<optgroup label="${t('ui.thm.optCustomThemes', 'Пользовательские темы')}">\n`;
+      optionsHtml += customThemes
+        .map((x) => `  <option value="${x.id}"${x.id === parentId ? ' selected' : ''}>${x.name}</option>`)
+        .join('\n');
+      optionsHtml += '\n</optgroup>\n';
+    }
+    if (lightThemes.length > 0) {
+      optionsHtml += `<optgroup label="${t('ui.thm.optLightThemes', 'Светлые темы')}">\n`;
+      optionsHtml += lightThemes
+        .map((x) => `  <option value="${x.id}"${x.id === parentId ? ' selected' : ''}>${x.name}</option>`)
+        .join('\n');
+      optionsHtml += '\n</optgroup>\n';
+    }
+    if (darkThemes.length > 0) {
+      optionsHtml += `<optgroup label="${t('ui.thm.optDarkThemes', 'Тёмные темы')}">\n`;
+      optionsHtml += darkThemes
+        .map((x) => `  <option value="${x.id}"${x.id === parentId ? ' selected' : ''}>${x.name}</option>`)
+        .join('\n');
+      optionsHtml += '\n</optgroup>\n';
+    }
+    parentSelect.innerHTML = optionsHtml;
+    parentSelect.value = parentId;
+  }
+
+  renderBaseThemeSwatches(parentId);
+
+  const keepEditsCb = document.getElementById('child-theme-keep-edits');
+  if (keepEditsCb) {
+    keepEditsCb.checked = true;
   }
 
   // Предзаполнение названия
   const nameInput = document.getElementById('child-theme-name-input');
   if (nameInput) {
-    nameInput.value = `${parentName} (Моя копия)`;
+    nameInput.value = `${parentName} (${t('ui.thm.myCopySuffix', 'Моя тема')})`;
+    nameInput.dataset.autoFilled = 'true';
   }
 
   const descInput = document.getElementById('child-theme-desc-input');
   if (descInput) {
-    descInput.value = `Пользовательская модификация на базе ${parentName}`;
+    descInput.value = `${t('ui.thm.basedOnPrefix', 'Собрана на основе')}: ${parentName}`;
+    descInput.dataset.autoFilled = 'true';
   }
 
   const modalEl = document.getElementById('themeCreateChildModal');
@@ -124,6 +192,42 @@ export function bindActions(onUpdate) {
     });
   }
 
+  // Слушатель смены базовой темы в модалке «Собрать свою тему на основе существующей»
+  const modalParentSelect = document.getElementById('child-theme-parent-select');
+  if (modalParentSelect) {
+    modalParentSelect.addEventListener('change', () => {
+      const selectedBase = modalParentSelect.value;
+      renderBaseThemeSwatches(selectedBase);
+      const baseTheme = window.themeEngine?.getTheme(selectedBase);
+      const baseName = baseTheme?.name || selectedBase;
+      const keepEditsCb = document.getElementById('child-theme-keep-edits');
+      if (keepEditsCb) {
+        keepEditsCb.checked = (selectedBase === presetSelect?.value);
+      }
+      const nameInput = document.getElementById('child-theme-name-input');
+      if (nameInput && nameInput.dataset.autoFilled === 'true') {
+        nameInput.value = `${baseName} (${t('ui.thm.myCopySuffix', 'Моя тема')})`;
+      }
+      const descInput = document.getElementById('child-theme-desc-input');
+      if (descInput && descInput.dataset.autoFilled === 'true') {
+        descInput.value = `${t('ui.thm.basedOnPrefix', 'Собрана на основе')}: ${baseName}`;
+      }
+    });
+  }
+
+  const modalNameInput = document.getElementById('child-theme-name-input');
+  if (modalNameInput) {
+    modalNameInput.addEventListener('input', () => {
+      modalNameInput.dataset.autoFilled = 'false';
+    });
+  }
+  const modalDescInput = document.getElementById('child-theme-desc-input');
+  if (modalDescInput) {
+    modalDescInput.addEventListener('input', () => {
+      modalDescInput.dataset.autoFilled = 'false';
+    });
+  }
+
   // Кнопка подтверждения создания дочерней темы в модалке
   const btnConfirmCreate = document.getElementById('btn-confirm-create-child');
   if (btnConfirmCreate) {
@@ -131,10 +235,12 @@ export function bindActions(onUpdate) {
       const nameInput = document.getElementById('child-theme-name-input');
       const parentSelectEl = document.getElementById('child-theme-parent-select');
       const descInput = document.getElementById('child-theme-desc-input');
+      const keepEditsCb = document.getElementById('child-theme-keep-edits');
 
       const name = nameInput?.value.trim();
       const parentId = parentSelectEl?.value || 'theme-dark-slate';
       const desc = descInput?.value.trim() || '';
+      const keepEdits = keepEditsCb ? keepEditsCb.checked : true;
 
       if (!name) {
         showToast('Создание темы', 'Пожалуйста, введите название дочерней темы.', 'warning');
@@ -144,8 +250,14 @@ export function bindActions(onUpdate) {
       if (!window.themeEngine) return;
 
       try {
+        // Если пользователь хочет стартовать с чистой палитры выбранной базовой темы
+        if (!keepEdits) {
+          loadPreset(parentId);
+        }
+
         const tokens = collectTokensFromUI();
         const state = collectFullStateFromUI();
+        state.name = name;
 
         const createdTheme = window.themeEngine.createChildTheme({
           name,
@@ -165,7 +277,7 @@ export function bindActions(onUpdate) {
         }
 
         const parentTheme = window.themeEngine.getTheme(parentId);
-        showToast('Тема оформления', `Дочерняя тема «${name}» успешно создана на базе «${parentTheme?.name || parentId}»!`, 'success');
+        showToast('Тема оформления', `Тема «${name}» успешно создана на базе «${parentTheme?.name || parentId}»!`, 'success');
       } catch (err) {
         showToast('Ошибка создания', err.message, 'danger');
       }

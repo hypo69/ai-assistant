@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 23:50:00
+# Updated: 2026-11-20 02:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -28,6 +28,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import subprocess
+import sys
 from typing import Any, Dict, List, Optional, Union
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
@@ -70,7 +73,7 @@ class WorkspaceCreateRequest(BaseModel):
     workspace_id: str = Field(..., description="Уникальный идентификатор рабочей области (например, my_docs)")
     name: str = Field(..., description="Отображаемое название рабочей области")
     description: str = Field("", description="Описание рабочей области")
-    language: Optional[str] = Field("ru", description="Основной язык рабочего пространства ('he', 'ru', 'en', 'uk', 'ua')")
+    language: Optional[str] = Field(None, description="Основной язык рабочего пространства ('he', 'ru', 'en', 'uk', 'ua'); при None определяется автоматически")
     custom_path: Optional[str] = Field(None, description="Опциональная локальная директория на диске")
 
 
@@ -120,6 +123,14 @@ class AddFactFromChatRequest(BaseModel):
     predicate: Optional[str] = Field(None, description="Опциональное действие / отношение")
     object: Optional[str] = Field(None, description="Опциональный объект / предмет обладания")
     fact_type: Optional[str] = Field(None, description="Тип факта: 'action' или 'possession'")
+
+
+class AddTaskFromChatRequest(BaseModel):
+    """Запрос на постановку новой задачи из чата во внутренние файлы рабочей области, TaskOrchestrator и календарь."""
+    task_text: str = Field(..., min_length=1, description="Текст новой задачи на естественном языке")
+    workspace_id: Optional[str] = Field(None, description="Идентификатор рабочей области")
+    document_id: str = Field("chat_tasks.md", description="Внутренний файл рабочей области для сохранения задачи")
+    language: Optional[str] = Field(None, description="Язык задачи ('ru', 'he', 'en', 'uk') или автоопределение")
 
 
 class WatchdogConfigUpdateRequest(BaseModel):
@@ -239,12 +250,21 @@ class ReviseVirtualTreeRequest(BaseModel):
 class WorkspaceActivateRequest(BaseModel):
     """Запрос на переключение активного рабочего пространства."""
     workspace_id: str = Field(..., description="Идентификатор рабочей области для активации")
+    tab_id: Optional[str] = Field(default=None, description="Опциональный идентификатор активной вкладки")
+    url_hash: Optional[str] = Field(default=None, description="Опциональный полный URL-хэш последней сессии")
+
+
+class ActiveTabRequest(BaseModel):
+    """Запрос на сохранение последней открытой вкладки и URL в конфигурации."""
+    tab_id: str = Field(..., description="Идентификатор активной вкладки (например, 'tab-workspace' или 'tab-instruments')")
+    url_hash: Optional[str] = Field(default=None, description="Полный хэш URL (например, '#tab-workspace#panel-files#workspace=my_workspace')")
+    workspace_id: Optional[str] = Field(default=None, description="Опциональный идентификатор связанного рабочего пространства")
 
 
 class TelegramScenarioTriggerRequest(BaseModel):
-    """Запрос на запуск специального сценария Telegram-бота для рабочего пространства דוד משה."""
-    workspace_id: Optional[str] = Field(None, description="Идентификатор рабочего пространства (по умолчанию דוד_משה)")
-    trigger_file_name: Optional[str] = Field(None, description="Имя входного файла или сообщения (שיחה בין דוד משה לשמוליק)")
+    """Запрос на запуск сценария Telegram-бота."""
+    workspace_id: Optional[str] = Field(None, description="Идентификатор рабочего пространства")
+    trigger_file_name: Optional[str] = Field(None, description="Имя входного файла или сообщения")
     trigger_source: str = Field("telegram_bot", description="Источник запуска сценария (telegram_bot или webgui)")
     delay_seconds: Optional[float] = Field(None, description="Длительность спиннера в секундах (из config.json по умолчанию 10)")
     wait_for_completion: bool = Field(False, description="Ожидать ли завершения 10-секундной задержки синхронно")
@@ -280,24 +300,90 @@ async def trigger_telegram_scenario(req: Optional[TelegramScenarioTriggerRequest
     }
 
 
+class TelegramScenarioConditionUpdateRequest(BaseModel):
+    """Запрос на обновление статуса условия сценария покупки."""
+    condition_id: str = Field(..., description="Идентификатор условия (email_vet, email_insurer, find_common_day и др.)")
+    status: str = Field("completed", description="Новый статус условия (completed, planned, in_progress)")
+
+
+@router.post("/workspaces/telegram-scenario/condition", summary="Обновление статуса условия сценария покупки")
+async def update_telegram_scenario_condition(req: TelegramScenarioConditionUpdateRequest) -> Dict[str, Any]:
+    """Обновляет статус выбранного условия сценария покупки коровы и возвращает актуальное состояние."""
+    state = _workspace_manager.scenario_service.update_condition_status(
+        condition_id=req.condition_id,
+        new_status=req.status,
+    )
+    return {
+        "status": "ok",
+        "scenario": state,
+    }
+
+
+class TelegramScenarioScheduleInspectionRequest(BaseModel):
+    """Запрос на занесение осмотра коровы 20.11 в 06:00 в календарь с напоминанием для участников."""
+    workspace_id: Optional[str] = Field(None, description="Идентификатор рабочего пространства")
+    attendees: Optional[List[str]] = Field(None, description="Список email участников (по умолчанию veterinarian@davidka.net, attorney@davidka.net)")
+    start_time: Optional[str] = Field(None, description="Время начала в ISO 8601 (по умолчанию 2026-11-20T06:00:00+02:00)")
+    end_time: Optional[str] = Field(None, description="Время окончания в ISO 8601 (по умолчанию 2026-11-20T07:00:00+02:00)")
+    language: Optional[str] = Field("he", description="Код языка интерфейса (he, ru, en, uk)")
+
+
+@router.post("/workspaces/telegram-scenario/schedule-inspection", summary="Занесение осмотра коровы 20.11 в 06:00 в календарь с напоминаниями")
+async def schedule_telegram_scenario_inspection(req: Optional[TelegramScenarioScheduleInspectionRequest] = None) -> Dict[str, Any]:
+    """Создает событие осмотра коровы Зины в Google Calendar (sendUpdates=all + напоминания) и сохраняет .ics с VALARM."""
+    payload = req or TelegramScenarioScheduleInspectionRequest()
+    res = await asyncio.to_thread(
+        _workspace_manager.scenario_service.schedule_cow_inspection,
+        _workspace_manager,
+        payload.workspace_id,
+        payload.attendees,
+        payload.start_time,
+        payload.end_time,
+        payload.language,
+    )
+    return res
+
+
 @router.get("/workspaces/active", summary="Получение текущего активного рабочего пространства")
 async def get_active_workspace() -> Dict[str, Any]:
     """Возвращает метаданные последнего открытого рабочего пространства из конфига."""
     try:
         active_id = _workspace_manager.get_active_workspace_id()
+        last_tab = _workspace_manager.get_last_active_tab_from_config()
+        last_url = _workspace_manager.get_last_active_url_from_config()
         if not active_id:
-            return {"status": "ok", "workspace_id": None, "workspace": None}
+            return {
+                "status": "ok",
+                "workspace_id": None,
+                "workspace": None,
+                "last_active_tab": last_tab,
+                "last_active_url": last_url,
+            }
         ws = _workspace_manager.get_workspace(active_id)
         if not ws:
-            return {"status": "ok", "workspace_id": None, "workspace": None}
+            return {
+                "status": "ok",
+                "workspace_id": None,
+                "workspace": None,
+                "last_active_tab": last_tab,
+                "last_active_url": last_url,
+            }
         return {
             "status": "ok",
             "workspace_id": active_id,
             "workspace": ws,
+            "last_active_tab": last_tab,
+            "last_active_url": last_url,
         }
     except Exception as exc:
         logger.error(f"[RouterKnowledge] Ошибка получения активного пространства: {exc}")
-        return {"status": "ok", "workspace_id": None, "workspace": None}
+        return {
+            "status": "ok",
+            "workspace_id": None,
+            "workspace": None,
+            "last_active_tab": None,
+            "last_active_url": None,
+        }
 
 
 @router.post("/workspaces/active", summary="Установка активного рабочего пространства")
@@ -306,12 +392,34 @@ async def set_active_workspace(req: WorkspaceActivateRequest) -> Dict[str, Any]:
     ws = _workspace_manager.get_workspace(req.workspace_id)
     if not ws:
         raise HTTPException(status_code=404, detail=f"Рабочая область '{req.workspace_id}' не найдена")
-    _workspace_manager.set_active_workspace(req.workspace_id)
+    _workspace_manager.set_active_workspace(
+        req.workspace_id,
+        tab_id=req.tab_id,
+        url_hash=req.url_hash,
+    )
     return {
         "status": "ok",
         "workspace_id": req.workspace_id,
         "workspace": ws,
+        "last_active_tab": req.tab_id,
+        "last_active_url": req.url_hash,
         "message": f"Рабочая область '{ws.get('name', req.workspace_id)}' успешно активирована",
+    }
+
+
+@router.post("/workspaces/active-tab", summary="Сохранение активной вкладки и URL в конфиге")
+async def set_active_tab(req: ActiveTabRequest) -> Dict[str, Any]:
+    """Сохраняет последнюю активную вкладку и URL-хэш в apps/ai_assistant/config.json."""
+    _workspace_manager.set_last_active_tab_in_config(
+        tab_id=req.tab_id,
+        url_hash=req.url_hash,
+        workspace_id=req.workspace_id,
+    )
+    return {
+        "status": "ok",
+        "tab_id": req.tab_id,
+        "url_hash": req.url_hash,
+        "workspace_id": req.workspace_id,
     }
 
 
@@ -381,7 +489,7 @@ async def create_workspace(req: WorkspaceCreateRequest) -> Dict[str, Any]:
             workspace_id=req.workspace_id,
             name=req.name,
             description=req.description,
-            language=req.language or "ru",
+            language=req.language,
         )
         # Если в папке уже есть файлы — сканируем и индексируем их
         scan_info = await asyncio.to_thread(_workspace_manager.scan_and_index_workspace, ws["workspace_id"])
@@ -439,44 +547,159 @@ async def delete_workspace(workspace_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-def _open_folder_dialog(initial_dir: Optional[str] = None) -> str:
-    """Открывает нативное окно Tkinter для выбора папки на диске."""
-    try:
-        import tkinter as tk
-        from tkinter import filedialog
-        root = tk.Tk()
-        root.withdraw()
-        root.attributes('-topmost', True)
-        folder = filedialog.askdirectory(
-            initialdir=initial_dir or None,
-            title="Выберите рабочую директорию на компьютере"
+_NATIVE_DIALOG_PY_SCRIPT = """
+import json
+import sys
+import tkinter as tk
+from tkinter import filedialog
+
+mode = sys.argv[1] if len(sys.argv) > 1 else "folder"
+initial_dir = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
+
+root = tk.Tk()
+root.withdraw()
+root.attributes("-topmost", True)
+root.lift()
+root.focus_force()
+root.update()
+try:
+    if mode == "folder":
+        selected = filedialog.askdirectory(
+            parent=root,
+            initialdir=initial_dir,
+            title="Выберите рабочую директорию на компьютере",
         )
-        root.destroy()
-        return folder or ""
-    except Exception as dialog_err:
-        logger.warning(f"[browse_folder] Ошибка вызова Tkinter диалога: {dialog_err}")
-        return ""
+        print(json.dumps({"result": selected or ""}))
+    else:
+        selected = filedialog.askopenfilenames(
+            parent=root,
+            initialdir=initial_dir,
+            title="Выберите файлы на компьютере для отслеживания",
+        )
+        print(json.dumps({"result": list(selected) if selected else []}))
+finally:
+    root.destroy()
+""".strip()
+
+
+def _run_powershell_dialog_fallback(mode: str, initial_dir: Optional[str] = None, timeout: float = 60.0) -> Union[str, List[str]]:
+    """Резервный вызов нативного диалога Windows через PowerShell WinForms в STA-потоке."""
+    if mode == "folder":
+        ps_script = (
+            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
+            "Add-Type -AssemblyName System.Windows.Forms; "
+            "$owner = New-Object System.Windows.Forms.Form; $owner.TopMost = $true; "
+            "$dlg = New-Object System.Windows.Forms.FolderBrowserDialog; "
+            "$dlg.Description = 'Выберите рабочую директорию на компьютере'; "
+            "if ($env:DIALOG_INITIAL_DIR) { $dlg.SelectedPath = $env:DIALOG_INITIAL_DIR }; "
+            "if ($dlg.ShowDialog($owner) -eq [System.Windows.Forms.DialogResult]::OK) { "
+            "  @{ result = $dlg.SelectedPath } | ConvertTo-Json -Compress "
+            "} else { "
+            "  @{ result = '' } | ConvertTo-Json -Compress "
+            "}; $owner.Dispose()"
+        )
+    else:
+        ps_script = (
+            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
+            "Add-Type -AssemblyName System.Windows.Forms; "
+            "$owner = New-Object System.Windows.Forms.Form; $owner.TopMost = $true; "
+            "$dlg = New-Object System.Windows.Forms.OpenFileDialog; "
+            "$dlg.Title = 'Выберите файлы на компьютере для отслеживания'; "
+            "$dlg.Multiselect = $true; "
+            "if ($env:DIALOG_INITIAL_DIR) { $dlg.InitialDirectory = $env:DIALOG_INITIAL_DIR }; "
+            "if ($dlg.ShowDialog($owner) -eq [System.Windows.Forms.DialogResult]::OK) { "
+            "  @{ result = @($dlg.FileNames) } | ConvertTo-Json -Compress "
+            "} else { "
+            "  @{ result = @() } | ConvertTo-Json -Compress "
+            "}; $owner.Dispose()"
+        )
+
+    env = os.environ.copy()
+    if initial_dir:
+        env["DIALOG_INITIAL_DIR"] = initial_dir
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-STA", "-Command", ps_script],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+        timeout=timeout,
+        creationflags=flags,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"PowerShell dialog failed (rc={proc.returncode}): {proc.stderr.strip()}")
+    lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    if not lines:
+        return "" if mode == "folder" else []
+    payload = json.loads(lines[-1])
+    result = payload.get("result")
+    if mode == "folder":
+        return str(result) if result else ""
+    if isinstance(result, str):
+        return [result] if result else []
+    return [str(p) for p in (result or []) if p]
+
+
+def _run_native_dialog_subprocess(mode: str, initial_dir: Optional[str] = None, timeout: float = 60.0) -> Union[str, List[str]]:
+    """Запускает нативный диалог выбора папки или файлов в изолированном процессе Python.
+
+    Изоляция в дочернем процессе гарантирует выполнение Tcl/Tk в главном потоке (STA),
+    вывод окна поверх браузера (parent=root + topmost) и корректное завершение по таймауту
+    без блокировки пула потоков FastAPI/uvicorn.
+    """
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-c", _NATIVE_DIALOG_PY_SCRIPT, mode, initial_dir or ""],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+            timeout=timeout,
+            creationflags=flags,
+        )
+        if proc.returncode == 0:
+            lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+            if not lines:
+                return "" if mode == "folder" else []
+            payload = json.loads(lines[-1])
+            result = payload.get("result")
+            if mode == "folder":
+                return str(result) if result else ""
+            if isinstance(result, list):
+                return [str(p) for p in result if p]
+            return [str(result)] if result else []
+
+        stderr_msg = proc.stderr.strip()
+        logger.warning(f"[native_dialog:{mode}] Ошибка дочернего Tkinter-процесса (rc={proc.returncode}): {stderr_msg}")
+    except subprocess.TimeoutExpired as exc:
+        logger.warning(f"[native_dialog:{mode}] Превышен таймаут ожидания выбора ({timeout}с)")
+        raise TimeoutError(f"Таймаут ожидания диалога выбора ({timeout}с)") from exc
+    except Exception as exc:
+        logger.warning(f"[native_dialog:{mode}] Сбой запуска Tkinter-процесса: {exc}")
+
+    if sys.platform == "win32":
+        return _run_powershell_dialog_fallback(mode=mode, initial_dir=initial_dir, timeout=timeout)
+    raise RuntimeError(f"Не удалось открыть системный диалог выбора ({mode})")
+
+
+def _open_folder_dialog(initial_dir: Optional[str] = None) -> str:
+    """Открывает нативное окно выбора папки на диске в изолированном процессе."""
+    result = _run_native_dialog_subprocess("folder", initial_dir=initial_dir, timeout=60.0)
+    return str(result) if result else ""
 
 
 def _open_file_dialog(initial_dir: Optional[str] = None) -> Union[str, List[str]]:
-    """Открывает нативное окно Tkinter для выбора одного или нескольких файлов на диске."""
-    try:
-        import tkinter as tk
-        from tkinter import filedialog
-        root = tk.Tk()
-        root.withdraw()
-        root.attributes('-topmost', True)
-        selected_files = filedialog.askopenfilenames(
-            initialdir=initial_dir or None,
-            title="Выберите файлы на компьютере для отслеживания"
-        )
-        root.destroy()
-        if selected_files:
-            return list(selected_files)
-        return ""
-    except Exception as dialog_err:
-        logger.warning(f"[browse_file] Ошибка вызова Tkinter диалога: {dialog_err}")
-        return ""
+    """Открывает нативное окно выбора одного или нескольких файлов на диске в изолированном процессе."""
+    result = _run_native_dialog_subprocess("files", initial_dir=initial_dir, timeout=60.0)
+    if isinstance(result, list):
+        return result if result else ""
+    return str(result) if result else ""
 
 
 @router.post("/workspaces/browse-folder", summary="Диалоговое окно выбора директории на компьютере")
@@ -486,12 +709,12 @@ async def browse_workspace_folder(initial_dir: Optional[str] = Query(None, descr
     try:
         selected_path = await asyncio.wait_for(
             loop.run_in_executor(None, lambda: _open_folder_dialog(initial_dir)),
-            timeout=60.0
+            timeout=65.0
         )
         if selected_path:
             return {"status": "ok", "path": selected_path}
         return {"status": "cancelled", "path": ""}
-    except asyncio.TimeoutError:
+    except (asyncio.TimeoutError, TimeoutError):
         return {"status": "timeout", "path": ""}
     except Exception as exc:
         logger.error(f"[browse_folder] Сбой открытия диалога: {exc}")
@@ -505,7 +728,7 @@ async def browse_workspace_file(initial_dir: Optional[str] = Query(None, descrip
     try:
         selected_file_path = await asyncio.wait_for(
             loop.run_in_executor(None, lambda: _open_file_dialog(initial_dir)),
-            timeout=60.0
+            timeout=65.0
         )
         if selected_file_path:
             if isinstance(selected_file_path, (list, tuple)):
@@ -516,11 +739,11 @@ async def browse_workspace_file(initial_dir: Optional[str] = Query(None, descrip
                 all_paths = [first_path] if first_path else []
             return {"status": "ok", "path": first_path, "paths": all_paths}
         return {"status": "cancelled", "path": "", "paths": []}
-    except asyncio.TimeoutError:
-        return {"status": "timeout", "path": ""}
+    except (asyncio.TimeoutError, TimeoutError):
+        return {"status": "timeout", "path": "", "paths": []}
     except Exception as exc:
         logger.error(f"[browse_file] Сбой открытия диалога: {exc}")
-        return {"status": "error", "message": str(exc), "path": ""}
+        return {"status": "error", "message": str(exc), "path": "", "paths": []}
 
 
 @router.post("/workspaces/seed-demo", summary="Заполнение демо-примерами из ТЗ (RU + HE)")
@@ -626,7 +849,15 @@ async def unlink_workspace_source(workspace_id: str, source_id: str) -> Dict[str
 @router.get("/workspaces/{workspace_id}/sources/changes", summary="Инкрементальная проверка изменений во внешних источниках")
 async def get_workspace_sources_changes(workspace_id: str) -> Dict[str, Any]:
     """Проверяет mtime и размер всех привязанных файлов/папок без повторного парсинга."""
-    return await asyncio.to_thread(_workspace_manager.detect_changed_linked_sources, workspace_id)
+    try:
+        return await asyncio.to_thread(_workspace_manager.detect_changed_linked_sources, workspace_id)
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as exc:
+        logger.error(f"[RouterKnowledge] Ошибка проверки изменений источников {workspace_id}: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/workspaces/{workspace_id}/sources/sync", summary="Синхронизация и индексация связанных источников")
@@ -636,6 +867,10 @@ async def sync_workspace_sources(workspace_id: str, req: Optional[SyncSourcesReq
         force = req.force_reanalyze if req else False
         report = await _workspace_manager.sync_linked_sources(workspace_id=workspace_id, force_reanalyze=force)
         return report
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as exc:
         logger.error(f"[RouterKnowledge] Ошибка синхронизации источников {workspace_id}: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
@@ -646,6 +881,10 @@ async def get_workspace_directory_contents(workspace_id: str) -> Dict[str, Any]:
     """Возвращает детальное содержимое директории рабочей области со статусом отслеживания Git."""
     try:
         return _workspace_manager.get_directory_contents(workspace_id)
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as exc:
         logger.error(f"[RouterKnowledge] Ошибка получения содержимого папки {workspace_id}: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
@@ -656,6 +895,10 @@ async def get_workspace_virtual_tree(workspace_id: str) -> Dict[str, Any]:
     """Возвращает объединённое виртуальное дерево локальных и внешних файлов, сгруппированное по семантическим категориям содержимого."""
     try:
         return _workspace_manager.get_virtual_tree(workspace_id)
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as exc:
         logger.error(f"[RouterKnowledge] Ошибка построения виртуального дерева {workspace_id}: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
@@ -681,6 +924,10 @@ async def revise_workspace_virtual_tree(
             provider=provider,
             model_name=model_name,
         )
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as exc:
         logger.error(f"[RouterKnowledge] Ошибка ревизии виртуального дерева {workspace_id}: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
@@ -1061,6 +1308,33 @@ async def add_fact_from_chat_endpoint(req: AddFactFromChatRequest) -> Dict[str, 
     return await add_workspace_fact_from_chat(target_ws, req)
 
 
+@router.post("/workspaces/{workspace_id}/tasks", summary="Постановка задачи через чат во внутренние файлы рабочей области и календарь")
+async def add_workspace_task_from_chat(workspace_id: str, req: AddTaskFromChatRequest) -> Dict[str, Any]:
+    """Ставит задачу из чата во внутренний файл рабочей области, TaskOrchestrator и календарь (20.11 в 06:00)."""
+    try:
+        return await asyncio.to_thread(
+            _workspace_manager.add_task_from_chat,
+            workspace_id=workspace_id,
+            task_text=req.task_text,
+            document_id=req.document_id,
+            language=req.language,
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as exc:
+        logger.error(f"[RouterKnowledge] Ошибка постановки задачи в '{workspace_id}': {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/tasks/from-chat", summary="Постановка задачи через чат в активную или указанную рабочую область")
+async def add_task_from_chat_endpoint(req: AddTaskFromChatRequest) -> Dict[str, Any]:
+    """Ставит задачу из чата в указанную (или активную) рабочую область."""
+    target_ws = _resolve_target_workspace(req.workspace_id)
+    if not target_ws:
+        raise HTTPException(status_code=400, detail="Рабочее пространство не выбрано")
+    return await add_workspace_task_from_chat(target_ws, req)
+
+
 @router.get("/watchdog/config", summary="Статус и конфигурация наблюдателя watchdog")
 async def get_watchdog_config() -> Dict[str, Any]:
     """Возвращает настройки watchdog из config.json, список наблюдаемых путей и последние события."""
@@ -1205,19 +1479,46 @@ async def search_entities(
     return {"status": "ok", "workspace_id": target_ws, "count": len(entities), "entities": entities}
 
 
+@router.get("/workspaces/{workspace_id}/rag/status", summary="Статус RAG-индекса рабочей области")
+async def get_workspace_rag_status_endpoint(workspace_id: str) -> Dict[str, Any]:
+    """Возвращает статус изолированного RAG-индекса для указанной рабочей области."""
+    target_ws = await asyncio.to_thread(_resolve_target_workspace, workspace_id)
+    if not target_ws:
+        raise HTTPException(status_code=404, detail="Рабочее пространство не найдено")
+    return await asyncio.to_thread(_workspace_manager.get_workspace_rag_status, target_ws)
+
+
+@router.post("/workspaces/{workspace_id}/rag/build", summary="Построение/перестроение RAG-индекса рабочей области")
+async def build_workspace_rag_endpoint(workspace_id: str, scan_files: bool = True) -> Dict[str, Any]:
+    """Строит или перестраивает RAG-индекс (FAISS + SQLite) для рабочей области."""
+    target_ws = await asyncio.to_thread(_resolve_target_workspace, workspace_id)
+    if not target_ws:
+        raise HTTPException(status_code=404, detail="Рабочее пространство не найдено")
+    return await asyncio.to_thread(_workspace_manager.build_workspace_rag, target_ws, scan_files)
+
+
+@router.post("/workspaces/rag/build-all", summary="Построение RAG-индексов для всех рабочих областей")
+@router.post("/faiss/rebuild-all", summary="Перестроение RAG во всех рабочих областях")
+async def build_all_workspaces_rag_endpoint(scan_files: bool = True) -> Dict[str, Any]:
+    """Строит и синхронизирует RAG-индексы во всех зарегистрированных рабочих областях."""
+    return await asyncio.to_thread(_workspace_manager.build_all_workspaces_rag, scan_files)
+
+
 @router.post("/faiss/rebuild", summary="Перестроение векторного индекса FAISS")
 async def rebuild_faiss(req: FaissRebuildRequest) -> Dict[str, Any]:
     """Перестраивает локальный индекс FAISS из первичных документов SQLite."""
+    if req.workspace_id in ("all", "*"):
+        return await asyncio.to_thread(_workspace_manager.build_all_workspaces_rag)
     target_ws = await asyncio.to_thread(_resolve_target_workspace, req.workspace_id)
     if not target_ws:
         raise HTTPException(status_code=400, detail="Рабочее пространство не выбрано")
-    return await asyncio.to_thread(_workspace_manager.rebuild_faiss_index, target_ws)
+    return await asyncio.to_thread(_workspace_manager.build_workspace_rag, target_ws)
 
 
 @router.get("/ai-models", summary="Список доступных провайдеров и моделей из модуля src/ai")
 async def list_ai_models() -> Dict[str, Any]:
     """Возвращает перечень поддерживаемых провайдеров и моделей из единого модуля src/ai."""
-    from src.ai.model_manager import get_available_models
+    from src.ai.orchestration.model_manager import get_available_models
     prov_labels = {
         "gemini": "Google Gemini API (src/ai/gemini)",
         "agy": "Antigravity SDK (src/ai/providers/agy)",

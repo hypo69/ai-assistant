@@ -19,7 +19,7 @@
 # Package: apps.ai_assistant.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-19 18:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -40,6 +40,7 @@ from apps.ai_assistant.api.schemas import (
 )
 from apps.ai_assistant.core.ai_diff_summarizer import AIDiffSummarizer
 from apps.ai_assistant.core.git_history_engine import GitHistoryEngine
+from apps.ai_assistant.core.repo_resolver import resolve_repo_path
 from apps.ai_assistant.core.query_orchestrator import QueryOrchestrator
 from apps.ai_assistant.core.temporal_code_graph import TemporalCodeGraph
 from apps.ai_assistant.core.wikillm_version_linker import WikiLLMVersionLinker
@@ -71,9 +72,10 @@ class SupersedeRequest(BaseModel):
 
 
 class InsightsRequest(BaseModel):
-    """Схема запроса ИИ-суммаризации диффа."""
-    commit_hash: str = Field(..., description="Хэш коммита")
-    file_path: Optional[str] = Field(default=None, description="Опциональный путь к файлу")
+    """Схема запроса ИИ-суммаризации изменений версии."""
+    commit_hash: str = Field(..., description="Идентификатор версии (хэш сохранения)")
+    file_path: Optional[str] = Field(default=None, description="Опциональный путь к документу")
+    workspace_id: Optional[str] = Field(default=None, description="Идентификатор рабочей области")
 
 
 @router.post("/annotate", response_model=AnnotationResponse, summary="Двухшаговая запись архитектурной связи")
@@ -157,11 +159,16 @@ async def get_knowledge_links(
     return await asyncio.to_thread(target_graph.get_active_links, source_id=source_id)
 
 
-@router.post("/insights", summary="ИИ-анализ диффа и архитектурных последствий")
+@router.post("/insights", summary="Понятное ИИ-пояснение изменений в версии")
 async def get_diff_insights(request: InsightsRequest) -> Dict[str, Any]:
-    """Выполняет суммаризацию diff коммита и формирует предложения связей с WikiLLM."""
+    """Выполняет понятную суммаризацию изменений выбранной версии с учетом рабочего пространства."""
     try:
-        diff_resp = await _git_engine.get_diff(commit_hash=request.commit_hash, file_path=request.file_path)
+        if request.workspace_id:
+            target_repo = await asyncio.to_thread(resolve_repo_path, workspace_id=request.workspace_id)
+            engine = GitHistoryEngine(repo_path=target_repo)
+        else:
+            engine = _git_engine
+        diff_resp = await engine.get_diff(commit_hash=request.commit_hash, file_path=request.file_path)
         summary = await asyncio.to_thread(
             _summarizer.summarize_diff,
             diff_resp.diff_text,
@@ -177,11 +184,12 @@ async def get_diff_insights(request: InsightsRequest) -> Dict[str, Any]:
             "file_path": request.file_path,
             "summary": summary,
             "matched_entities": wiki_entities,
+            "entities_affected": wiki_entities,
             "truncated": diff_resp.truncated,
         }
     except Exception as exc:
         logger.error(f"[RouterGitWikiLLM] Ошибка генерации инсайтов: {exc}")
-        raise HTTPException(status_code=500, detail=f"Ошибка генерации инсайтов: {exc}")
+        raise HTTPException(status_code=500, detail=f"Ошибка генерации пояснения: {exc}")
 
 
 @router.post("/git-wikillm/query", response_model=QuerySearchResponse, summary="Параллельный гибридный поиск (Git + Wiki + RAG)")

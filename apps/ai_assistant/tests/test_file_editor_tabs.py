@@ -12,7 +12,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 20:30:00
+# Updated: 2026-11-19 20:55:00
 # =============================================================================
 
 from __future__ import annotations
@@ -194,8 +194,15 @@ async def test_markdown_preview_rendering_and_local_assets() -> None:
         js = res_js.text
         assert "parseMarkdownToHtml" in js
         assert "ensureMarkedLoaded" in js
-        # Автоматический режим split по умолчанию для Markdown
-        assert "(ext === 'md' || ext === 'markdown') ? 'split' : 'code'" in js
+        assert "ensureMermaidLoaded" in js
+        assert "renderMermaidDiagramsInContainer" in js
+        # Автоматический режим split по умолчанию для Markdown и Mermaid
+        assert "(ext === 'md' || ext === 'markdown' || MERMAID_EXTENSIONS.has(ext)) ? 'split' : 'code'" in js
+
+        # 3. Локальная библиотека mermaid.min.js отдаётся со статусом 200 без зависимости от внешнего CDN
+        res_mermaid = await client.get("/html/js/mermaid.min.js")
+        assert res_mermaid.status_code == 200
+        assert len(res_mermaid.content) > 100000
 
 
 @pytest.mark.asyncio
@@ -268,6 +275,7 @@ async def test_extensionless_file_content_detection_and_api(tmp_path: Path) -> N
     assert res["status"] == "ok"
     assert res["is_binary"] is False
     assert res.get("detected_type") == "md"
+    assert res.get("direction") == "rtl"
 
     # 3. Проверяем клиентскую функцию detectFileTypeFromContent в main.js и ide_tree_context_menu.js
     transport = ASGITransport(app=app)
@@ -281,6 +289,160 @@ async def test_extensionless_file_content_detection_and_api(tmp_path: Path) -> N
         assert res_menu.status_code == 200
         assert "detectFileTypeFromContent" in res_menu.text
         assert "window.detectFileTypeFromContent = detectFileTypeFromContent" in res_menu.text
+
+
+@pytest.mark.asyncio
+async def test_file_tab_close_button_studio_code_style() -> None:
+    """Проверяет наличие кнопки закрытия вкладки [x] в стиле Studio Code и ключей i18n."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Проверяем разметку и логику закрытия в main.js редактора
+        res_js = await client.get("/html/tab_file_editor/main.js")
+        assert res_js.status_code == 200
+        js = res_js.text
+        assert "wasm-tab-close" in js
+        assert "bi-x" in js
+        assert "fileEditor.closeTabTitle" in js
+        assert "closeDocument" in js
+        assert "auxclick" in js
+
+        # 2. Проверяем стили кнопки закрытия [x] в style.css
+        res_css = await client.get("/html/tab_file_editor/style.css")
+        assert res_css.status_code == 200
+        css = res_css.text
+        assert ".wasm-tab-close" in css
+        assert ".wasm-tab-item:hover .wasm-tab-close" in css
+
+        # 3. Проверяем ключи локализации в словарях ru и en
+        res_ru = await client.get("/html/locales/ru.json")
+        assert res_ru.status_code == 200
+        ru_json = res_ru.json()
+        assert ru_json.get("fileEditor", {}).get("closeTabTitle") == "Закрыть вкладку"
+
+        res_en = await client.get("/html/locales/en.json")
+        assert res_en.status_code == 200
+        en_json = res_en.json()
+        assert en_json.get("fileEditor", {}).get("closeTabTitle") == "Close tab"
+
+
+@pytest.mark.asyncio
+async def test_hebrew_documents_default_to_rtl_across_editors(tmp_path: Path) -> None:
+    """Проверяет, что все документы на иврите по умолчанию открываются в режиме RTL во всех редакторах проекта."""
+    from apps.ai_assistant.core.workspace_file_ops import WorkspaceFileOps
+    from apps.ai_assistant.core.workspace_manager import WorkspaceManager
+    from apps.common.file_editor.catalog import SupportedFileCatalog
+    from apps.common.file_editor.service import FileEditorService
+    from apps.common.file_tree.service import FileTreeService
+
+    # 1. Проверяем SupportedFileCatalog.detect_text_direction на разных вариантах ивритских документов
+    assert SupportedFileCatalog.detect_text_direction("לדוד משה היתה חווה", "farm.txt") == "rtl"
+    assert SupportedFileCatalog.detect_text_direction("lang=he\n\n# דוד משה\n\nתיאור", "README.md") == "rtl"
+    assert SupportedFileCatalog.detect_text_direction(
+        "---\ngenerator: ai_assistant_obsidian\nlanguage: he\ntitle: \"דוד משה\"\n---\n\nלדוד משה היתה חווה",
+        "david.md",
+    ) == "rtl"
+    # Пустой новый файл с ивритским названием также должен быть RTL по умолчанию
+    assert SupportedFileCatalog.detect_text_direction("", "דוד_משה.md") == "rtl"
+    # Документы на русском и английском языках остаются LTR
+    assert SupportedFileCatalog.detect_text_direction("Мама мыла раму.", "mama.txt") == "ltr"
+    assert SupportedFileCatalog.detect_text_direction("Hello world", "hello.py") == "ltr"
+
+    # 2. Проверяем сервисы FileEditorService, FileTreeService и WorkspaceFileOps
+    wm = WorkspaceManager(workspaces_dir=tmp_path / "workspaces")
+    ws_id = "hebrew_rtl_ws"
+    wm.ensure_workspace_folder(ws_id)
+    _, ws_path = wm._get_or_create_workspace(ws_id)
+    WorkspaceFileOps.create_item(
+        wm=wm,
+        workspace_id=ws_id,
+        rel_path="david_farm.md",
+        is_dir=False,
+        content="# חוות דוד משה\n\nלדוד משה היתה חווה גדולה.",
+    )
+    WorkspaceFileOps.create_item(
+        wm=wm,
+        workspace_id=ws_id,
+        rel_path="mama.txt",
+        is_dir=False,
+        content="Мама мыла раму.",
+    )
+
+    ws_res_he = WorkspaceFileOps.get_content(wm=wm, workspace_id=ws_id, rel_path="david_farm.md")
+    assert ws_res_he["direction"] == "rtl"
+
+    ws_res_ru = WorkspaceFileOps.get_content(wm=wm, workspace_id=ws_id, rel_path="mama.txt")
+    assert ws_res_ru["direction"] == "ltr"
+
+    fe_service = FileEditorService(base_root=ws_path)
+    fe_res_he = fe_service.read_file("david_farm.md", workspace_id=ws_id)
+    assert fe_res_he["direction"] == "rtl"
+
+    ft_service = FileTreeService(base_root=ws_path)
+    ft_sum_he = ft_service.get_file_summary("david_farm.md", workspace_id=ws_id)
+    assert ft_sum_he.direction == "rtl"
+
+    # 3. Проверяем клиентские оркестраторы редакторов на автоопределение RTL для иврита
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Центральный редактор Studio Code (tab_file_editor)
+        res_fe = await client.get("/html/tab_file_editor/main.js")
+        assert res_fe.status_code == 200
+        assert "detectDocumentDirection" in res_fe.text
+        assert "dir: initialDir" in res_fe.text
+
+        # Редактор базы знаний Obsidian (tab_obsidian)
+        res_obs = await client.get("/html/tab_obsidian/main.js")
+        assert res_obs.status_code == 200
+        assert "detectNoteDirection" in res_obs.text
+        assert "applyNoteDirection" in res_obs.text
+
+        # Модальный редактор файлов и просмотр ревизий (ide_tree_context_menu.js)
+        res_cm = await client.get("/html/js/ide_tree_context_menu.js")
+        assert res_cm.status_code == 200
+        assert "detectDocumentDirection" in res_cm.text
+        assert "applyModalDirection" in res_cm.text
+        assert "renderMermaidDiagramsInContainer" in res_cm.text
+
+
+@pytest.mark.asyncio
+async def test_mermaid_diagrams_rendering_support_and_obsidian_sanitization(tmp_path: Path) -> None:
+    """Проверяет рендеринг диаграмм Mermaid в редакторе файлов и экранирование вертикальных черт '|' в Obsidian Vault."""
+    from apps.ai_assistant.core.workspace_manager import WorkspaceManager
+
+    wm = WorkspaceManager(workspaces_dir=tmp_path / "workspaces")
+    ws_id = "mermaid_hebrew_ws"
+    wm.ensure_workspace_folder(ws_id)
+
+    # Импортируем документ с символом вертикальной черты '|' (например, из wikilink [[דוד משה|דוד משה]]), который раньше ломал синтаксис Mermaid
+    wm.import_document(
+        workspace_id=ws_id,
+        document_id="farm.md",
+        content="**דוד משה|דוד משה:** הסבר משכנע אבל מכיוון שמדובר בסיכון רפואי אני רוצה לאמת נתונים בשטח.",
+        commit_message="Тест экранирования Mermaid",
+    )
+
+    kb_path = wm.obsidian.rebuild_knowledge_base_index(ws_id)
+    kb_text = kb_path.read_text(encoding="utf-8")
+    assert "```mermaid" in kb_text
+    assert "flowchart LR" in kb_text
+    # Внутри узлов N*_S["..."] и N*_O["..."] не должно оставаться неэкранированной вертикальной черты '|'
+    for line in kb_text.splitlines():
+        if line.strip().startswith("N") and "-->" in line:
+            node_left, rest = line.split("-->", 1)
+            assert "|" not in node_left
+            if '|"' in rest:
+                node_right = rest.split('|"', 1)[1].split('"|', 1)[-1]
+                assert "|" not in node_right
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res_css = await client.get("/html/tab_file_editor/style.css")
+        assert res_css.status_code == 200
+        assert ".mermaid-diagram-wrapper" in res_css.text
+        assert ".mermaid-diagram-stage" in res_css.text
+
+
+
 
 
 

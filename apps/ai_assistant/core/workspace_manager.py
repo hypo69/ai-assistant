@@ -22,7 +22,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 23:50:00
+# Updated: 2026-11-23 17:08:00
 # =============================================================================
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import threading
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -42,6 +43,7 @@ from logger import logger
 from src.ai.rag.text_rag import TextRAG
 from src.utils.convertors.excel import excel2text
 from src.utils.pdf import extract_pdf_text
+from apps.ai_assistant.core.git_i18n import get_git_commit_msg
 from apps.ai_assistant.core.content_extractor import (
     IMAGE_EXTENSIONS,
     MEDIA_WITH_AUDIO_EXTENSIONS,
@@ -58,12 +60,14 @@ from apps.ai_assistant.core.workspace_registry import (
     WORKSPACE_META_DIR,
     WorkspaceRegistry,
     _utc_now_iso,
+    build_workspace_gitignore,
     format_host_qualified_path,
     generate_workspace_readme,
     get_current_host_name,
     normalize_workspace_language,
     parse_host_qualified_path,
     parse_workspace_readme,
+    resolve_workspace_language,
     resolve_workspaces_dir,
 )
 
@@ -120,6 +124,8 @@ class WorkspaceManager:
         self.extractor = content_extractor or ContentExtractor()
         self.obsidian = ObsidianVaultBuilder(self)
         self._on_watches_changed: Optional[Callable[[], None]] = None
+        self._manifest_locks_guard = threading.Lock()
+        self._manifest_locks: Dict[str, threading.RLock] = {}
 
         # Автоматическая миграция существующих глобальных БД в локальные директории пространств
         try:
@@ -127,18 +133,30 @@ class WorkspaceManager:
         except Exception as exc:
             logger.debug(f"[WorkspaceManager] Начальная проверка миграции БД: {exc}")
 
+    def get_manifest_lock(self, ws_path: Path) -> threading.RLock:
+        """Возвращает реентерабельную блокировку для сериализации операций с .tracked_sources.json рабочей области."""
+        key = str(Path(ws_path).resolve()).lower()
+        with self._manifest_locks_guard:
+            lock = self._manifest_locks.get(key)
+            if lock is None:
+                lock = threading.RLock()
+                self._manifest_locks[key] = lock
+            return lock
+
     def get_workspace_db_path(self, workspace_id: str) -> Path:
         """Возвращает путь к SQLite базе знаний внутри рабочего пространства."""
         ws_path = self.registry.workspace_path(workspace_id)
         db_dir = ws_path / WORKSPACE_META_DIR
-        db_dir.mkdir(parents=True, exist_ok=True)
+        if ws_path.is_dir():
+            db_dir.mkdir(parents=True, exist_ok=True)
         return db_dir / "knowledge_store.db"
 
     def get_workspace_graph_path(self, workspace_id: str) -> Path:
         """Возвращает путь к SQLite темпорального графа: единая БД рабочей области (knowledge_store.db)."""
         ws_path = self.registry.workspace_path(workspace_id)
         db_dir = ws_path / WORKSPACE_META_DIR
-        db_dir.mkdir(parents=True, exist_ok=True)
+        if ws_path.is_dir():
+            db_dir.mkdir(parents=True, exist_ok=True)
         return db_dir / "knowledge_store.db"
 
     def get_workspace_store(self, workspace_id: str) -> KnowledgeStore:
@@ -167,7 +185,7 @@ class WorkspaceManager:
     def graph(self) -> TemporalCodeGraph:
         """Возвращает темпоральный граф связей активной рабочей области или временный изолированный экземпляр."""
         active_ws = self.get_active_workspace_id()
-        if active_ws:
+        if active_ws and self.registry.workspace_path(active_ws).is_dir():
             return self.get_workspace_graph(active_ws)
         if self._default_graph is None:
             self._default_graph = TemporalCodeGraph(db_path=":memory:")
@@ -322,11 +340,73 @@ class WorkspaceManager:
                 logger.warning(f"[WorkspaceManager] Ошибка чтения active_workspace из config.json: {exc}")
         return None
 
-    def set_active_workspace_in_config(self, workspace_id: str) -> None:
+    def get_last_active_tab_from_config(self) -> Optional[str]:
+        """Возвращает последнюю активную вкладку из config.json."""
+        cfg_path = Path(__file__).resolve().parent.parent / "config.json"
+        if cfg_path.exists():
+            try:
+                data = json.loads(cfg_path.read_text(encoding="utf-8"))
+                val = data.get("last_active_tab") or data.get("active_tab")
+                return str(val).strip() if val else None
+            except Exception as exc:
+                logger.warning(f"[WorkspaceManager] Ошибка чтения last_active_tab из config.json: {exc}")
+        return None
+
+    def get_last_active_url_from_config(self) -> Optional[str]:
+        """Возвращает последний полный URL-хэш сессии из config.json."""
+        cfg_path = Path(__file__).resolve().parent.parent / "config.json"
+        if cfg_path.exists():
+            try:
+                data = json.loads(cfg_path.read_text(encoding="utf-8"))
+                val = data.get("last_active_url") or data.get("active_url")
+                return str(val).strip() if val else None
+            except Exception as exc:
+                logger.warning(f"[WorkspaceManager] Ошибка чтения last_active_url из config.json: {exc}")
+        return None
+
+    def set_last_active_tab_in_config(
+        self,
+        tab_id: str,
+        url_hash: Optional[str] = None,
+        workspace_id: Optional[str] = None,
+    ) -> None:
+        """Сохраняет последнюю активную вкладку и URL в apps/ai_assistant/config.json."""
+        cfg_path = Path(__file__).resolve().parent.parent / "config.json"
+        if cfg_path.exists():
+            try:
+                data = json.loads(cfg_path.read_text(encoding="utf-8"))
+                clean_tab = str(tab_id or "").strip()
+                if clean_tab:
+                    data["last_active_tab"] = clean_tab
+                    data["active_tab"] = clean_tab
+                if url_hash:
+                    clean_url = str(url_hash).strip()
+                    data["last_active_url"] = clean_url
+                    data["active_url"] = clean_url
+                if workspace_id:
+                    clean_ws = str(workspace_id).strip()
+                    data["active_workspace"] = clean_ws
+                    data["last_active_workspace"] = clean_ws
+                ObsidianVaultBuilder._atomic_write_text(
+                    cfg_path,
+                    json.dumps(data, indent=2, ensure_ascii=False),
+                )
+                logger.info(f"[WorkspaceManager] В config.json сохранены active_tab: '{clean_tab}', active_url: '{url_hash}'")
+            except Exception as exc:
+                logger.warning(f"[WorkspaceManager] Ошибка сохранения active_tab в config.json: {exc}")
+
+    def set_active_workspace_in_config(
+        self,
+        workspace_id: str,
+        tab_id: Optional[str] = None,
+        url_hash: Optional[str] = None,
+    ) -> None:
         """Сохраняет последнее открытое рабочее пространство в apps/ai_assistant/config.json.
 
         Args:
             workspace_id: Идентификатор активного рабочего пространства.
+            tab_id: Опциональный идентификатор активной вкладки.
+            url_hash: Опциональный полный URL-хэш страницы.
         """
         clean_id = (workspace_id or "").strip()
         cfg_path = Path(__file__).resolve().parent.parent / "config.json"
@@ -335,9 +415,18 @@ class WorkspaceManager:
                 data = json.loads(cfg_path.read_text(encoding="utf-8"))
                 data["active_workspace"] = clean_id
                 data["last_active_workspace"] = clean_id
-                tmp_cfg = cfg_path.with_suffix(".json.tmp")
-                tmp_cfg.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-                os.replace(tmp_cfg, cfg_path)
+                if tab_id:
+                    clean_tab = str(tab_id).strip()
+                    data["last_active_tab"] = clean_tab
+                    data["active_tab"] = clean_tab
+                if url_hash:
+                    clean_url = str(url_hash).strip()
+                    data["last_active_url"] = clean_url
+                    data["active_url"] = clean_url
+                ObsidianVaultBuilder._atomic_write_text(
+                    cfg_path,
+                    json.dumps(data, indent=2, ensure_ascii=False),
+                )
                 logger.info(f"[WorkspaceManager] В config.json сохранён active_workspace: '{clean_id}'")
             except Exception as exc:
                 logger.warning(f"[WorkspaceManager] Ошибка сохранения active_workspace в config.json: {exc}")
@@ -345,7 +434,7 @@ class WorkspaceManager:
     def get_active_workspace_id(self) -> Optional[str]:
         """Возвращает последнее открытое рабочее пространство из конфига или БД."""
         cfg_active = self.get_active_workspace_id_from_config()
-        if cfg_active:
+        if cfg_active and (self.workspaces_dir / cfg_active).is_dir():
             return cfg_active
         try:
             store_active = self.store.get_active_workspace_id()
@@ -361,31 +450,54 @@ class WorkspaceManager:
             pass
         return None
 
-    def set_active_workspace(self, workspace_id: str) -> bool:
+    def set_active_workspace(
+        self,
+        workspace_id: str,
+        tab_id: Optional[str] = None,
+        url_hash: Optional[str] = None,
+    ) -> bool:
         """Фиксирует выбранное рабочее пространство как активное в конфиге, БД и electron_state.json."""
-        self.set_active_workspace_in_config(workspace_id)
+        self.set_active_workspace_in_config(workspace_id, tab_id=tab_id, url_hash=url_hash)
         try:
             from header import __root__
             el_state_path = __root__ / "data" / "electron_state.json"
             if el_state_path.parent.exists():
-                el_state = {"active_workspace_id": workspace_id, "updated_at": _utc_now_iso()}
-                tmp_el = el_state_path.with_suffix(".json.tmp")
-                tmp_el.write_text(json.dumps(el_state, indent=2, ensure_ascii=False), encoding="utf-8")
-                os.replace(tmp_el, el_state_path)
+                el_state = {
+                    "active_workspace_id": workspace_id,
+                    "last_active_tab": tab_id,
+                    "last_active_url": url_hash,
+                    "updated_at": _utc_now_iso(),
+                }
+                ObsidianVaultBuilder._atomic_write_text(
+                    el_state_path,
+                    json.dumps(el_state, indent=2, ensure_ascii=False),
+                )
         except Exception:
             pass
         try:
             return self.store.set_active_workspace(workspace_id)
         except Exception as exc:
             logger.warning(f"[WorkspaceManager] Ошибка сохранения активного пространства в БД: {exc}")
-            return True
+        return True
+
+    def _get_ws_lang(self, workspace_id: Optional[str]) -> str:
+        """Определяет язык рабочей области для локализации системных сообщений Git."""
+        if not workspace_id:
+            return resolve_workspace_language(None)
+        try:
+            ws = self.registry.get_workspace(workspace_id)
+            if ws and ws.get("language"):
+                return ws["language"]
+        except Exception:
+            pass
+        return resolve_workspace_language(None, text_hints=(workspace_id,))
 
     def _ensure_git_repo(
         self,
         ws_path: Path,
         name: str = "",
         description: str = "",
-        language: str = "ru",
+        language: Optional[str] = None,
     ) -> str:
         """Инициализирует индивидуальный Git-репозиторий в папке рабочей области, создаёт каталог assets/ и README.md."""
         ws_path.mkdir(parents=True, exist_ok=True)
@@ -393,8 +505,14 @@ class WorkspaceManager:
         assets_dir = ws_path / "assets"
         assets_dir.mkdir(parents=True, exist_ok=True)
 
+        existing_readme = parse_workspace_readme(ws_path / "README.md") if (ws_path / "README.md").exists() else {}
+        eff_lang = resolve_workspace_language(
+            language or existing_readme.get("language"),
+            text_hints=(name, ws_path.name, description),
+        )
+
         git_dir = ws_path / ".git"
-        is_new_repo = not git_dir.exists()
+        is_new_repo = not (git_dir / "HEAD").exists()
         if is_new_repo:
             self._run_git(ws_path, ["init"])
             self._run_git(ws_path, ["config", "user.name", "AI-Assistant"])
@@ -403,77 +521,38 @@ class WorkspaceManager:
             self._run_git(ws_path, ["config", "diff.renames", "true"])
             self._run_git(ws_path, ["config", "status.renames", "true"])
 
-        # Гарантируем наличие файла README.md с первой строкой lang=<language> и главами
+        # Гарантируем наличие файла README.md с первой строкой lang=<eff_lang> и главами
         self.registry.ensure_workspace_readme(
             ws_path,
             name=name,
             description=description,
-            language=language,
+            language=eff_lang,
         )
 
         # Удаляем assets из индекса Git, если каталог случайно был зафиксирован ранее
         if not is_new_repo:
             if self._run_git(ws_path, ["ls-files", "assets"]):
                 self._run_git(ws_path, ["rm", "-r", "--cached", "--ignore-unmatch", "assets"])
-                self._run_git(ws_path, ["commit", "-m", "Git: исключение директории assets из репозитория"])
+                self._run_git(ws_path, ["commit", "-m", get_git_commit_msg("git_exclude_assets", lang=eff_lang)])
 
-        # Создаём .gitignore по умолчанию (каталог assets/ и бинарные медиафайлы исключены из Git)
+        # Создаём локализованный .gitignore из конфигурации workspace_config.json (без хардкода)
         gitignore_path = ws_path / ".gitignore"
-        default_gitignore = (
-            "# AI Windows Admin - Workspace Git Ignore\n"
-            "# Временные файлы и системные кэши\n"
-            "~*\n"
-            "*.tmp\n"
-            "__pycache__/\n"
-            ".DS_Store\n"
-            "Thumbs.db\n\n"
-            "# Каталог исходников исключен из Git\n"
-            "assets/\n\n"
-            "# PDF и медиафайлы по умолчанию (хранятся только конвертированные .md)\n"
-            "*.pdf\n"
-            "*.png\n"
-            "*.jpg\n"
-            "*.jpeg\n"
-            "*.bmp\n"
-            "*.webp\n"
-            "*.tiff\n"
-            "*.gif\n"
-            "*.wav\n"
-            "*.mp3\n"
-            "*.ogg\n"
-            "*.m4a\n"
-            "*.flac\n"
-            "*.aac\n"
-            "*.mp4\n"
-            "*.avi\n"
-            "*.mkv\n"
-            "*.mov\n"
-            "*.webm\n"
-            "*.wmv\n"
-            "*.flv\n"
-            "*.m4v\n"
-            "*.3gp\n"
-            "*.opus\n"
-            "*.wma\n\n"
-            "# Исключения: сохранять конвертированные companion .md и текстовые файлы\n"
-            "!*.md\n"
-            "!*.txt\n"
-        )
+        default_gitignore = build_workspace_gitignore(eff_lang)
         if not gitignore_path.exists():
             try:
                 gitignore_path.write_text(default_gitignore, encoding="utf-8")
                 self._run_git(ws_path, ["add", ".gitignore", "README.md"])
-                self._run_git(ws_path, ["commit", "-m", "Git: начальная конфигурация .gitignore и README.md"])
+                self._run_git(ws_path, ["commit", "-m", get_git_commit_msg("git_init", lang=eff_lang)])
             except Exception as ign_err:
                 logger.warning(f"[WorkspaceManager] Не удалось записать .gitignore в {ws_path}: {ign_err}")
         else:
             try:
                 current_gi = gitignore_path.read_text(encoding="utf-8")
                 if "assets/" not in current_gi:
-                    new_gi = current_gi.rstrip("\n") + "\n\n# Каталог исходников исключен из Git\nassets/\n"
+                    new_gi = current_gi.rstrip("\n") + "\n\nassets/\n"
                     gitignore_path.write_text(new_gi, encoding="utf-8")
                     self._run_git(ws_path, ["add", ".gitignore"])
-                    self._run_git(ws_path, ["commit", "-m", "Git: исключение каталога assets из репозитория"])
+                    self._run_git(ws_path, ["commit", "-m", get_git_commit_msg("git_exclude_assets", lang=eff_lang)])
             except Exception as ign_upd_err:
                 logger.warning(f"[WorkspaceManager] Не удалось обновить .gitignore в {ws_path}: {ign_upd_err}")
 
@@ -481,7 +560,7 @@ class WorkspaceManager:
             untracked = self._run_git(ws_path, ["status", "--porcelain", "README.md"])
             if untracked:
                 self._run_git(ws_path, ["add", "README.md"])
-                self._run_git(ws_path, ["commit", "-m", "Git: добавление README.md рабочего пространства"])
+                self._run_git(ws_path, ["commit", "-m", get_git_commit_msg("git_add_readme", lang=eff_lang)])
 
         head = self._run_git(ws_path, ["rev-parse", "HEAD"])
         return head if head and not head.startswith("fatal") else ""
@@ -491,7 +570,7 @@ class WorkspaceManager:
         workspace_id: str,
         name: str,
         description: str = "",
-        language: str = "ru",
+        language: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Создаёт или выбирает рабочую область data/workspaces/<id>, инициализирует Git, assets/, README.md и config.json."""
         # Очистка идентификатора: поддержка Unicode-букв и цифр, схлопывание разделителей
@@ -499,8 +578,16 @@ class WorkspaceManager:
         ws_path = self.registry.workspace_path(clean_id)
         ws_path.mkdir(parents=True, exist_ok=True)
         (ws_path / "assets").mkdir(parents=True, exist_ok=True)
-        self._ensure_git_repo(ws_path, name=name or clean_id, description=description, language=language)
-        saved = self.registry.save_workspace(clean_id, name=name or clean_id, description=description, language=language)
+
+        existing_ws = self.registry.get_workspace(clean_id)
+        eff_name = name or clean_id
+        eff_lang = resolve_workspace_language(
+            language or (existing_ws.get("language") if existing_ws else None),
+            text_hints=(eff_name, clean_id, description),
+        )
+
+        self._ensure_git_repo(ws_path, name=eff_name, description=description, language=eff_lang)
+        saved = self.registry.save_workspace(clean_id, name=eff_name, description=description, language=eff_lang)
         self.set_active_workspace(clean_id)
         return saved
 
@@ -602,13 +689,95 @@ class WorkspaceManager:
                 logger.debug(f"[WorkspaceManager] Ошибка обновления watchdog: {exc}")
 
     def _get_or_create_workspace(self, workspace_id: str) -> Tuple[Dict[str, Any], Path]:
-        """Возвращает описание и путь рабочей области, создавая её при отсутствии."""
-        existing = self.registry.get_workspace(workspace_id)
+        """Возвращает описание и путь рабочей области, проверяя её наличие в реестре."""
+        clean_id = (workspace_id or "").strip()
+        if not clean_id:
+            raise ValueError("Идентификатор рабочей области не указан.")
+        existing = self.registry.get_workspace(clean_id)
         if existing:
             return existing, Path(existing["path"])
-        ws = self.create_or_select_workspace(workspace_id, name=workspace_id)
-        self._notify_watches_changed()
-        return ws, Path(ws["path"])
+        raise FileNotFoundError(f"Рабочая область '{clean_id}' не найдена. Создание выполняется вручную пользователем.")
+
+    @staticmethod
+    def _build_faiss_chunks(
+        workspace_id: str,
+        doc_id: str,
+        content: str,
+        commit_hash: str = "",
+        language: str = "ru",
+        original_path: Optional[str] = None,
+        host_name: Optional[str] = None,
+        qualified_path: Optional[str] = None,
+        max_chars: int = 1200,
+        overlap: int = 150,
+    ) -> List[Dict[str, Any]]:
+        """Разбивает текст документа на смысловые чанки для векторного индекса FAISS."""
+        cleaned = (content or "").strip()
+        if not cleaned:
+            return []
+
+        raw_chunks: List[str] = []
+        if len(cleaned) <= max_chars:
+            raw_chunks.append(cleaned)
+        else:
+            step = max(1, max_chars - overlap)
+            buf: List[str] = []
+            buf_len = 0
+            for line in cleaned.splitlines():
+                line_len = len(line) + 1
+                if line_len > max_chars:
+                    if buf:
+                        raw_chunks.append("\n".join(buf).strip())
+                        buf, buf_len = [], 0
+                    for start in range(0, len(line), step):
+                        part = line[start : start + max_chars].strip()
+                        if part:
+                            raw_chunks.append(part)
+                    continue
+                if buf and buf_len + line_len > max_chars:
+                    chunk_text = "\n".join(buf).strip()
+                    if chunk_text:
+                        raw_chunks.append(chunk_text)
+                    # Сохраняем хвост длиной ~overlap для контекстного перекрытия
+                    tail: List[str] = []
+                    tail_len = 0
+                    for prev_line in reversed(buf):
+                        if tail_len + len(prev_line) + 1 > overlap:
+                            break
+                        tail.append(prev_line)
+                        tail_len += len(prev_line) + 1
+                    buf = list(reversed(tail))
+                    buf_len = tail_len
+                buf.append(line)
+                buf_len += line_len
+            if buf:
+                tail_text = "\n".join(buf).strip()
+                if tail_text:
+                    raw_chunks.append(tail_text)
+
+        doc_prefix = f"{workspace_id}:{doc_id}:"
+        docs: List[Dict[str, Any]] = []
+        for idx, chunk_text in enumerate(raw_chunks):
+            meta: Dict[str, Any] = {
+                "workspace_id": workspace_id,
+                "document_id": doc_id,
+                "sentence_index": idx,
+                "chunk_index": idx,
+                "commit_hash": commit_hash,
+                "language": language,
+            }
+            if original_path:
+                meta["original_path"] = original_path
+            if host_name:
+                meta["host_name"] = host_name
+            if qualified_path:
+                meta["qualified_path"] = qualified_path
+            docs.append({
+                "id": f"{doc_prefix}c{idx}",
+                "text": chunk_text,
+                "meta": meta,
+            })
+        return docs
 
     def _update_faiss_and_graph_for_doc(
         self,
@@ -617,6 +786,7 @@ class WorkspaceManager:
         commit_hash: str,
         commit_message: Optional[str],
         analysis: Dict[str, Any],
+        content: Optional[str] = None,
         original_path: Optional[str] = None,
         host_name: Optional[str] = None,
         qualified_path: Optional[str] = None,
@@ -624,38 +794,25 @@ class WorkspaceManager:
         """Обновляет векторный индекс FAISS (с очисткой прежних чанков документа) и граф связей WikiLLM."""
         rag = self.get_faiss_rag(workspace_id)
         doc_prefix = f"{workspace_id}:{doc_id}:"
-        # Удаляем устаревшие предложения прежней версии документа из индекса FAISS
-        rag.metadatas = [m for m in rag.metadatas if not str(m.get("id", "")).startswith(doc_prefix)]
+        # Удаляем устаревшие чанки прежней версии документа из SQLite-индекса
+        rag.delete_by_prefix(doc_prefix)
 
-        rag_docs: List[Dict[str, Any]] = []
-        for sent in analysis.get("sentences", []):
-            s_idx = sent.get("sentence_index", 0)
-            s_text = sent.get("text", "")
-            if s_text:
-                meta: Dict[str, Any] = {
-                    "workspace_id": workspace_id,
-                    "document_id": doc_id,
-                    "sentence_index": s_idx,
-                    "commit_hash": commit_hash,
-                    "language": analysis.get("language", "ru"),
-                }
-                if original_path:
-                    meta["original_path"] = original_path
-                if host_name:
-                    meta["host_name"] = host_name
-                if qualified_path:
-                    meta["qualified_path"] = qualified_path
-                rag_docs.append({
-                    "id": f"{doc_prefix}s{s_idx}",
-                    "text": s_text,
-                    "meta": meta,
-                })
+        source_text = content if content is not None else "\n".join(
+            s.get("text", "") for s in analysis.get("sentences", []) if s.get("text")
+        )
+        rag_docs = self._build_faiss_chunks(
+            workspace_id=workspace_id,
+            doc_id=doc_id,
+            content=source_text,
+            commit_hash=commit_hash,
+            language=analysis.get("language", "ru"),
+            original_path=original_path,
+            host_name=host_name,
+            qualified_path=qualified_path,
+        )
 
         if rag_docs:
             rag.add_documents(rag_docs)
-        else:
-            rag._rebuild_index()
-            rag._save()
 
         self.store.update_embedding_registry(
             workspace_id=workspace_id,
@@ -756,6 +913,7 @@ class WorkspaceManager:
                 commit_hash=commit_hash,
                 commit_message=commit_message,
                 analysis=analysis,
+                content=clean_content,
                 original_path=original_path,
                 host_name=resolved_host,
                 qualified_path=final_qual,
@@ -806,8 +964,8 @@ class WorkspaceManager:
     ) -> Dict[str, Any]:
         """Импортирует или обновляет документ в рабочей области, коммитит в Git и индексирует знания."""
         t0 = time.perf_counter()
-        _, ws_path = self._get_or_create_workspace(workspace_id)
-        self._ensure_git_repo(ws_path)
+        ws, ws_path = self._get_or_create_workspace(workspace_id)
+        self._ensure_git_repo(ws_path, name=ws.get("name", ""), description=ws.get("description", ""), language=ws.get("language"))
 
         clean_rel = str(document_id).strip().replace("\\", "/").lstrip("/")
         rel_parts = [p for p in clean_rel.split("/") if p and p not in (".", "..")]
@@ -834,7 +992,11 @@ class WorkspaceManager:
         if not is_in_assets:
             self._run_git(ws_path, ["add", safe_doc_id])
             if self._run_git(ws_path, ["status", "--porcelain", safe_doc_id]):
-                self._run_git(ws_path, ["commit", "-m", commit_message or f"Обновление документа {safe_doc_id}"])
+                ws_lang = self._get_ws_lang(workspace_id)
+                self._run_git(
+                    ws_path,
+                    ["commit", "-m", commit_message or get_git_commit_msg("update_document", lang=ws_lang, name=safe_doc_id)],
+                )
 
         commit_hash = self._run_git(ws_path, ["rev-parse", "HEAD"])
         if commit_hash.startswith("fatal"):
@@ -899,11 +1061,12 @@ class WorkspaceManager:
                     continue
                 try:
                     raw_text = strip_obsidian_enrichment(self._extract_file_sync(fpath))
+                    ws_lang = self._get_ws_lang(workspace_id)
                     self.import_document(
                         workspace_id=workspace_id,
                         document_id=fpath.name,
                         content=raw_text,
-                        commit_message=f"Авто-сканирование {fpath.name}",
+                        commit_message=get_git_commit_msg("auto_scan", lang=ws_lang, name=fpath.name),
                     )
                     indexed_files.append(fpath.name)
                 except Exception as exc:
@@ -929,88 +1092,102 @@ class WorkspaceManager:
     ) -> Dict[str, Any]:
         """Индексирует документ из связанного внешнего источника БЕЗ копирования оригинала, сохраняя полный путь с именем ПК."""
         t0 = time.perf_counter()
-        _, ws_path = self._get_or_create_workspace(workspace_id)
-        self._ensure_git_repo(ws_path)
+        ws, ws_path = self._get_or_create_workspace(workspace_id)
+        self._ensure_git_repo(ws_path, name=ws.get("name", ""), description=ws.get("description", ""), language=ws.get("language"))
 
         resolved_host, clean_local_path, qualified_path = parse_host_qualified_path(file_path, default_host=host_name)
 
         manifest_file = ws_path / ".tracked_sources.json"
-        manifest_data: Dict[str, Any] = {}
-        if manifest_file.exists():
+        with self.get_manifest_lock(ws_path):
+            manifest_data: Dict[str, Any] = {}
+            if manifest_file.exists():
+                try:
+                    manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+                except Exception:
+                    manifest_data = {}
+
+            # Если одноимённый файл уже отслеживается с ДРУГОГО компьютера на этой же флешке — разделяем по имени ПК
+            existing_entry = manifest_data.get(document_id)
+            if existing_entry and existing_entry.get("host_name") and existing_entry["host_name"].upper() != resolved_host.upper():
+                document_id = f"{resolved_host}/{document_id}"
+
+            # Сохраняем текстовый слепок в скрытой служебной директории .extracted_snapshots для реального git diff
+            from apps.ai_assistant.core.workspace_relocator import WorkspaceRelocator
+
+            snapshots_dir = ws_path / ".extracted_snapshots"
+            snapshots_dir.mkdir(parents=True, exist_ok=True)
+            safe_snap_name = "".join(c if c.isalnum() or c in ("_", "-", ".") else "_" for c in f"{resolved_host}_{document_id}") + ".snapshot"
+            new_snap_rel = f".extracted_snapshots/{safe_snap_name}"
+            snap_file = snapshots_dir / safe_snap_name
+
+            # Проверяем, не был ли этот файл перенесён без изменений из другой папки/пути
+            relocated_from = WorkspaceRelocator.reconcile_external_move(
+                wm=self,
+                ws_path=ws_path,
+                manifest_data=manifest_data,
+                new_doc_id=document_id,
+                new_snap_rel=new_snap_rel,
+                content=content,
+                resolved_host=resolved_host,
+            )
+            content_hash = WorkspaceRelocator.compute_clean_hash(content)
+            ObsidianVaultBuilder._atomic_write_text(snap_file, content)
+
+            src_mtime = 0.0
+            src_size = 0
             try:
-                manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+                fp_obj = Path(clean_local_path)
+                if fp_obj.exists() and fp_obj.is_file():
+                    st = fp_obj.stat()
+                    src_mtime = st.st_mtime
+                    src_size = st.st_size
             except Exception:
-                manifest_data = {}
+                pass
 
-        # Если одноимённый файл уже отслеживается с ДРУГОГО компьютера на этой же флешке — разделяем по имени ПК
-        existing_entry = manifest_data.get(document_id)
-        if existing_entry and existing_entry.get("host_name") and existing_entry["host_name"].upper() != resolved_host.upper():
-            document_id = f"{resolved_host}/{document_id}"
+            entry_payload: Dict[str, Any] = {
+                "host_name": resolved_host,
+                "file_path": str(clean_local_path),
+                "qualified_path": qualified_path,
+                "snapshot": new_snap_rel,
+                "updated_at": time.time(),
+                "content_length": len(content),
+                "content_hash": content_hash,
+                "source_mtime": src_mtime,
+                "source_size": src_size,
+            }
+            if relocated_from:
+                entry_payload["moved_from"] = relocated_from
+            manifest_data[document_id] = entry_payload
+            ObsidianVaultBuilder._atomic_write_text(
+                manifest_file,
+                json.dumps(manifest_data, indent=2, ensure_ascii=False),
+            )
 
-        # Сохраняем текстовый слепок в скрытой служебной директории .extracted_snapshots для реального git diff
-        from apps.ai_assistant.core.workspace_relocator import WorkspaceRelocator
+            ws_lang = self._get_ws_lang(workspace_id)
+            if relocated_from:
+                self._run_git(ws_path, ["add", "-f", "-A", ".tracked_sources.json", ".extracted_snapshots"])
+                default_commit_msg = get_git_commit_msg(
+                    "move_source",
+                    lang=ws_lang,
+                    host=resolved_host,
+                    relocated_from=relocated_from,
+                    name=document_id,
+                )
+            else:
+                self._run_git(ws_path, ["add", "-f", ".tracked_sources.json", new_snap_rel])
+                default_commit_msg = get_git_commit_msg(
+                    "sync_source",
+                    lang=ws_lang,
+                    host=resolved_host,
+                    name=document_id,
+                )
 
-        snapshots_dir = ws_path / ".extracted_snapshots"
-        snapshots_dir.mkdir(parents=True, exist_ok=True)
-        safe_snap_name = "".join(c if c.isalnum() or c in ("_", "-", ".") else "_" for c in f"{resolved_host}_{document_id}") + ".snapshot"
-        new_snap_rel = f".extracted_snapshots/{safe_snap_name}"
-        snap_file = snapshots_dir / safe_snap_name
+            if self._run_git(ws_path, ["status", "--porcelain", ".tracked_sources.json", ".extracted_snapshots"]):
+                self._run_git(ws_path, ["commit", "-m", commit_message or default_commit_msg])
 
-        # Проверяем, не был ли этот файл перенесён без изменений из другой папки/пути
-        relocated_from = WorkspaceRelocator.reconcile_external_move(
-            wm=self,
-            ws_path=ws_path,
-            manifest_data=manifest_data,
-            new_doc_id=document_id,
-            new_snap_rel=new_snap_rel,
-            content=content,
-            resolved_host=resolved_host,
-        )
-        content_hash = WorkspaceRelocator.compute_clean_hash(content)
-        snap_file.write_text(content, encoding="utf-8")
-
-        src_mtime = 0.0
-        src_size = 0
-        try:
-            fp_obj = Path(clean_local_path)
-            if fp_obj.exists() and fp_obj.is_file():
-                st = fp_obj.stat()
-                src_mtime = st.st_mtime
-                src_size = st.st_size
-        except Exception:
-            pass
-
-        entry_payload: Dict[str, Any] = {
-            "host_name": resolved_host,
-            "file_path": str(clean_local_path),
-            "qualified_path": qualified_path,
-            "snapshot": new_snap_rel,
-            "updated_at": time.time(),
-            "content_length": len(content),
-            "content_hash": content_hash,
-            "source_mtime": src_mtime,
-            "source_size": src_size,
-        }
-        if relocated_from:
-            entry_payload["moved_from"] = relocated_from
-        manifest_data[document_id] = entry_payload
-        tmp_manifest = manifest_file.with_suffix(".json.tmp")
-        tmp_manifest.write_text(json.dumps(manifest_data, indent=2, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp_manifest, manifest_file)
-
-        if relocated_from:
-            self._run_git(ws_path, ["add", "-A", ".tracked_sources.json", ".extracted_snapshots"])
-            default_commit_msg = f"Перемещение источника без изменений ({resolved_host}): {relocated_from} -> {document_id}"
-        else:
-            self._run_git(ws_path, ["add", ".tracked_sources.json", new_snap_rel])
-            default_commit_msg = f"Синхронизация источника ({resolved_host}): {document_id}"
-
-        if self._run_git(ws_path, ["status", "--porcelain", ".tracked_sources.json", ".extracted_snapshots"]):
-            self._run_git(ws_path, ["commit", "-m", commit_message or default_commit_msg])
-
-        commit_hash = self._run_git(ws_path, ["rev-parse", "HEAD"])
-        if commit_hash.startswith("fatal"):
-            commit_hash = "HEAD"
+            commit_hash = self._run_git(ws_path, ["rev-parse", "HEAD"])
+            if commit_hash.startswith("fatal"):
+                commit_hash = "HEAD"
 
         return self._persist_and_index_doc(
             workspace_id=workspace_id,
@@ -1251,12 +1428,13 @@ class WorkspaceManager:
                             ocr_mode=ocr_mode,
                             audio_mode=audio_mode,
                         )
+                        ws_lang = self._get_ws_lang(workspace_id)
                         idx_res = self.index_document_from_source(
                             workspace_id=workspace_id,
                             document_id=p.name,
                             content=extracted["text"],
                             file_path=str(p),
-                            commit_message=commit_message or f"Индексация связанного файла {p.name}",
+                            commit_message=commit_message or get_git_commit_msg("index_linked_file", lang=ws_lang, name=p.name),
                             force_reanalyze=force_reanalyze,
                             host_name=src_host,
                         )
@@ -1285,12 +1463,13 @@ class WorkspaceManager:
                                         audio_mode=audio_mode,
                                     )
                                     rel_name = str(f.relative_to(dir_path)).replace("\\", "/")
+                                    ws_lang = self._get_ws_lang(workspace_id)
                                     idx_res = self.index_document_from_source(
                                         workspace_id=workspace_id,
                                         document_id=rel_name,
                                         content=extracted["text"],
                                         file_path=str(f),
-                                        commit_message=commit_message or f"Индексация связанного файла {rel_name}",
+                                        commit_message=commit_message or get_git_commit_msg("index_linked_file", lang=ws_lang, name=rel_name),
                                         force_reanalyze=force_reanalyze,
                                         host_name=src_host,
                                     )
@@ -1361,29 +1540,19 @@ class WorkspaceManager:
         rag = self.get_faiss_rag(workspace_id)
         rag.clear()
         docs = self.store.list_documents(workspace_id)
-        total_chunks = 0
+        all_chunks: List[Dict[str, Any]] = []
         for d in docs:
-            content = d.get("content") or ""
-            doc_id = d["document_id"]
-            commit_hash = d.get("commit_hash", "")
-            analysis = self.analyzers.analyze_text(content, document_id=doc_id, language=d.get("language"))
-            batch = [
-                {
-                    "id": f"{workspace_id}:{doc_id}:s{sent.get('sentence_index', 0)}",
-                    "text": sent.get("text", ""),
-                    "meta": {
-                        "workspace_id": workspace_id,
-                        "document_id": doc_id,
-                        "sentence_index": sent.get("sentence_index", 0),
-                        "commit_hash": commit_hash,
-                        "language": d.get("language", "ru"),
-                    },
-                }
-                for sent in analysis.get("sentences", [])
-                if sent.get("text", "")
-            ]
-            if batch:
-                total_chunks += rag.add_documents(batch)
+            all_chunks.extend(
+                self._build_faiss_chunks(
+                    workspace_id=workspace_id,
+                    doc_id=d["document_id"],
+                    content=d.get("content") or "",
+                    commit_hash=d.get("commit_hash", ""),
+                    language=d.get("language") or "ru",
+                )
+            )
+
+        total_chunks = rag.add_documents(all_chunks) if all_chunks else 0
 
         self.store.update_embedding_registry(
             workspace_id=workspace_id,
@@ -1397,6 +1566,76 @@ class WorkspaceManager:
             "workspace_id": workspace_id,
             "total_vectors": rag.count(),
             "chunks_indexed": total_chunks,
+        }
+
+    def get_workspace_rag_status(self, workspace_id: str) -> Dict[str, Any]:
+        """Возвращает статус RAG-индекса для указанной рабочей области."""
+        clean_id = str(workspace_id).strip()
+        ws_info = self.registry.get_workspace(clean_id) or {}
+        rag = self.get_faiss_rag(clean_id)
+        docs = self.store.list_documents(clean_id)
+        chunks = self.store.get_document_chunks(clean_id)
+        vectors_count = rag.count()
+        total_docs = len(docs)
+        total_chunks = len(chunks)
+
+        if vectors_count > 0:
+            status = "ready"
+        elif total_docs == 0:
+            status = "empty"
+        else:
+            status = "needs_rebuild"
+
+        return {
+            "status": status,
+            "workspace_id": clean_id,
+            "name": ws_info.get("name", clean_id),
+            "language": ws_info.get("language", "ru"),
+            "documents_count": total_docs,
+            "chunks_count": total_chunks,
+            "vectors_count": vectors_count,
+            "dimension": rag.dimension,
+            "index_path": str(rag.index_file),
+        }
+
+    def build_workspace_rag(self, workspace_id: str, scan_files: bool = True) -> Dict[str, Any]:
+        """Строит или перестраивает RAG-индекс для конкретной рабочей области."""
+        clean_id = str(workspace_id).strip()
+        if scan_files:
+            try:
+                self.scan_and_index_workspace(clean_id)
+            except Exception as exc:
+                logger.warning(f"[build_workspace_rag] Ошибка автосканирования для '{clean_id}': {exc}")
+
+        rebuild_res = self.rebuild_faiss_index(clean_id)
+        status_info = self.get_workspace_rag_status(clean_id)
+        return {
+            **rebuild_res,
+            **status_info,
+        }
+
+    def build_all_workspaces_rag(self, scan_files: bool = True) -> Dict[str, Any]:
+        """Строит RAG-индексы во всех зарегистрированных рабочих областях."""
+        workspaces = self.registry.list_workspaces()
+        results: List[Dict[str, Any]] = []
+        for ws in workspaces:
+            ws_id = ws.get("workspace_id")
+            if not ws_id:
+                continue
+            try:
+                res = self.build_workspace_rag(ws_id, scan_files=scan_files)
+                results.append(res)
+            except Exception as exc:
+                logger.error(f"[build_all_workspaces_rag] Ошибка сборки RAG для '{ws_id}': {exc}")
+                results.append({
+                    "status": "error",
+                    "workspace_id": ws_id,
+                    "error": str(exc),
+                })
+        return {
+            "status": "ok",
+            "total_workspaces": len(workspaces),
+            "results": results,
         }
 
     def seed_demo_workspace(self, workspace_id: str = "default") -> Dict[str, Any]:
@@ -1663,24 +1902,35 @@ class WorkspaceManager:
                 internal_file.read_text(encoding="utf-8", errors="replace")
             ).strip()
 
+        ws_lang = self._get_ws_lang(workspace_id)
+        chat_fact_header_titles = {
+            "ru": "# Факты из чата",
+            "he": "# עובדות מהצ'אט",
+            "en": "# Chat Facts",
+            "uk": "# Факти з чату",
+        }
+        header_title = chat_fact_header_titles.get(ws_lang, "# עובדות מהצ'אט" if ws_lang == "he" else "# Факты из чата")
+
         if existing_clean:
+            if ws_lang == "he" and existing_clean.startswith("# Факты из чата"):
+                existing_clean = existing_clean.replace("# Факты из чата", "# עובדות מהצ'אט", 1)
             existing_lines = [ln.strip() for ln in existing_clean.splitlines() if ln.strip()]
             if clean_fact in existing_lines:
                 updated_content = existing_clean
             else:
                 updated_content = f"{existing_clean}\n{clean_fact}"
         else:
-            updated_content = f"# Факты из чата\n\n{clean_fact}"
+            updated_content = f"{header_title}\n\n{clean_fact}"
 
         eff_lang = language or detect_language(clean_fact)
         if eff_lang == "unknown":
-            eff_lang = "ru"
+            eff_lang = "ru" if ws_lang != "he" else "he"
 
         import_res = self.import_document(
             workspace_id=workspace_id,
             document_id=safe_doc_id,
             content=updated_content,
-            commit_message=f"Добавлен факт из чата: {clean_fact[:60]}",
+            commit_message=get_git_commit_msg("chat_fact_add", lang=ws_lang, fact=clean_fact[:60]),
             language=eff_lang,
             force_reanalyze=True,
         )
@@ -1772,7 +2022,10 @@ class WorkspaceManager:
                 )
                 self._run_git(ws_path, ["add", "."])
                 if self._run_git(ws_path, ["status", "--porcelain"]):
-                    self._run_git(ws_path, ["commit", "-m", f"Obsidian sync факта из чата: {clean_fact[:50]}"])
+                    self._run_git(
+                        ws_path,
+                        ["commit", "-m", get_git_commit_msg("chat_fact_sync", lang=ws_lang, fact=clean_fact[:50])],
+                    )
             except Exception as obs_err:
                 logger.warning(f"[WorkspaceManager] Ошибка синхронизации Obsidian для факта из чата: {obs_err}")
 
@@ -1789,6 +2042,25 @@ class WorkspaceManager:
             "facts_count": len(all_doc_facts),
             "facts": all_doc_facts,
         }
+
+    def add_task_from_chat(
+        self,
+        workspace_id: str,
+        task_text: str,
+        document_id: str = "chat_tasks.md",
+        language: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Ставит задачу через чат во внутренние файлы рабочей области, TaskOrchestrator и календарь."""
+        from apps.ai_assistant.core.chat_task_service import create_task_from_chat
+
+        return create_task_from_chat(
+            wm=self,
+            workspace_id=workspace_id,
+            task_text=task_text,
+            document_id=document_id,
+            language=language,
+        )
+
 
 
 

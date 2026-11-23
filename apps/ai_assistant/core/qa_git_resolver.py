@@ -14,7 +14,7 @@
 #
 #     git_ctx, sources, fallback_ans = await QaGitResolver.resolve(
 #         wm=workspace_manager,
-#         workspace_id="דוד_משה",
+#         workspace_id="my_workspace",
 #         parsed_q=parsed_question,
 #         language="he",
 #     )
@@ -24,7 +24,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-19 17:47:00
 # =============================================================================
 
 from __future__ import annotations

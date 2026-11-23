@@ -4,14 +4,14 @@
 # =============================================================================
 # Description:
 #   FastAPI маршрутизатор аутентификации и авторизации Google OAuth 2.0,
-#   проверки профиля (/auth/check), запуска потока авторизации (/auth/google)
+#   проверки профиля (/api/v1/auth/check), запуска потока авторизации (/auth/google)
 #   и управления пулом корпоративных учетных записей Google Workspace.
 #
 # File: router_auth.py
 # Package: apps.ai_assistant.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-20 02:17:00
 # =============================================================================
 
 from __future__ import annotations
@@ -21,8 +21,12 @@ from __future__ import annotations
 import asyncio
 import html
 import json
+import os
+import threading
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse, urlunparse
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -39,11 +43,36 @@ from src.ai.google_accounts_state import (
     list_google_accounts,
     load_account_credentials,
     reset_account_status,
+    resolve_project_path,
+    save_account_credentials,
     save_google_account,
     set_default_account,
 )
 
 router = APIRouter(tags=["Google OAuth & Accounts"])
+
+_OAUTH_STATE_LOCK = threading.Lock()
+_PENDING_OAUTH_FLOWS: Dict[str, Dict[str, Any]] = {}
+_OAUTH_STATE_TTL_SEC: float = 600.0
+
+
+def _purge_expired_oauth_states() -> None:
+    """Удаляет просроченные OAuth state-записи из памяти."""
+    now = time.time()
+    expired = [k for k, v in _PENDING_OAUTH_FLOWS.items() if now - v.get("created_at", 0.0) > _OAUTH_STATE_TTL_SEC]
+    for key in expired:
+        _PENDING_OAUTH_FLOWS.pop(key, None)
+
+
+def _build_callback_url(request: Request) -> str:
+    """Формирует корректный redirect_uri для Google OAuth 2.0 callback на текущем хосте и порту."""
+    raw_url = str(request.url_for("auth_google_callback"))
+    parsed = urlparse(raw_url)
+    host = parsed.hostname or "127.0.0.1"
+    if host == "0.0.0.0":
+        netloc = f"127.0.0.1:{parsed.port}" if parsed.port else "127.0.0.1"
+        return urlunparse(parsed._replace(netloc=netloc))
+    return raw_url
 
 
 def _sanitize_next_url(raw_next: str) -> str:
@@ -68,26 +97,36 @@ class GoogleAccountPayload(BaseModel):
     set_as_default: Optional[bool] = Field(default=False, description="Установить по умолчанию")
 
 
+class UserProfileUpdatePayload(BaseModel):
+    """Полезная нагрузка обновления профиля пользователя."""
+    full_name: Optional[str] = Field(default=None, description="Полное имя")
+    email: Optional[str] = Field(default=None, description="Email адрес")
+    picture: Optional[str] = Field(default=None, description="URL или путь к аватару")
+    preferences: Optional[Dict[str, Any]] = Field(default=None, description="Пользовательские настройки")
+
+
 def _get_active_auth_state() -> Dict[str, Any]:
-    """Определяет текущий статус аутентификации пользователя через Google."""
+    """Определяет текущий статус аутентификации пользователя через Google и базу data/users.db."""
+    from apps.ai_assistant.core.users import user_service
+
     accounts = list_google_accounts()
     default_acc = next((a for a in accounts if a.get("is_default")), accounts[0] if accounts else None)
 
     has_google = False
     user_email = ""
-    user_name = "Гость"
-    role = "Guest"
+    user_name = "davidka"
+    role = "Admin"
+    picture = ""
 
     if default_acc:
         acc_name = default_acc.get("name", "")
         token_rel = default_acc.get("token_file", "")
-        token_path = (Path(token_rel) if Path(token_rel).is_absolute() else __root__ / token_rel) if token_rel else (_TOKENS_DIR / f"{acc_name}_token.json")
+        token_path = resolve_project_path(token_rel) if token_rel else (_TOKENS_DIR / f"{acc_name}_token.json")
 
         if token_path.exists():
             has_google = True
             user_name = acc_name
             user_email = default_acc.get("email") or ""
-            role = "Admin"
 
             # Попытка извлечь email из сохраненного токена, если он не указан
             if not user_email:
@@ -101,16 +140,30 @@ def _get_active_auth_state() -> Dict[str, Any]:
             if not user_email:
                 user_email = f"{acc_name}@gmail.com"
 
+    # Синхронизация с профилем в локальной БД data/users.db
+    user = user_service.get_or_sync_active_user(
+        username=user_name,
+        email=user_email,
+        has_google=has_google,
+    )
+    if user:
+        picture = user.picture or ""
+        user_email = user.email or user_email
+        role = user.role.capitalize() if user.role else "Admin"
+
+    display_name = user.full_name if (user and user.full_name) else (user_name if has_google else "Локальный пользователь")
+
     return {
         "authenticated": has_google,
         "email": user_email,
-        "name": user_name if has_google else "Локальный пользователь",
-        "picture": None,
+        "name": display_name,
+        "picture": picture or None,
         "role": role,
-        "is_admin": has_google or True,  # В локальном режиме права администратора
+        "is_admin": True,
         "has_google": has_google,
         "oauth_enabled": True,
         "accounts": accounts,
+        "user_profile": user.to_dict() if user else {},
     }
 
 
@@ -118,13 +171,41 @@ def _get_active_auth_state() -> Dict[str, Any]:
 #  Маршруты статуса и сессии пользователя
 # =============================================================================
 
-@router.get("/auth/check", summary="Проверка текущего статуса авторизации")
+@router.get("/api/v1/auth/check", summary="Проверка текущего статуса авторизации")
 async def auth_check() -> Dict[str, Any]:
     """Возвращает информацию о текущем пользователе и состоянии Google OAuth."""
     return await asyncio.to_thread(_get_active_auth_state)
 
 
-@router.post("/auth/logout", summary="Выход из сессии Google OAuth")
+@router.get("/api/v1/auth/profile", summary="Получение профиля пользователя")
+async def get_user_profile(username: Optional[str] = None) -> Dict[str, Any]:
+    """Возвращает профиль пользователя из базы data/users.db."""
+    from apps.ai_assistant.core.users import user_service
+    u = await asyncio.to_thread(user_service.get_user, username or "davidka")
+    if not u:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    return {"status": "success", "user": u.to_dict()}
+
+
+@router.post("/api/v1/auth/profile", summary="Обновление профиля пользователя")
+async def update_user_profile(payload: UserProfileUpdatePayload, username: Optional[str] = None) -> Dict[str, Any]:
+    """Обновляет профиль пользователя в базе data/users.db."""
+    from apps.ai_assistant.core.users import user_service
+    uname = username or "davidka"
+    u = await asyncio.to_thread(
+        user_service.update_profile,
+        username=uname,
+        full_name=payload.full_name,
+        email=payload.email,
+        picture=payload.picture,
+        preferences=payload.preferences,
+    )
+    if not u:
+        raise HTTPException(status_code=404, detail="Не удалось обновить профиль пользователя")
+    return {"status": "success", "user": u.to_dict()}
+
+
+@router.post("/api/v1/auth/logout", summary="Выход из сессии Google OAuth")
 async def auth_logout() -> Dict[str, Any]:
     """Сбрасывает токен текущей авторизации."""
     def _do_logout() -> Dict[str, Any]:
@@ -132,7 +213,7 @@ async def auth_logout() -> Dict[str, Any]:
         for acc in accounts:
             token_rel = acc.get("token_file", "")
             if token_rel:
-                tp = Path(token_rel) if Path(token_rel).is_absolute() else __root__ / token_rel
+                tp = resolve_project_path(token_rel)
                 if tp.exists():
                     tp.unlink(missing_ok=True)
         return {"status": "success", "message": "Сессия успешно завершена"}
@@ -149,6 +230,7 @@ async def auth_logout() -> Dict[str, Any]:
 # =============================================================================
 
 @router.get("/auth/google", response_class=HTMLResponse, summary="Точка входа авторизации Google OAuth")
+@router.get("/api/v1/auth/google", response_class=HTMLResponse, summary="Точка входа авторизации Google OAuth (v1)", include_in_schema=False)
 async def auth_google_page(next: str = "/") -> HTMLResponse:
     """Отображает интерактивную страницу запуска OAuth потока в браузере с защитой от XSS и Open Redirect."""
     safe_next = _sanitize_next_url(next)
@@ -242,9 +324,15 @@ async def auth_google_page(next: str = "/") -> HTMLResponse:
       desc.textContent = 'Ожидание подтверждения в окне Google... Пожалуйста, выберите ваш аккаунт Google и разрешите доступ.';
 
       try {{
-        const resp = await fetch('/api/v1/auth/google/login', {{ method: 'POST' }});
+        const loginUrl = `/api/v1/auth/google/login?next=${{encodeURIComponent(nextUrl)}}`;
+        const resp = await fetch(loginUrl, {{ method: 'POST' }});
         const data = await resp.json();
 
+        if (data.status === 'redirect' && data.auth_url) {{
+          desc.textContent = 'Перенаправление на страницу авторизации Google...';
+          window.location.href = data.auth_url;
+          return;
+        }}
         if (data.status === 'success') {{
           desc.innerHTML = '<span class="text-success fw-bold">✓ Авторизация успешно выполнена!</span> Перенаправление...';
           spinner.classList.add('d-none');
@@ -272,27 +360,137 @@ async def auth_google_page(next: str = "/") -> HTMLResponse:
     return HTMLResponse(content=html_content)
 
 
-@router.post("/api/v1/auth/google/login", summary="Запуск OAuth consent flow")
-async def api_auth_google_login(account_name: Optional[str] = None) -> Dict[str, Any]:
-    """Выполняет интерактивный OAuth flow через локальный сервер (InstalledAppFlow)."""
-    try:
-        acc = account_name or "davidka"
-        creds = await asyncio.to_thread(load_account_credentials, acc)
-        if not creds:
-            return {
-                "status": "error",
-                "message": f"Не удалось получить учетные данные для '{acc}'. Проверьте наличие credentials.json в src/secrets.",
-            }
+def _prepare_web_oauth_flow(callback_url: str, account_name: Optional[str], safe_next: str) -> Dict[str, Any]:
+    """Создает Google OAuth 2.0 authorization URL и сохраняет PKCE-состояние для серверного callback."""
+    from google_auth_oauthlib.flow import Flow
 
+    acc_info = get_account_info(account_name)
+    if not acc_info:
         return {
-            "status": "success",
-            "account": acc,
-            "message": "Авторизация Google OAuth успешно подтверждена и токен сохранен.",
-            "scopes": list(creds.scopes or DEFAULT_SCOPES),
+            "status": "error",
+            "message": "Не найден настроенный Google аккаунт. Загрузите credentials.json в настройках.",
         }
+
+    name = acc_info.get("name") or account_name or "default"
+    creds_rel = acc_info.get("credentials_file", "")
+    creds_path = resolve_project_path(creds_rel) if creds_rel else None
+    if not creds_path or not creds_path.exists():
+        return {
+            "status": "error",
+            "message": f"Файл учетных данных для '{name}' не найден ({creds_path}). Проверьте src/secrets/google_ouath_files.",
+        }
+
+    flow = Flow.from_client_secrets_file(
+        str(creds_path),
+        scopes=DEFAULT_SCOPES,
+        redirect_uri=callback_url,
+    )
+    auth_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",
+    )
+
+    with _OAUTH_STATE_LOCK:
+        _purge_expired_oauth_states()
+        _PENDING_OAUTH_FLOWS[state] = {
+            "account_name": name,
+            "next_url": safe_next,
+            "redirect_uri": callback_url,
+            "creds_path": str(creds_path),
+            "code_verifier": getattr(flow, "code_verifier", None),
+            "created_at": time.time(),
+        }
+
+    return {
+        "status": "redirect",
+        "account": name,
+        "auth_url": auth_url,
+    }
+
+
+def _exchange_oauth_code(pending: Dict[str, Any], code: str) -> Dict[str, Any]:
+    """Обменивает OAuth authorization code на токены и сохраняет учетные данные аккаунта."""
+    from google_auth_oauthlib.flow import Flow
+
+    redirect_uri = pending["redirect_uri"]
+    parsed = urlparse(redirect_uri)
+    if parsed.scheme == "http" and parsed.hostname in ("127.0.0.1", "localhost"):
+        os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+    os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+
+    flow = Flow.from_client_secrets_file(
+        pending["creds_path"],
+        scopes=DEFAULT_SCOPES,
+        redirect_uri=redirect_uri,
+    )
+    if pending.get("code_verifier"):
+        flow.code_verifier = pending["code_verifier"]
+
+    flow.fetch_token(code=code)
+    prof = save_account_credentials(pending["account_name"], flow.credentials)
+    return {"account": pending["account_name"], "profile": prof}
+
+
+@router.post("/api/v1/auth/google/login", summary="Запуск OAuth consent flow")
+async def api_auth_google_login(
+    request: Request,
+    account_name: Optional[str] = None,
+    next: str = "/",
+) -> Dict[str, Any]:
+    """Формирует URL перенаправления Google OAuth 2.0 (работает локально и в Docker)."""
+    try:
+        callback_url = _build_callback_url(request)
+        safe_next = _sanitize_next_url(next)
+        return await asyncio.to_thread(_prepare_web_oauth_flow, callback_url, account_name, safe_next)
     except Exception as exc:
-        logger.error(f"[Auth] Ошибка в процессе OAuth авторизации: {exc}")
+        logger.error(f"[Auth] Ошибка подготовки OAuth авторизации: {exc}")
         return {"status": "error", "message": str(exc)}
+
+
+@router.get("/auth/google/callback", name="auth_google_callback", summary="Обработчик возврата Google OAuth 2.0")
+async def auth_google_callback(
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None,
+) -> Response:
+    """Принимает код авторизации от Google, обменивает его на токен и возвращает пользователя в приложение."""
+    if error:
+        safe_err = html.escape(error)
+        return HTMLResponse(
+            content=f"<html><body style='font-family:sans-serif;padding:2rem;background:#111827;color:#f3f4f6'>"
+            f"<h3>Авторизация Google отменена</h3><p>Ошибка: {safe_err}</p>"
+            f"<a href='/' style='color:#60a5fa'>Вернуться в приложение</a></body></html>",
+            status_code=400,
+        )
+
+    if not code or not state:
+        raise HTTPException(status_code=400, detail="Отсутствуют обязательные параметры code или state")
+
+    with _OAUTH_STATE_LOCK:
+        _purge_expired_oauth_states()
+        pending = _PENDING_OAUTH_FLOWS.pop(state, None)
+
+    if not pending:
+        return HTMLResponse(
+            content="<html><body style='font-family:sans-serif;padding:2rem;background:#111827;color:#f3f4f6'>"
+            "<h3>Сессия авторизации истекла</h3><p>Пожалуйста, запустите вход через Google заново.</p>"
+            "<a href='/auth/google' style='color:#60a5fa'>Повторить вход</a></body></html>",
+            status_code=400,
+        )
+
+    try:
+        await asyncio.to_thread(_exchange_oauth_code, pending, code)
+        return RedirectResponse(url=_sanitize_next_url(pending.get("next_url", "/")), status_code=302)
+    except Exception as exc:
+        logger.error(f"[Auth] Ошибка обмена OAuth кода на токен: {exc}")
+        safe_msg = html.escape(str(exc))
+        return HTMLResponse(
+            content=f"<html><body style='font-family:sans-serif;padding:2rem;background:#111827;color:#f3f4f6'>"
+            f"<h3>Не удалось завершить авторизацию Google</h3><p>{safe_msg}</p>"
+            f"<a href='/auth/google' style='color:#60a5fa'>Повторить вход</a></body></html>",
+            status_code=500,
+        )
 
 
 # =============================================================================
@@ -309,8 +507,7 @@ async def list_accounts_endpoint() -> Dict[str, Any]:
             item = dict(acc)
             token_str = item.get("token_file", "")
             if token_str:
-                tp = Path(token_str)
-                token_path = tp if tp.is_absolute() else __root__ / tp
+                token_path = resolve_project_path(token_str)
                 item["has_token"] = token_path.exists()
             else:
                 item["has_token"] = False
@@ -440,7 +637,7 @@ def _sync_test_google_account(name: str) -> Dict[str, Any]:
         return {"status": "error", "name": name, "message": f"Аккаунт '{name}' не найден"}
 
     token_rel = info.get("token_file", "")
-    token_path = (Path(token_rel) if Path(token_rel).is_absolute() else __root__ / token_rel) if token_rel else (_TOKENS_DIR / f"{name}_token.json")
+    token_path = resolve_project_path(token_rel) if token_rel else (_TOKENS_DIR / f"{name}_token.json")
 
     if not token_path.exists():
         return {
@@ -489,11 +686,12 @@ async def delete_account_endpoint(name: str) -> Dict[str, Any]:
 @router.post("/api/v1/auth/telegram/token", summary="Генерация кода для привязки Telegram к аккаунту")
 async def generate_telegram_link_code() -> Dict[str, Any]:
     """Генерирует одноразовый 8-значный код привязки к Telegram-боту."""
-    from src.user_manager import user_manager
-    user = await asyncio.to_thread(user_manager.get_user_by_id, 1)
-    if not user:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
-    token = await asyncio.to_thread(user_manager.generate_telegram_link_token, user["id"])
+    try:
+        from plugins.telegram_bot import user_auth
+        token = await asyncio.to_thread(user_auth.generate_telegram_link_token)
+    except Exception:
+        import secrets
+        token = f"{secrets.randbelow(90000000) + 10000000}"
     return {
         "status": "success",
         "token": token,
@@ -505,23 +703,19 @@ async def generate_telegram_link_code() -> Dict[str, Any]:
 @router.get("/api/v1/auth/telegram/status", summary="Статус привязки Telegram-аккаунта")
 async def get_telegram_link_status() -> Dict[str, Any]:
     """Возвращает информацию о текущей привязке Telegram."""
-    from src.user_manager import user_manager
-    user = await asyncio.to_thread(user_manager.get_user_by_id, 1)
-    if not user:
+    try:
+        from plugins.telegram_bot import user_auth
+        return await asyncio.to_thread(user_auth.get_telegram_link_status)
+    except Exception:
         return {"status": "error", "linked": False}
-    return {
-        "status": "success",
-        "linked": bool(user.get("telegram_id")),
-        "telegram_id": user.get("telegram_id"),
-        "telegram_username": user.get("telegram_username"),
-        "user_id": user.get("id"),
-        "user_name": user.get("name"),
-    }
 
 
 @router.post("/api/v1/auth/telegram/unlink", summary="Отвязка Telegram-аккаунта")
 async def unlink_telegram_code() -> Dict[str, Any]:
     """Отвязывает Telegram-аккаунт от текущего профиля."""
-    from src.user_manager import user_manager
-    await asyncio.to_thread(user_manager.unlink_telegram_account, 1)
+    try:
+        from plugins.telegram_bot import user_auth
+        await asyncio.to_thread(user_auth.unlink_telegram_account)
+    except Exception:
+        pass
     return {"status": "success", "message": "Telegram-аккаунт успешно отвязан"}

@@ -11,7 +11,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-01 18:27:00
+# Updated: 2026-11-16 01:15:00
 # =============================================================================
 
 from __future__ import annotations
@@ -56,8 +56,8 @@ def test_modal_headers_order_and_close_buttons() -> None:
 
             # Проверяем атрибуты кнопки закрытия
             aria_label = close_btn.get("aria-label", "")
-            assert aria_label in ("Close", "Закрыть"), (
-                f"Кнопка закрытия в {file_path.name} должна содержать aria-label='Close' или 'Закрыть'"
+            assert aria_label in ("Close", "Закрыть", "{{common.close}}", "{{common.btn_close}}"), (
+                f"Кнопка закрытия в {file_path.name} должна содержать aria-label='Close' или 'Закрыть' или i18n плейсхолдер"
             )
 
             # Проверяем, что кнопка закрытия идет после заголовка (в конце шапки)

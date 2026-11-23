@@ -11,7 +11,7 @@
 # Package: apps.ai_assistant.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 19:44:00
+# Updated: 2026-11-19 23:52:00
 # =============================================================================
 
 from __future__ import annotations
@@ -325,4 +325,42 @@ def test_ensure_paperless_running_async_runs_in_daemon_thread(monkeypatch) -> No
     assert t.daemon is True
     assert called.wait(timeout=2.0)
     t.join(timeout=2.0)
+
+
+def test_build_paperless_doc_id_uses_sanitized_title() -> None:
+    """build_paperless_doc_id формирует читаемый doc_id из title/original_file_name с защитой от спецсимволов."""
+    from apps.ai_assistant.core.paperless_sync import build_paperless_doc_id
+
+    assert build_paperless_doc_id({"id": 21, "title": "01_vet_exam_physical_checklist"}, 21) == (
+        "paperless/01_vet_exam_physical_checklist_21"
+    )
+    assert build_paperless_doc_id({"id": 22, "title": "Договор: №1/2026.pdf"}, 22) == (
+        "paperless/Договор_ №1_2026_22"
+    )
+    assert build_paperless_doc_id({"id": 23, "title": "", "original_file_name": "scan_he.PDF"}, 23) == (
+        "paperless/scan_he_23"
+    )
+    assert build_paperless_doc_id({"id": 24, "title": ""}, 24) == "paperless/24"
+
+
+def test_sync_workspace_from_paperless_passes_readable_doc_id() -> None:
+    """sync_workspace_from_paperless передаёт в _persist_and_index_doc читаемый doc_id с названием документа."""
+    from apps.ai_assistant.core.paperless_sync import sync_workspace_from_paperless
+
+    wm = MagicMock()
+    wm.get_workspace.return_value = {"name": "דוד משה"}
+    connector = MagicMock()
+    connector.workspace_tag_name.return_value = "דוד משה"
+    connector.iter_documents.return_value = [
+        {"id": 21, "title": "01_vet_exam_physical_checklist"},
+    ]
+    connector.get_document_content.return_value = "Текст осмотра коровы Зины"
+
+    report = sync_workspace_from_paperless(wm, connector, "דוד_משה")
+    assert report == {"workspace_id": "דוד_משה", "indexed": 1, "failed": 0}
+    kwargs = wm._persist_and_index_doc.call_args.kwargs
+    assert kwargs["doc_id"] == "paperless/01_vet_exam_physical_checklist_21"
+    assert kwargs["file_path_str"] == "paperless://21"
+    assert kwargs["paperless_id"] == 21
+
 

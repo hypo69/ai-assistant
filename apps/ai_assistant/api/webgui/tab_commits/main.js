@@ -10,17 +10,22 @@
  * Package: apps/ai_assistant/api/webgui/tab_commits
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-17 00:46:00
+ * Updated: 2026-11-16 04:22:00
  * =============================================================================
  */
 
-import { initCommitsPanel } from './panel_commits/panel.js';
+import { initCommitsPanel, activateCommitsPanel } from './panel_commits/panel.js';
 
 export function init() {
   initCommitsPanel();
 }
 
+export function activate() {
+  activateCommitsPanel();
+}
+
 window.initCommitsTab = init;
+window.activateCommitsTab = activate;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);

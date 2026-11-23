@@ -13,7 +13,7 @@
 # Package: apps.common.file_tree
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 19:55:00
+# Updated: 2026-11-19 20:16:30
 # =============================================================================
 
 from __future__ import annotations
@@ -76,6 +76,7 @@ class FileSummaryResponse(BaseModel):
     is_binary: bool = Field(default=False, description="Признак бинарного содержимого")
     lines_count: Optional[int] = Field(default=None, description="Количество строк для текстовых файлов")
     language_id: str = Field(default="plaintext", description="Языковой режим VS Code")
+    direction: str = Field(default="ltr", description="Направление текста документа ('rtl' для иврита, 'ltr' по умолчанию)")
     summary: str = Field(default="", description="Краткая суть содержимого или первые строки")
     preview: str = Field(default="", description="Текстовый фрагмент начала файла")
     modified_at: str = Field(default="", description="Время изменения файла")

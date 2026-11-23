@@ -1,8 +1,8 @@
 /**
  * Модуль конфигурации локальных и облачных провайдеров (Foundry, Ollama, AGY, ONNX)
  * и управления системной инструкцией ИИ.
- * Файл: apps/ai_assistant/api/webgui/tab_models/panel_providers_config/panel.js
- * Updated: 2026-11-01 17:37:00
+ * Файл: apps/common/webgui/tab_models/panel_providers_config/panel.js
+ * Updated: 2026-11-16 04:26:00
  */
 
 import { showModelsNotification } from '../common/ui_utils.js';
@@ -13,7 +13,7 @@ import { showModelsNotification } from '../common/ui_utils.js';
 export async function loadFoundryConfig() {
   try {
     const fetchFn = (window.api && window.api.fetch) || fetch;
-    const res = await fetchFn('/api/foundry/config');
+    const res = await fetchFn('/api/v1/foundry/config');
     const config = typeof res.json === 'function' ? await res.json() : res;
 
     const enabledInput = document.getElementById('foundry-enabled');
@@ -36,7 +36,7 @@ export async function loadFoundryConfig() {
 export async function loadOllamaConfig() {
   try {
     const fetchFn = (window.api && window.api.fetch) || fetch;
-    const res = await fetchFn('/api/ollama/config');
+    const res = await fetchFn('/api/v1/ollama/config');
     const config = typeof res.json === 'function' ? await res.json() : res;
 
     const enabledInput = document.getElementById('ollama-enabled');
@@ -81,7 +81,7 @@ export async function loadAgyConfig() {
       }
     }
 
-    const res = await fetchFn('/api/agy/config');
+    const res = await fetchFn('/api/v1/agy/config');
     const config = typeof res.json === 'function' ? await res.json() : res;
 
     const enabledInput = document.getElementById('agy-enabled');
@@ -101,7 +101,7 @@ export async function loadAgyConfig() {
 export async function loadOnnxConfig() {
   try {
     const fetchFn = (window.api && window.api.fetch) || fetch;
-    const res = await fetchFn('/api/onnx/config');
+    const res = await fetchFn('/api/v1/onnx/config');
     const config = typeof res.json === 'function' ? await res.json() : res;
 
     const enabledInput = document.getElementById('onnx-enabled');
@@ -139,9 +139,7 @@ export async function loadSystemInstruction() {
     let instructionText = '';
     const endpoints = [
       '/api/v1/tc/model-instruction',
-      '/api/v1/chat/model-instruction',
-      '/api/admin/system_instruction',
-      '/api/v1/admin/system_instruction'
+      '/api/v1/chat/model-instruction'
     ];
 
     const fetchFn = (window.api && window.api.fetch) || fetch;
@@ -203,11 +201,6 @@ export async function saveSystemInstruction() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ instruction: textVal, content: textVal, system_instruction: textVal, save_to_disk: true })
-      }),
-      fetchFn('/api/admin/system_instruction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: textVal })
       })
     ]);
 

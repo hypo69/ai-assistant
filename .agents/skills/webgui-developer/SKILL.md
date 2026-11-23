@@ -8,9 +8,12 @@ description_i18n:
 
 # 🌐 Навык: Разработчик WebGUI (WebGUI Developer)
 
-**Updated:** 2026-11-11 21:25:00
+**Updated:** 2026-11-15 19:55:00
 
-Этот навык предназначен для проектирования, создания, модификации и поддержки вкладок (`tab_<tab_id>`) и веб-интерфейса в проекте **AI-Assistant** (`apps/ai_assistant/api/webgui/` и `apps/common/webgui/`).
+Этот навык предназначен для проектирования, создания, модификации и поддержки вкладок (`tab_<tab_id>`) и веб-интерфейса в проекте **AI-Assistant** (`apps/ai_assistant/api/webgui/` и общий слой `apps/common/webgui/`, объединенные через `SmartMultiDirStaticFiles`).
+
+> [!IMPORTANT]
+> **Обязательный учет общего слоя `apps/common/webgui/`**: При любой ревизии, модификации компонентов или проверке i18n вы **ОБЯЗАНЫ** проверять и синхронизировать как `apps/ai_assistant/api/webgui/`, так и `apps/common/webgui/` (включая `components/user_settings_modal.html`, `components/universal_ai_table_modal.html`, `ai_modal_dialog/`, общие вкладки `tab_file_editor`, `tab_file_tree`, `tab_instruments`, `tab_issues`, `tab_models`, `tab_obsidian`, `tab_theme_editor` и оба каталога `locales/{ru,en,he,uk}.json`).
 
 ---
 
@@ -105,6 +108,10 @@ apps/ai_assistant/api/webgui/
    - Все модальные окна подчиняются глобальному правилу `.modal .modal-dialog` (`90vw × 90vh`). Запрещено задавать индивидуальные размеры отдельным окнам.
 5. **Поля ввода в RTL (`WEBGUI.md` § 6.5)**:
    - При выборе RTL-языка (`html[dir="rtl"]`) все поля ввода (`input`, `textarea`, `select`, `contenteditable`) читаются и заполняются справа налево (секция 8.1 в `rtl.css`). Исключение — поля с явным `dir="ltr"` (пути, URL, хеши, команды).
+6. **Каноническая двухуровневая URL-маршрутизация (`WEBGUI.md` § 3.3, `SUBTABS_AND_BLOCKS_MENU.md` § 2)**:
+   - Все составные экраны поддерживают глубокие ссылки вида `#tab-<tabId>#panel-<panelId>[#block-<blockId>]` (например, `#tab-tasks#panel-cases`, `#tab-models#panel-google-accounts#block-file`, `#tab-tooltips#panel-editor#block-ru`, `#tab-workspace#panel-files#block-dir#workspace=<id>`).
+   - Кнопки 1-го уровня содержат `data-panel-id="panel-..."`, подэлементы 2-го уровня содержат `data-block-id="block-..."`.
+   - Тултипы формулируются статически БЕЗ обращения к модели.
 
 ---
 
@@ -118,4 +125,5 @@ apps/ai_assistant/api/webgui/
 - [ ] Отсутствует хардкод цветов (HEX/RGB/inline styles).
 - [ ] Все модальные окна имеют размер `90vw × 90vh` без локальных переопределений.
 - [ ] В RTL-режиме все поля ввода читаются справа налево.
+- [ ] **URL-маршрутизация панелей и блоков:** субпанели и внутренние блоки используют канонический формат `#tab-<tabId>#panel-<panelId>[#block-<blockId>]` с двусторонней синхронизацией и нативными тултипами.
 - [ ] Обновлена версия ассетов `?v=YYYYMMDD_vN` и метка `Updated: YYYY-MM-DD HH:MM:SS` в шапке файлов.

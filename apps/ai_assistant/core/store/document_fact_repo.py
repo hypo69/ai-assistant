@@ -13,7 +13,7 @@
 # Package: apps.ai_assistant.core.store
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-11 20:38:00
+# Updated: 2026-11-20 02:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional
 import uuid
 
 from logger import logger
-from apps.ai_assistant.core.store.workspace_repo import get_utc_now_iso
+from apps.ai_assistant.core.store.workspace_repo import get_utc_now_iso, run_sqlite_with_retry
 from apps.ai_assistant.core.workspace_registry import parse_host_qualified_path
 
 
@@ -290,10 +290,44 @@ class DocumentFactRepoMixin:
         relocated_from: Optional[str] = "",
         paperless_id: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Сохраняет документ, версию, чанки и извлечённые факты с защитой от Lost Update и пакетной вставкой.
+        """Сохраняет документ, версию, чанки и извлечённые факты с защитой от Lost Update и ретраями при блокировке БД.
 
         Если задан paperless_id, полный текст версии не дублируется в БД: источник текста — Paperless-ngx API.
         """
+        return run_sqlite_with_retry(
+            lambda: self._store_document_and_facts_once(
+                workspace_id=workspace_id,
+                document_id=document_id,
+                file_path=file_path,
+                raw_content=raw_content,
+                commit_hash=commit_hash,
+                analysis_result=analysis_result,
+                duration_ms=duration_ms,
+                force_reanalyze=force_reanalyze,
+                host_name=host_name,
+                qualified_path=qualified_path,
+                relocated_from=relocated_from,
+                paperless_id=paperless_id,
+            ),
+            context="KnowledgeStore",
+        )
+
+    def _store_document_and_facts_once(
+        self,
+        workspace_id: str,
+        document_id: str,
+        file_path: str,
+        raw_content: str,
+        commit_hash: str,
+        analysis_result: Dict[str, Any],
+        duration_ms: float = 0.0,
+        force_reanalyze: bool = False,
+        host_name: Optional[str] = "",
+        qualified_path: Optional[str] = "",
+        relocated_from: Optional[str] = "",
+        paperless_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Выполняет одну попытку атомарного сохранения документа, версии, чанков и фактов в SQLite."""
         now = get_utc_now_iso()
         content_hash = compute_sha256(raw_content)
         language = analysis_result.get("language", "ru")
@@ -337,8 +371,10 @@ class DocumentFactRepoMixin:
                     return relocated_res
                 conn = self._get_conn(workspace_id=workspace_id)
 
-            # Чтение текущей версии и запись выполняются внутри единой транзакции (защита от Lost Update)
+            # Чтение текущей версии и запись выполняются внутри единой IMMEDIATE-транзакции (защита от Lost Update и read-to-write deadlock)
             with conn:
+                if not conn.in_transaction:
+                    conn.execute("BEGIN IMMEDIATE")
                 cur = conn.execute(
                     "SELECT current_version, content_hash FROM documents WHERE workspace_id = ? AND document_id = ?",
                     (workspace_id, document_id),

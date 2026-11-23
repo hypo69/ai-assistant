@@ -11,7 +11,7 @@
  * Package: apps/ai_assistant/api/webgui/tab_doc_categorizer
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 11:46:00
+ * Updated: 2026-11-12 02:40:00
  * =============================================================================
  */
 
@@ -472,34 +472,52 @@ import { registerTabPoller, unregisterTabPoller, isTabActive } from '../js/tab-c
 })();
 
 /**
- * Автоматическая синхронизация активной панели вкладки с URL-хэшем.
+ * Автоматическая синхронизация активной панели и блока вкладки с URL-хэшем.
  */
 export function initTabUrlHashRouting() {
-  const canonicalTabId = 'tab-doc_categorizer';
+  const canonicalTabId = 'tab-doc-categorizer';
   const syncFromHash = () => {
     const raw = window.location.hash || '';
-    if (!raw.includes(canonicalTabId)) return;
+    if (!raw.includes('tab-doc-categorizer') && !raw.includes('tab-doc_categorizer')) return;
     const parts = raw.replace(/^#/, '').split('#');
-    const panelPart = parts.find((p) => p.startsWith('panel-'));
+    let panelPart = parts.find((p) => p.startsWith('panel-'));
+    if (!panelPart) {
+      const fallback = parts.find((p) => ['catalog', 'uncertain', 'rag'].includes(p.toLowerCase()));
+      if (fallback) panelPart = `panel-${fallback.toLowerCase()}`;
+    }
+    const blockPart = parts.find((p) => p.startsWith('block-'));
+
     if (panelPart) {
       const btn = document.querySelector(`button[data-panel-id="${panelPart}"]`) ||
+                  document.querySelector(`button[data-bs-target="#doc-subtab-${panelPart.replace('panel-', '')}"]`) ||
                   document.querySelector(`button[data-bs-target="#${panelPart}"]`);
       if (btn && window.bootstrap && window.bootstrap.Tab) {
         (window.bootstrap.Tab.getInstance?.(btn) || window.bootstrap.Tab.getOrCreateInstance?.(btn) || new window.bootstrap.Tab(btn)).show();
       }
     }
+
+    if (blockPart) {
+      const cleanBlock = blockPart.replace(/^block-/, '');
+      const blockBtn = document.querySelector(`button[data-block-id="${blockPart}"]`) ||
+                       document.querySelector(`button[data-block-id="${cleanBlock}"]`);
+      if (blockBtn && window.bootstrap && window.bootstrap.Tab) {
+        (window.bootstrap.Tab.getInstance?.(blockBtn) || window.bootstrap.Tab.getOrCreateInstance?.(blockBtn) || new window.bootstrap.Tab(blockBtn)).show();
+      }
+    }
   };
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-panel-id], button[data-bs-toggle="pill"]');
+    const btn = e.target.closest('#doc-cat-subtabs button[data-panel-id], #doc-cat-subtabs button[data-bs-toggle="pill"]');
     if (btn) {
-      const panelId = btn.getAttribute('data-panel-id') || btn.getAttribute('data-bs-target')?.replace('#', '');
+      let rawPanel = btn.getAttribute('data-panel-id') || btn.getAttribute('data-bs-target')?.replace('#doc-subtab-', '')?.replace('#', '');
+      const canonicalPanel = rawPanel.startsWith('panel-') ? rawPanel : `panel-${rawPanel}`;
       const blockId = btn.getAttribute('data-block-id');
-      if (panelId) {
-        let hash = `#${canonicalTabId}#${panelId}`;
-        if (blockId) hash += `#${blockId}`;
-        history.replaceState(null, null, hash);
+      let hash = `#${canonicalTabId}#${canonicalPanel}`;
+      if (blockId) {
+        const normBlock = blockId.startsWith('block-') ? blockId : `block-${blockId}`;
+        hash += `#${normBlock}`;
       }
+      history.replaceState(null, null, hash);
     }
   });
 

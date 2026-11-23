@@ -158,8 +158,8 @@ def test_local_workspace_file_move_via_api_and_tree_panel(tmp_path: Path, monkey
     assert len(facts) >= 1
     assert facts[0]["document_id"] == "archive/farm_moved.txt"
 
-    # Проверяем работу REST эндпоинта панели дерева файлов /v1/panel/panel-tree
-    panel_res = client.get(f"/v1/panel/panel-tree?workspace_id={ws_id}")
+    # Проверяем работу REST эндпоинта панели дерева файлов /api/v1/panel/panel-tree
+    panel_res = client.get(f"/api/v1/panel/panel-tree?workspace_id={ws_id}")
     assert panel_res.status_code == 200
     panel_json = panel_res.json()
     assert panel_json["status"] == "ok"

@@ -16,7 +16,7 @@
  * Package: apps/common/webgui/tab_file_editor
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-10 20:30:00
+ * Updated: 2026-11-19 20:48:00
  * =============================================================================
  */
 
@@ -27,6 +27,7 @@ let activeDocKey = null;
 const VIDEO_EXTENSIONS = new Set(['mp4', 'webm', 'ogg', 'ogv', 'mov', 'mkv', 'avi', 'm4v']);
 const AUDIO_EXTENSIONS = new Set(['mp3', 'wav', 'flac', 'aac', 'm4a', 'wma']);
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp']);
+const MERMAID_EXTENSIONS = new Set(['mmd', 'mermaid']);
 
 function notifyToast(msg, type = 'info') {
   if (typeof window.showToast === 'function') {
@@ -48,6 +49,81 @@ function getActiveWorkspaceId() {
 
 function makeDocKey(wsId, relPath) {
   return `${wsId || 'default'}:${(relPath || '').trim()}`;
+}
+
+const HEBREW_CHAR_RE = /[\u0590-\u05FF]/;
+const HEBREW_CHAR_GLOBAL_RE = /[\u0590-\u05FF]/g;
+const CYRILLIC_CHAR_GLOBAL_RE = /[\u0400-\u04FF]/g;
+const LATIN_CHAR_GLOBAL_RE = /[a-zA-Z]/g;
+const FRONTMATTER_BLOCK_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
+const LANG_DIRECTIVE_RE = /^\s*(?:<!--\s*)?(?:lang\s*=|language\s*:)\s*['"]?([a-zA-Z\-_]+)['"]?(?:\s*-->)?\s*$/im;
+const LANG_TAG_RE = /^\s*-\s*lang\/([a-zA-Z\-_]+)\s*$/im;
+
+/**
+ * Автоматически определяет направление текста документа ('rtl' для иврита, иначе 'ltr').
+ * @param {string} content - Текстовое содержимое документа
+ * @param {string} [fileName=''] - Имя или относительный путь к файлу
+ * @param {string|null} [explicitDirection=null] - Явное направление от бэкенда ('rtl'|'ltr')
+ * @returns {'rtl'|'ltr'}
+ */
+function detectDocumentDirection(content, fileName = '', explicitDirection = null) {
+  if (explicitDirection === 'rtl' || explicitDirection === 'ltr') {
+    if (explicitDirection === 'rtl') return 'rtl';
+  }
+
+  const text = typeof content === 'string' ? content.slice(0, 32768) : '';
+  if (text) {
+    const head = text.slice(0, 2048);
+    const mDir = head.match(LANG_DIRECTIVE_RE);
+    if (mDir) {
+      const dirLang = mDir[1].trim().toLowerCase().split(/[-_]/)[0];
+      if (['he', 'heb', 'iw'].includes(dirLang)) return 'rtl';
+      if (['ru', 'en', 'uk', 'ua'].includes(dirLang)) return 'ltr';
+    }
+
+    const mTag = head.match(LANG_TAG_RE);
+    if (mTag) {
+      const tagLang = mTag[1].trim().toLowerCase().split(/[-_]/)[0];
+      if (['he', 'heb', 'iw'].includes(tagLang)) return 'rtl';
+    }
+
+    // Исключаем технические латинские ключи YAML Frontmatter при подсчёте букв тела документа
+    let body = text;
+    const fmMatch = text.match(FRONTMATTER_BLOCK_RE);
+    if (fmMatch) {
+      body = text.slice(fmMatch[0].length);
+    }
+
+    const sample = body.trim() ? body : text;
+    const heMatches = sample.match(HEBREW_CHAR_GLOBAL_RE);
+    const heCount = heMatches ? heMatches.length : 0;
+
+    if (heCount > 0) {
+      const cyrCount = (sample.match(CYRILLIC_CHAR_GLOBAL_RE) || []).length;
+      const latCount = (sample.match(LATIN_CHAR_GLOBAL_RE) || []).length;
+      const totalLetters = heCount + cyrCount + latCount;
+      if (heCount >= cyrCount && (heCount >= latCount || (totalLetters > 0 && heCount / totalLetters >= 0.2))) {
+        return 'rtl';
+      }
+      const lines = sample.split(/\r?\n/);
+      for (const line of lines) {
+        const cleanLine = line.trim().replace(/^[#>\-*+0-9.\s[\]()]+/, '');
+        if (cleanLine) {
+          if (HEBREW_CHAR_RE.test(cleanLine)) return 'rtl';
+          break;
+        }
+      }
+    }
+  }
+
+  // Если документ пустой или не содержит букв, проверяем имя/путь файла на иврит
+  if (fileName && HEBREW_CHAR_RE.test(String(fileName))) {
+    if (!text || (!CYRILLIC_CHAR_GLOBAL_RE.test(text) && !LATIN_CHAR_GLOBAL_RE.test(text))) {
+      return 'rtl';
+    }
+  }
+
+  return explicitDirection === 'rtl' ? 'rtl' : 'ltr';
 }
 
 /**
@@ -143,6 +219,8 @@ function getFileIconClass(fileName, isMedia, mediaType, explicitExt = null) {
     case 'sass': return 'bi-filetype-css text-info';
     case 'md':
     case 'markdown': return 'bi-markdown-fill text-primary';
+    case 'mmd':
+    case 'mermaid': return 'bi-diagram-3-fill text-info';
     case 'svg': return 'bi-filetype-svg text-warning';
     case 'xml': return 'bi-filetype-xml text-warning';
     case 'yaml':
@@ -198,10 +276,218 @@ function ensureMarkedLoaded() {
 }
 
 /**
+ * Определяет текущую тему для диаграмм Mermaid ('dark' или 'default') по атрибутам документа.
+ * @returns {'dark'|'default'}
+ */
+function resolveMermaidTheme() {
+  if (typeof document === 'undefined') return 'default';
+  const bsTheme = document.documentElement.getAttribute('data-bs-theme');
+  if (bsTheme === 'dark') return 'dark';
+  const appTheme = document.documentElement.getAttribute('data-theme') || '';
+  if (appTheme.includes('dark') || appTheme === 'terminal') return 'dark';
+  return 'default';
+}
+
+/**
+ * Конфигурирует window.mermaid под текущую тему приложения.
+ */
+function configureMermaidInstance() {
+  if (typeof window === 'undefined' || !window.mermaid || typeof window.mermaid.initialize !== 'function') {
+    return;
+  }
+  const theme = resolveMermaidTheme();
+  if (window._mermaidConfiguredTheme === theme) return;
+  try {
+    window.mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'loose',
+      theme,
+      flowchart: {
+        htmlLabels: true,
+        curve: 'basis',
+        useMaxWidth: true,
+      },
+    });
+    window._mermaidConfiguredTheme = theme;
+  } catch (err) {
+    console.warn('[FileEditor] Ошибка инициализации mermaid:', err);
+  }
+}
+
+/**
+ * Загружает локальную библиотеку mermaid.min.js по требованию и возвращает Promise.
+ * @returns {Promise<any>}
+ */
+function ensureMermaidLoaded() {
+  if (typeof window !== 'undefined' && window.mermaid) {
+    configureMermaidInstance();
+    return Promise.resolve(window.mermaid);
+  }
+  if (typeof window !== 'undefined' && window._loadingMermaidPromise) {
+    return window._loadingMermaidPromise;
+  }
+  if (typeof document === 'undefined') {
+    return Promise.resolve(null);
+  }
+  window._loadingMermaidPromise = new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = '/html/js/mermaid.min.js?v=20261119_v1';
+    script.onload = () => {
+      window._loadingMermaidPromise = null;
+      configureMermaidInstance();
+      resolve(window.mermaid || null);
+    };
+    script.onerror = () => {
+      window._loadingMermaidPromise = null;
+      console.warn('[FileEditor] Не удалось загрузить /html/js/mermaid.min.js');
+      resolve(null);
+    };
+    document.head.appendChild(script);
+  });
+  return window._loadingMermaidPromise;
+}
+
+let mermaidIdCounter = 0;
+
+/**
+ * Находит в контейнере блоки диаграмм Mermaid (<pre><code class="language-mermaid"> и .mermaid-diagram-block)
+ * и рендерит их в интерактивные SVG-схемы с переключателем исходного кода.
+ * @param {HTMLElement} container
+ */
+export async function renderMermaidDiagramsInContainer(container) {
+  if (!container) return;
+
+  // 1. Преобразуем стандартные блоки <pre><code class="language-mermaid"> (от marked.parse) в обёртки Mermaid
+  const codeNodes = container.querySelectorAll(
+    'pre > code.language-mermaid, pre > code.lang-mermaid, code.language-mermaid'
+  );
+  codeNodes.forEach((codeEl) => {
+    const preEl = codeEl.closest('pre') || codeEl;
+    if (preEl.closest('.mermaid-diagram-wrapper')) return;
+    const rawGraph = (codeEl.textContent || '').trim();
+    if (!rawGraph) return;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildMermaidBlockHtml(rawGraph);
+    const firstChild = wrapper.firstElementChild;
+    if (firstChild && preEl.parentNode) {
+      preEl.parentNode.replaceChild(firstChild, preEl);
+    }
+  });
+
+  const blocks = container.querySelectorAll('.mermaid-diagram-wrapper[data-mermaid-rendered="false"]');
+  if (blocks.length === 0) return;
+
+  const mermaidLib = await ensureMermaidLoaded();
+  if (!mermaidLib) return;
+
+  configureMermaidInstance();
+
+  for (const block of blocks) {
+    const encoded = block.getAttribute('data-mermaid-code') || '';
+    let graphCode = '';
+    try {
+      graphCode = decodeURIComponent(encoded).trim();
+    } catch (_) {
+      graphCode = (block.querySelector('.mermaid-diagram-source code')?.textContent || '').trim();
+    }
+    if (!graphCode) continue;
+
+    const stage = block.querySelector('.mermaid-diagram-stage');
+    const sourcePre = block.querySelector('.mermaid-diagram-source');
+    const toggleBtn = block.querySelector('.mermaid-toggle-source-btn');
+
+    if (toggleBtn && !toggleBtn.dataset.bound) {
+      toggleBtn.dataset.bound = 'true';
+      toggleBtn.addEventListener('click', () => {
+        if (!sourcePre || !stage) return;
+        const showingSource = !sourcePre.classList.contains('d-none');
+        if (showingSource) {
+          sourcePre.classList.add('d-none');
+          stage.classList.remove('d-none');
+        } else {
+          sourcePre.classList.remove('d-none');
+          stage.classList.add('d-none');
+        }
+      });
+    }
+
+    if (!stage) continue;
+
+    try {
+      mermaidIdCounter += 1;
+      const renderId = `fe-mermaid-svg-${Date.now()}-${mermaidIdCounter}`;
+      if (typeof mermaidLib.render === 'function') {
+        const res = await mermaidLib.render(renderId, graphCode);
+        const svgHtml = typeof res === 'string' ? res : (res && res.svg ? res.svg : '');
+        if (svgHtml) {
+          stage.innerHTML = svgHtml;
+          block.setAttribute('data-mermaid-rendered', 'true');
+          continue;
+        }
+      }
+      // Fallback через mermaid.run
+      const node = document.createElement('div');
+      node.className = 'mermaid';
+      node.textContent = graphCode;
+      stage.innerHTML = '';
+      stage.appendChild(node);
+      if (typeof mermaidLib.run === 'function') {
+        await mermaidLib.run({ nodes: [node] });
+      } else if (typeof mermaidLib.init === 'function') {
+        mermaidLib.init(undefined, node);
+      }
+      block.setAttribute('data-mermaid-rendered', 'true');
+    } catch (err) {
+      console.warn('[FileEditor] Ошибка рендеринга диаграммы Mermaid:', err);
+      block.setAttribute('data-mermaid-rendered', 'error');
+      if (sourcePre) sourcePre.classList.remove('d-none');
+      stage.innerHTML = `
+        <div class="alert alert-warning py-1.5 px-2.5 mb-2 small text-start" dir="ltr">
+          <i class="bi bi-exclamation-triangle me-1"></i>
+          <span>Mermaid syntax warning: ${escapeHtml(err?.message || String(err))}</span>
+        </div>
+      `;
+    }
+  }
+}
+
+/**
+ * Формирует HTML-карточку контейнера диаграммы Mermaid с кнопкой переключения исходного кода.
+ * @param {string} rawCode
+ * @returns {string}
+ */
+function buildMermaidBlockHtml(rawCode) {
+  const cleanCode = String(rawCode || '').trim();
+  const encoded = encodeURIComponent(cleanCode);
+  const safeCode = escapeHtml(cleanCode);
+  return `
+    <div class="card my-2.5 border border-subtle shadow-xs mermaid-diagram-wrapper" data-mermaid-rendered="false" data-mermaid-code="${escapeAttr(encoded)}" dir="ltr">
+      <div class="card-header py-1 px-2.5 bg-body-tertiary d-flex align-items-center justify-content-between font-monospace small text-muted">
+        <span class="d-inline-flex align-items-center gap-1.5">
+          <i class="bi bi-diagram-3 text-primary"></i>
+          <span>Mermaid</span>
+        </span>
+        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1.5 mermaid-toggle-source-btn" title="Code / Diagram">
+          <i class="bi bi-code-slash"></i>
+        </button>
+      </div>
+      <div class="card-body p-3 text-center overflow-auto bg-body mermaid-diagram-stage" dir="ltr">
+        <div class="text-muted small py-2">
+          <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span>
+          <span>Mermaid...</span>
+        </div>
+      </div>
+      <pre class="p-2.5 m-0 overflow-auto bg-body-tertiary font-monospace small border-top border-subtle d-none mermaid-diagram-source" dir="ltr" style="line-height: 1.45; text-align: left;"><code>${safeCode}</code></pre>
+    </div>
+  `;
+}
+
+/**
  * Инициализирует модуль редактора при первом монтировании вкладки.
  */
 function initFileEditorTab() {
   ensureMarkedLoaded();
+  ensureMermaidLoaded();
   bindToolbarEvents();
   bindEditorEvents();
   renderTabsBar();
@@ -248,6 +534,14 @@ function bindToolbarEvents() {
     handleOpenSystem();
   });
 
+  // Переключение направления LTR / RTL
+  document.getElementById('fe-btn-dir-ltr')?.addEventListener('click', () => {
+    switchActiveDirection('ltr');
+  });
+  document.getElementById('fe-btn-dir-rtl')?.addEventListener('click', () => {
+    switchActiveDirection('rtl');
+  });
+
   // Переключение режимов Редактор / Вид/Редактор (Split) / Вид
   document.getElementById('fe-tab-mode-code')?.addEventListener('click', () => {
     switchActiveViewMode('code');
@@ -274,6 +568,13 @@ function bindEditorEvents() {
     if (!doc) return;
     doc.content = textarea.value;
     doc.isDirty = (doc.content !== doc.initialContent);
+    if (!doc.userSetDir) {
+      const autoDir = detectDocumentDirection(doc.content, doc.relPath);
+      if (autoDir !== doc.dir) {
+        doc.dir = autoDir;
+        applyDirection(autoDir);
+      }
+    }
     updateGutter();
     updateCursorAndStats();
     updateActiveTabDirtyIndicator();
@@ -282,9 +583,13 @@ function bindEditorEvents() {
     }
   });
 
-  textarea.addEventListener('scroll', () => {
-    if (gutter) gutter.scrollTop = textarea.scrollTop;
-  });
+  const syncGutterScroll = () => {
+    if (gutter && textarea) {
+      gutter.scrollTop = textarea.scrollTop;
+    }
+  };
+  textarea.addEventListener('scroll', syncGutterScroll);
+  textarea.addEventListener('wheel', () => requestAnimationFrame(syncGutterScroll), { passive: true });
 
   textarea.addEventListener('keyup', updateCursorAndStats);
   textarea.addEventListener('click', updateCursorAndStats);
@@ -345,6 +650,7 @@ async function openDocumentInTab(relPath, wsId, switchSubtab = true) {
 
   let isBinary = isMedia;
   let initialContent = '';
+  let backendDirection = null;
 
   // Для не-медиа файлов загружаем текстовое содержимое через API
   if (!isMedia) {
@@ -355,6 +661,7 @@ async function openDocumentInTab(relPath, wsId, switchSubtab = true) {
         const data = await res.json();
         isBinary = Boolean(data.is_binary);
         initialContent = isBinary ? '' : (data.content ?? '');
+        backendDirection = data?.direction || null;
         // Если у файла нет суффикса/расширения — определяем тип по ответу бэкенда или по содержимому
         if (!ext || ext === fileName.toLowerCase()) {
           const detected = (data && data.detected_type) || detectFileTypeFromContent(initialContent, fileName);
@@ -380,6 +687,10 @@ async function openDocumentInTab(relPath, wsId, switchSubtab = true) {
     }
   }
 
+  const initialDir = isMedia || isBinary
+    ? 'ltr'
+    : detectDocumentDirection(initialContent, relPath, backendDirection);
+
   const docState = {
     wsId: currentWs,
     relPath,
@@ -392,7 +703,9 @@ async function openDocumentInTab(relPath, wsId, switchSubtab = true) {
     content: initialContent,
     initialContent,
     isDirty: false,
-    viewMode: (ext === 'md' || ext === 'markdown') ? 'split' : 'code',
+    viewMode: (ext === 'md' || ext === 'markdown' || MERMAID_EXTENSIONS.has(ext)) ? 'split' : 'code',
+    dir: initialDir,
+    userSetDir: false,
     cursorLine: 1,
     cursorCol: 1,
   };
@@ -446,11 +759,17 @@ function renderTabsBar() {
     tabEl.style.cursor = 'pointer';
 
     const iconClass = getFileIconClass(doc.fileName, doc.isMedia, doc.mediaType, doc.ext);
+    const closeTitle = (typeof window !== 'undefined' && window.i18n && typeof window.i18n.t === 'function')
+      ? window.i18n.t('fileEditor.closeTabTitle', 'Закрыть вкладку')
+      : 'Закрыть вкладку';
+
     tabEl.innerHTML = `
-      <i class="bi ${iconClass}"></i>
+      <i class="bi ${iconClass} wasm-tab-icon me-1"></i>
       <span class="wasm-tab-title text-truncate" style="max-width: 140px;" title="${doc.relPath}">${doc.fileName}</span>
       <span class="wasm-tab-dirty text-warning ${doc.isDirty ? '' : 'd-none'}">●</span>
-      <button type="button" class="btn-close btn-close-white wasm-tab-close p-0 ms-1" style="font-size: 0.65rem;" title="Закрыть вкладку"></button>
+      <button type="button" class="btn btn-link wasm-tab-close p-0 ms-1 d-inline-flex align-items-center justify-content-center" data-i18n-title="fileEditor.closeTabTitle" title="${closeTitle}" aria-label="${closeTitle}">
+        <i class="bi bi-x"></i>
+      </button>
     `;
 
     // Клик по вкладке — активация
@@ -459,6 +778,15 @@ function renderTabsBar() {
       activeDocKey = key;
       renderTabsBar();
       renderActiveDocument();
+    });
+
+    // Клик средней кнопкой мыши (колесиком) — закрытие вкладки в стиле Studio Code
+    tabEl.addEventListener('auxclick', (e) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeDocument(key);
+      }
     });
 
     // Правый клик (ПКМ) по вкладке — вызов контекстного меню вкладки (VS Code Style)
@@ -672,11 +1000,53 @@ function renderActiveDocument() {
   updateGutter();
   updateCursorAndStats();
   applyViewMode(doc.viewMode || 'code');
+  applyDirection(doc.dir || 'ltr');
 }
 
 function setStatsText(txt) {
   const statsEl = document.getElementById('fe-editor-stats');
   if (statsEl) statsEl.textContent = txt;
+}
+
+/**
+ * Переключает направление текста LTR / RTL.
+ * @param {'ltr'|'rtl'} dir
+ */
+function switchActiveDirection(dir) {
+  const doc = getActiveDoc();
+  if (!doc) return;
+  doc.dir = dir;
+  doc.userSetDir = true;
+  applyDirection(dir);
+}
+
+function applyDirection(dir) {
+  const validDir = (dir === 'rtl') ? 'rtl' : 'ltr';
+  const btnLtr = document.getElementById('fe-btn-dir-ltr');
+  const btnRtl = document.getElementById('fe-btn-dir-rtl');
+  const textStage = document.getElementById('fe-text-stage');
+  const textarea = document.getElementById('fe-code-textarea');
+  const preview = document.getElementById('fe-markdown-preview');
+
+  btnLtr?.classList.toggle('active', validDir === 'ltr');
+  btnRtl?.classList.toggle('active', validDir === 'rtl');
+
+  if (textStage) {
+    textStage.classList.remove('dir-ltr', 'dir-rtl');
+    textStage.classList.add(`dir-${validDir}`);
+  }
+
+  if (textarea) {
+    textarea.setAttribute('dir', validDir);
+    textarea.style.direction = validDir;
+    textarea.style.textAlign = validDir === 'rtl' ? 'right' : 'left';
+  }
+
+  if (preview) {
+    preview.setAttribute('dir', validDir);
+    preview.style.direction = validDir;
+    preview.style.textAlign = validDir === 'rtl' ? 'right' : 'left';
+  }
 }
 
 /**
@@ -889,6 +1259,25 @@ function parseMarkdownToHtml(src) {
 
   const { frontmatterHtml, cleanMarkdown } = preprocessMarkdownContent(src);
 
+  // Извлекаем блоки ```mermaid до вызова marked / встроенного парсера
+  const mermaidPlaceholders = [];
+  const markdownWithoutMermaid = cleanMarkdown.replace(
+    /```\s*mermaid[ \t]*\r?\n([\s\S]*?)```/gi,
+    (_, graphCode) => {
+      const idx = mermaidPlaceholders.length;
+      mermaidPlaceholders.push(buildMermaidBlockHtml(graphCode));
+      return `\n\n<div data-mermaid-placeholder="${idx}"></div>\n\n`;
+    }
+  );
+
+  const restoreMermaidPlaceholders = (htmlStr) => {
+    if (mermaidPlaceholders.length === 0) return htmlStr;
+    return htmlStr.replace(
+      /<div data-mermaid-placeholder="(\d+)"><\/div>/g,
+      (_, idx) => mermaidPlaceholders[parseInt(idx, 10)] || ''
+    );
+  };
+
   // 1. Если доступна библиотека marked — используем её
   if (typeof window !== 'undefined') {
     if (typeof window.marked?.parse === 'function') {
@@ -897,13 +1286,13 @@ function parseMarkdownToHtml(src) {
           window.marked.setOptions({ breaks: true, gfm: true });
           window._markedConfigured = true;
         }
-        return frontmatterHtml + window.marked.parse(cleanMarkdown);
+        return frontmatterHtml + restoreMermaidPlaceholders(window.marked.parse(markdownWithoutMermaid));
       } catch (err) {
         console.warn('[FileEditor] Ошибка window.marked.parse:', err);
       }
     } else if (typeof window.marked === 'function') {
       try {
-        return frontmatterHtml + window.marked(cleanMarkdown);
+        return frontmatterHtml + restoreMermaidPlaceholders(window.marked(markdownWithoutMermaid));
       } catch (err) {
         console.warn('[FileEditor] Ошибка window.marked:', err);
       }
@@ -913,9 +1302,14 @@ function parseMarkdownToHtml(src) {
   // 2. Встроенный автономный парсер Markdown (CommonMark + GitHub Flavored Markdown)
   // Извлекаем кодовые блоки (```), чтобы не ломать форматирование внутри них
   const codeBlocks = [];
-  let text = cleanMarkdown.replace(/```([a-zA-Z0-9_\-#+.]*)\r?\n([\s\S]*?)```/g, (_, lang, code) => {
+  let text = markdownWithoutMermaid.replace(/```([a-zA-Z0-9_\-#+.]*)\r?\n([\s\S]*?)```/g, (_, lang, code) => {
     const idx = codeBlocks.length;
-    const safeLang = escapeHtml(lang.trim() || 'text');
+    const rawLang = (lang || '').trim();
+    if (rawLang.toLowerCase() === 'mermaid') {
+      codeBlocks.push(buildMermaidBlockHtml(code));
+      return `@@CODE_BLOCK_${idx}@@`;
+    }
+    const safeLang = escapeHtml(rawLang || 'text');
     const safeCode = escapeHtml(code);
     codeBlocks.push(`
       <div class="card my-2 border border-subtle shadow-xs">
@@ -1057,12 +1451,37 @@ function parseMarkdownToHtml(src) {
 
   // Возвращаем кодовые блоки на место
   text = text.replace(/@@CODE_BLOCK_(\d+)@@/g, (_, idx) => codeBlocks[parseInt(idx, 10)] || '');
+  text = text.replace(/&lt;div data-mermaid-placeholder=&quot;(\d+)&quot;&gt;&lt;\/div&gt;/g, (_, idx) => mermaidPlaceholders[parseInt(idx, 10)] || '');
+  text = restoreMermaidPlaceholders(text);
 
   return frontmatterHtml + text;
 }
 
+let mermaidPreviewTimer = null;
+
 /**
- * Рендерит предпросмотр документа в зависимости от его формата (Markdown, HTML, SVG, CSV, JSON и др.).
+ * Запускает отложенный (debounced) рендеринг диаграмм Mermaid в контейнере предпросмотра.
+ * @param {HTMLElement} container
+ * @param {boolean} [immediate=false]
+ */
+function scheduleMermaidRender(container, immediate = false) {
+  if (!container) return;
+  if (mermaidPreviewTimer) {
+    clearTimeout(mermaidPreviewTimer);
+    mermaidPreviewTimer = null;
+  }
+  if (immediate) {
+    renderMermaidDiagramsInContainer(container);
+    return;
+  }
+  mermaidPreviewTimer = setTimeout(() => {
+    mermaidPreviewTimer = null;
+    renderMermaidDiagramsInContainer(container);
+  }, 120);
+}
+
+/**
+ * Рендерит предпросмотр документа в зависимости от его формата (Markdown, Mermaid, HTML, SVG, CSV, JSON и др.).
  */
 function renderMarkdownPreview() {
   const doc = getActiveDoc();
@@ -1085,6 +1504,14 @@ function renderMarkdownPreview() {
         openDocumentInTab(targetRel, doc.wsId, true);
       });
     });
+    scheduleMermaidRender(preview, !doc.isDirty);
+    return;
+  }
+
+  // 1b. Выделенные файлы диаграмм Mermaid (.mmd, .mermaid)
+  if (MERMAID_EXTENSIONS.has(ext)) {
+    preview.innerHTML = buildMermaidBlockHtml(raw);
+    scheduleMermaidRender(preview, !doc.isDirty);
     return;
   }
 
@@ -1159,6 +1586,8 @@ function updateGutter() {
     numbers += i + '\n';
   }
   gutter.textContent = numbers;
+  // Синхронизируем положение прокрутки gutter с текущим положением textarea
+  gutter.scrollTop = textarea.scrollTop;
 }
 
 /**
@@ -1584,7 +2013,11 @@ if (typeof window !== 'undefined') {
   window.openFileInCentralEditor = openDocumentInTab;
   window.openFileInWasmEditor = openDocumentInTab;
   window.switchActiveViewMode = switchActiveViewMode;
+  window.switchActiveDirection = switchActiveDirection;
+  window.detectDocumentDirection = detectDocumentDirection;
   window.parseMarkdownToHtml = parseMarkdownToHtml;
+  window.renderMermaidDiagramsInContainer = renderMermaidDiagramsInContainer;
+  window.ensureMermaidLoaded = ensureMermaidLoaded;
 }
 
 export {
@@ -1595,6 +2028,8 @@ export {
   saveAllDocuments,
   closeOtherDocuments,
   switchActiveViewMode,
+  switchActiveDirection,
+  detectDocumentDirection,
   applyViewMode,
   parseMarkdownToHtml,
   openDocumentInTab as openFileInWasmEditor,
@@ -1609,6 +2044,8 @@ export default {
   saveAllDocuments,
   closeOtherDocuments,
   switchActiveViewMode,
+  switchActiveDirection,
+  detectDocumentDirection,
   applyViewMode,
   parseMarkdownToHtml,
   openFileInWasmEditor: openDocumentInTab,

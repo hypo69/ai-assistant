@@ -19,7 +19,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 17:15:00
+# Updated: 2026-11-20 02:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -66,9 +66,11 @@ class KnowledgeStore(WorkspaceRepoMixin, DocumentFactRepoMixin, TelemetryRepoMix
         self._mem_conn: Optional[sqlite3.Connection] = None
         self._initialized_paths: set[str] = set()
         if self.db_path == ":memory:":
-            self._mem_conn = sqlite3.connect(":memory:", timeout=15.0, check_same_thread=False)
+            self._mem_conn = sqlite3.connect(
+                ":memory:", timeout=30.0, check_same_thread=False, isolation_level="IMMEDIATE"
+            )
             self._mem_conn.row_factory = sqlite3.Row
-            self._mem_conn.execute("PRAGMA busy_timeout=15000;")
+            self._mem_conn.execute("PRAGMA busy_timeout=30000;")
             self._mem_conn.execute("PRAGMA foreign_keys=ON;")
         else:
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -97,12 +99,13 @@ class KnowledgeStore(WorkspaceRepoMixin, DocumentFactRepoMixin, TelemetryRepoMix
             return self._mem_conn
 
         path_str = str(target_path)
-        conn = sqlite3.connect(path_str, timeout=15.0, check_same_thread=False)
+        conn = sqlite3.connect(
+            path_str, timeout=30.0, check_same_thread=False, isolation_level="IMMEDIATE"
+        )
         try:
             conn.row_factory = sqlite3.Row
-            conn.execute("PRAGMA journal_mode=WAL;")
+            conn.execute("PRAGMA busy_timeout=30000;")
             conn.execute("PRAGMA synchronous=NORMAL;")
-            conn.execute("PRAGMA busy_timeout=15000;")
             conn.execute("PRAGMA foreign_keys=ON;")
 
             with self._lock:
@@ -119,6 +122,7 @@ class KnowledgeStore(WorkspaceRepoMixin, DocumentFactRepoMixin, TelemetryRepoMix
                 if needs_init:
                     if len(self._initialized_paths) >= MAX_INITIALIZED_PATHS_CACHE:
                         self._initialized_paths.clear()
+                    conn.execute("PRAGMA journal_mode=WAL;")
                     self._init_schema(existing_conn=conn)
                     self._initialized_paths.add(path_str)
             return conn

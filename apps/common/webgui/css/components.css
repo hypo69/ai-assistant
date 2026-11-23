@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-03 15:05:00
+ * Updated: 2026-11-20 02:32:00
  * =============================================================================
  */
 
@@ -105,9 +105,9 @@
   --bs-list-group-bg: var(--surface-1);
   --bs-list-group-color: var(--text-color);
   --bs-list-group-border-color: var(--border-color);
-  --bs-list-group-active-bg: var(--nav-active);
-  --bs-list-group-active-color: #ffffff;
-  --bs-list-group-active-border-color: var(--nav-active);
+  --bs-list-group-active-bg: var(--active-item-bg);
+  --bs-list-group-active-color: var(--active-item-color);
+  --bs-list-group-active-border-color: var(--active-item-border);
   --bs-list-group-hover-bg: var(--nav-hover-bg);
 }
 
@@ -130,33 +130,19 @@
 
 .list-group-item-action.active,
 .list-group-item.active {
-  background-color: var(--nav-active) !important;
-  border-color: var(--nav-active) !important;
-  color: #ffffff !important;
+  background-color: var(--active-item-bg) !important;
+  border-color: var(--active-item-border) !important;
+  color: var(--active-item-color) !important;
+}
+
+.list-group-item-action.active:hover,
+.list-group-item.active:hover {
+  background-color: var(--active-item-hover-bg) !important;
 }
 
 .list-group-item-action.active .text-muted,
 .list-group-item.active .text-muted {
-  color: rgba(255, 255, 255, 0.75) !important;
-}
-
-[data-theme="brick"] .list-group-item-action.active,
-[data-theme="brick"] .list-group-item.active {
-  background-color: #b84228 !important;
-  border-color: #b84228 !important;
-  color: #ffffff !important;
-}
-
-[data-theme="terminal"] .list-group-item-action.active,
-[data-theme="terminal"] .list-group-item.active {
-  background-color: #0c3316 !important;
-  border-color: #00ff66 !important;
-  color: #00ff66 !important;
-}
-
-[data-theme="terminal"] .list-group-item-action.active .text-muted,
-[data-theme="terminal"] .list-group-item.active .text-muted {
-  color: rgba(0, 255, 102, 0.75) !important;
+  color: var(--active-item-muted) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -350,30 +336,39 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    МОДАЛЬНЫЕ ОКНА (Стандарт геометрии 90vw × 90vh согласно WEBGUI.md § 5.4)
    ═══════════════════════════════════════════════════════════════════════════ */
-.modal .modal-dialog {
-  --bs-modal-width: var(--modal-size-w, var(--modal-width, 90vw));
-  width: var(--modal-size-w, var(--modal-width, 90vw));
-  max-width: var(--modal-size-w, var(--modal-width, 90vw));
-  height: var(--modal-size-h, var(--modal-height, 90vh));
-  max-height: var(--modal-size-h, var(--modal-height, 90vh));
-  min-height: var(--modal-size-h, var(--modal-height, 90vh));
-  margin: 5vh auto;
-  display: flex;
-  align-items: center;
+.modal .modal-dialog,
+#userSettingsModal .modal-dialog {
+  --bs-modal-width: var(--modal-size-w, var(--modal-width, 90vw)) !important;
+  width: var(--modal-size-w, var(--modal-width, 90vw)) !important;
+  max-width: var(--modal-size-w, var(--modal-width, 90vw)) !important;
+  height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  max-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  min-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  margin: calc((100vh - var(--modal-size-h, var(--modal-height, 90vh))) / 2) auto !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
-.modal .modal-content {
-  width: 100%;
-  height: 100%;
-  max-height: var(--modal-size-h, var(--modal-height, 90vh));
-  min-height: var(--modal-size-h, var(--modal-height, 90vh));
+.modal .modal-content,
+#userSettingsModal .modal-content {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
+  min-height: var(--modal-size-h, var(--modal-height, 90vh)) !important;
   background-color: var(--modal-bg);
   border: 1px solid var(--modal-border);
   color: var(--modal-text);
   border-radius: var(--radius-md, 8px);
   box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.modal .modal-body,
+#userSettingsModal .modal-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  max-height: calc(var(--modal-size-h, var(--modal-height, 90vh)) - 110px) !important;
 }
 
 .modal-header {
@@ -759,7 +754,7 @@
 .badge-success,
 .badge-dark,
 .film-inline-badge {
-  color: #ffffff !important;
+  color: var(--text-silver, #e2e8f0) !important;
 }
 
 .badge.bg-warning,
@@ -1859,7 +1854,7 @@ h3.panel-header,
 .ai-smart-tooltip-container {
   position: fixed !important;
   z-index: 9999;
-  pointer-events: auto;
+  pointer-events: none !important;
   opacity: 0;
   visibility: hidden;
   transform: translateY(6px);
@@ -1894,6 +1889,7 @@ h3.panel-header,
   line-height: 1.35;
   position: relative;
   user-select: none;
+  pointer-events: none !important;
 }
 
 /* Треугольная стрелка внизу карточки (указывает вниз на элемент под тултипом) */
@@ -2214,4 +2210,15 @@ select:disabled,
 [aria-disabled="true"],
 .disabled {
   cursor: not-allowed !important;
+}
+
+/* Гарантированная интерактивность полей ввода вкладки создания рабочего пространства */
+#cws-main-container input,
+#cws-main-container textarea,
+#cws-main-container select {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  position: relative;
+  z-index: 2;
 }

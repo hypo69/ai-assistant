@@ -12,7 +12,7 @@
  * Package: apps/common/webgui/tab_instruments
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-10 19:57:00
+ * Updated: 2026-11-19 20:14:00
  * =============================================================================
  */
 
@@ -21,12 +21,82 @@ let currentRunningTool = null;
 let searchDebounceTimer = null;
 
 /**
+ * Отрисовка диагностической панели здоровья подсистем (panel-system-status).
+ * @param {object} result
+ */
+export function renderStatusPanel(result) {
+  const tbody = document.getElementById('status-table-body');
+  const summaryBadge = document.getElementById('status-summary-badge');
+  if (!tbody) return;
+
+  const data = result?.data || [];
+  const allReady = data.length > 0 && data.every(d => d.is_ready);
+
+  if (summaryBadge) {
+    summaryBadge.textContent = allReady ? 'Все модули в строю (ONLINE)' : 'Обнаружены недоступные модули';
+    summaryBadge.className = allReady ? 'badge bg-success-subtle text-success border' : 'badge bg-danger-subtle text-danger border';
+  }
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-muted">Сведения о статусе отсутствуют.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(item => {
+    const isReady = item.is_ready;
+    const badgeClass = isReady ? 'bg-success' : 'bg-danger';
+    const statusText = isReady ? 'ГОТОВ' : 'НЕ ДОСТУПЕН';
+    const time = (item.last_checked_at || '').slice(0, 19).replace('T', ' ');
+
+    return `
+      <tr>
+        <td class="fw-semibold">${escapeHtml(item.module_name)}</td>
+        <td><span class="badge ${badgeClass}">${statusText}</span></td>
+        <td class="small font-monospace text-muted">${escapeHtml(item.details)}</td>
+        <td class="text-end small font-monospace text-muted">${escapeHtml(time)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Загрузка данных диагностической панели здоровья подсистем (panel-system-status).
+ * @param {boolean} [force=false]
+ */
+export async function loadSystemStatusPanel(force = false) {
+  if (typeof window.registerPanelRenderer === 'function') {
+    window.registerPanelRenderer('panel-system-status', renderStatusPanel);
+  }
+  if (typeof window.loadPanelData === 'function') {
+    await window.loadPanelData('panel-system-status', { force });
+    return;
+  }
+  try {
+    const res = await fetch('/api/v1/panel/panel-system-status?limit=60');
+    if (res.ok) {
+      const result = await res.json();
+      renderStatusPanel(result);
+    }
+  } catch (err) {
+    console.warn('[AI Instruments] Ошибка загрузки panel-system-status:', err);
+  }
+}
+
+/**
  * Инициализация вкладки инструментов.
  */
 export async function initInstrumentsTab() {
+  if (typeof window.registerPanelRenderer === 'function') {
+    window.registerPanelRenderer('panel-system-status', renderStatusPanel);
+  }
   bindEvents();
+  initTabUrlHashRouting();
   await loadInstrumentsList();
   await loadStorageStatus();
+  const rawHash = (typeof window !== 'undefined' && window.location?.hash) || '';
+  if (rawHash.includes('panel-system-status')) {
+    await loadSystemStatusPanel();
+  }
 }
 
 /**
@@ -128,6 +198,20 @@ function bindEvents() {
   if (btnExtract && !btnExtract.dataset.bound) {
     btnExtract.dataset.bound = 'true';
     btnExtract.addEventListener('click', handleExtractFromReasoning);
+  }
+
+  // Обновление диагностического статуса подсистем
+  const btnStatusRefresh = document.getElementById('status-refresh-btn');
+  if (btnStatusRefresh && !btnStatusRefresh.dataset.bound) {
+    btnStatusRefresh.dataset.bound = 'true';
+    btnStatusRefresh.addEventListener('click', () => loadSystemStatusPanel(true));
+  }
+
+  // Загрузка статуса при переключении на субвкладку Готовность подсистем
+  const btnStatusTab = document.getElementById('pill-inst-status-tab');
+  if (btnStatusTab && !btnStatusTab.dataset.bound) {
+    btnStatusTab.dataset.bound = 'true';
+    btnStatusTab.addEventListener('click', () => loadSystemStatusPanel());
   }
 }
 
@@ -691,3 +775,51 @@ function escapeHtml(str) {
 
 // Экспорт для глобального вызова
 window.initInstrumentsTab = initInstrumentsTab;
+
+/**
+ * Автоматическая синхронизация активной панели вкладки с URL-хэшем.
+ */
+export function initTabUrlHashRouting() {
+  const canonicalTabId = 'tab-instruments';
+  const syncFromHash = () => {
+    const raw = window.location.hash || '';
+    if (!raw.includes(canonicalTabId)) return;
+    const parts = raw.replace(/^#/, '').split('#');
+    const panelPart = parts.find((p) => p.startsWith('panel-'));
+    if (panelPart) {
+      const btn = document.querySelector(`button[data-panel-id="${panelPart}"]`) ||
+                  document.querySelector(`button[data-bs-target="#${panelPart}"]`);
+      if (btn && window.bootstrap && window.bootstrap.Tab) {
+        (window.bootstrap.Tab.getInstance?.(btn) || window.bootstrap.Tab.getOrCreateInstance?.(btn) || new window.bootstrap.Tab(btn)).show();
+      }
+      if (panelPart === 'panel-system-status') {
+        loadSystemStatusPanel();
+      }
+    }
+  };
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-panel-id], button[data-bs-toggle="pill"]');
+    if (btn) {
+      const panelId = btn.getAttribute('data-panel-id') || btn.getAttribute('data-bs-target')?.replace('#', '');
+      const blockId = btn.getAttribute('data-block-id');
+      if (panelId) {
+        let hash = `#${canonicalTabId}#${panelId}`;
+        if (blockId) hash += `#${blockId}`;
+        history.replaceState(null, null, hash);
+      }
+    }
+  });
+
+  window.addEventListener('hashchange', syncFromHash);
+  syncFromHash();
+}
+
+if (typeof window !== 'undefined') {
+  window.initTabUrlHashRouting = initTabUrlHashRouting;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTabUrlHashRouting);
+  } else {
+    initTabUrlHashRouting();
+  }
+}

@@ -20,7 +20,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-03 16:53:00
+# Updated: 2026-11-19 22:11:01
 # =============================================================================
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ QA_PROMPTS_I18N: Dict[str, Dict[str, str]] = {
             "Ты — точный мультиязычный модуль извлечения фактов, анализа данных и формирования "
             "грамматически согласованных ответов. Анализируй предоставленный контекст документов и историю Git. "
             "Отвечай строго на основе контекста. Если информации действительно нет, ответь строго: INSUFFICIENT_DATA. "
-            "Формируй ясный, глубокий и грамматически точный ответ на языке вопроса."
+            "Формируй ясный, глубокий и грамматически точный ответ строго на русском языке."
         ),
         "context_header": "Контекст документов и данных:",
         "question_header": "Вопрос ({language}):",
@@ -46,7 +46,7 @@ QA_PROMPTS_I18N: Dict[str, Dict[str, str]] = {
             "אתה מודול רב-לשוני מדויק לחילוץ עובדות, ניתוח נתונים וניסוח תשובות תקינות דקדוקית. "
             "נתח לעומק את הקשר המסמכים והיסטוריית Git המצורפים. ענה אך ורק על סמך ההקשר המצורף. "
             "אם אין מספיק מידע בהקשר, ענה בדיוק: INSUFFICIENT_DATA. "
-            "נסח תשובה בהירה, מעמיקה ומדויקת דקדוקית בשפת השאלה."
+            "נסח תשובה בהירה, מעמיקה ומדויקת דקדוקית בעברית בלבד, גם אם השאלה נשאלה בשפה אחרת."
         ),
         "context_header": "הקשר מסמכים ונתונים:",
         "question_header": "שאלה ({language}):",
@@ -58,7 +58,7 @@ QA_PROMPTS_I18N: Dict[str, Dict[str, str]] = {
             "You are a precise multilingual module for extracting facts, data analysis, and grammatically "
             "correct answers. Deeply analyze the provided document context and Git history. "
             "Answer strictly based on the context. If the required information is missing, respond strictly: INSUFFICIENT_DATA. "
-            "Provide a clear, in-depth, and accurate answer in the language of the question."
+            "Provide a clear, in-depth, and accurate answer strictly in English, even if the question is asked in another language."
         ),
         "context_header": "Context of documents and data:",
         "question_header": "Question ({language}):",
@@ -70,7 +70,7 @@ QA_PROMPTS_I18N: Dict[str, Dict[str, str]] = {
             "Ти — точний багатомовний модуль вилучення фактів, аналізу даних та формування граматично узгоджених відповідей. "
             "Глибоко аналізуй наданий контекст документів та історію Git. Відповідай строго на основі контексту. "
             "Якщо в контексті немає відповіді, відповідай строго: INSUFFICIENT_DATA. "
-            "Формуй коротку, змістовну та граматично точну відповідь мовою запитання."
+            "Формуй коротку, змістовну та граматично точну відповідь строго українською мовою, навіть якщо запитання поставлене іншою мовою."
         ),
         "context_header": "Контекст документів та даних:",
         "question_header": "Запитання ({language}):",

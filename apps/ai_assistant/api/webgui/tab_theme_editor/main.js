@@ -12,7 +12,7 @@
  *     await loadTab('theme-editor', '/html/tab_theme_editor/index.html?v=20261017_v1', '/html/tab_theme_editor/main.js?v=20261017_v1');
  *
  * File: main.js
- * Project: ai-assistant
+ * Project: ai-windows-admin
  * Package: apps/windows/api/webgui/tab_theme_editor
  * Author: hypo69
  * Copyright: © 2026 hypo69

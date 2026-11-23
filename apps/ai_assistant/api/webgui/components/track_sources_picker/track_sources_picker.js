@@ -15,7 +15,7 @@
  * Package: apps/ai_assistant/api/webgui/components/track_sources_picker
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-30 17:32:00
+ * Updated: 2026-11-20 02:16:00
  * =============================================================================
  */
 
@@ -153,24 +153,28 @@ export function mountTrackSourcesPicker(container, options = {}) {
   if (dirBrowseBtn && !dirBrowseBtn._bound) {
     dirBrowseBtn._bound = true;
     dirBrowseBtn.addEventListener('click', async () => {
-      let chosenPath = '';
+      let shouldFallbackToPicker = false;
       try {
         dirBrowseBtn.disabled = true;
         dirBrowseBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${t('ui.cws.btn_selecting', 'Выбор...')}`;
         const res = await apiFetch('/api/v1/workspaces/browse-folder', { method: 'POST' });
         if (res && res.status === 'ok' && res.path) {
-          chosenPath = res.path;
           if (dirInput) dirInput.value = '';
-          await onItemAdded(chosenPath, 'directory');
+          await onItemAdded(res.path, 'directory');
           return;
         }
+        if (res && (res.status === 'cancelled' || res.status === 'timeout')) {
+          return;
+        }
+        shouldFallbackToPicker = true;
       } catch (err) {
         console.debug('[TrackSourcesPicker] Fallback к проводнику браузера:', err);
+        shouldFallbackToPicker = true;
       } finally {
         dirBrowseBtn.disabled = false;
         dirBrowseBtn.innerHTML = `<i class="bi bi-folder2-open text-warning me-1"></i><span>${t('ui.cws.txt_503b2cca', 'Обзор...')}</span>`;
       }
-      if (!chosenPath && dirPicker) dirPicker.click();
+      if (shouldFallbackToPicker && dirPicker) dirPicker.click();
     });
   }
 
@@ -216,24 +220,33 @@ export function mountTrackSourcesPicker(container, options = {}) {
   if (fileBrowseBtn && !fileBrowseBtn._bound) {
     fileBrowseBtn._bound = true;
     fileBrowseBtn.addEventListener('click', async () => {
-      let chosenFile = '';
+      let shouldFallbackToPicker = false;
       try {
         fileBrowseBtn.disabled = true;
         fileBrowseBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${t('ui.cws.btn_selecting', 'Выбор...')}`;
         const res = await apiFetch('/api/v1/workspaces/browse-file', { method: 'POST' });
-        if (res && res.status === 'ok' && res.path) {
-          chosenFile = res.path;
+        if (res && res.status === 'ok') {
+          const paths = Array.isArray(res.paths) && res.paths.length > 0
+            ? res.paths
+            : (res.path ? [res.path] : []);
           if (fileInput) fileInput.value = '';
-          await onItemAdded(chosenFile, 'file');
+          for (const p of paths) {
+            if (p) await onItemAdded(p, 'file');
+          }
           return;
         }
+        if (res && (res.status === 'cancelled' || res.status === 'timeout')) {
+          return;
+        }
+        shouldFallbackToPicker = true;
       } catch (err) {
         console.debug('[TrackSourcesPicker] Fallback к проводнику браузера:', err);
+        shouldFallbackToPicker = true;
       } finally {
         fileBrowseBtn.disabled = false;
         fileBrowseBtn.innerHTML = `<i class="bi bi-file-earmark-plus text-info me-1"></i><span>${t('ui.cws.txt_503b2cca', 'Обзор...')}</span>`;
       }
-      if (!chosenFile && filePicker) filePicker.click();
+      if (shouldFallbackToPicker && filePicker) filePicker.click();
     });
   }
 

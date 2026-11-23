@@ -17,7 +17,7 @@
 # Package: apps.common.file_tree
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 14:31:40
+# Updated: 2026-11-19 20:16:30
 # =============================================================================
 
 from __future__ import annotations
@@ -403,6 +403,7 @@ class FileTreeService:
 
         summary_text = ""
         preview_text = ""
+        direction = "ltr"
         lines_count: Optional[int] = None
         tags: List[str] = [ext.lstrip(".") or "файл", language_id]
 
@@ -414,6 +415,7 @@ class FileTreeService:
                 with open(target_file, "rb") as tf:
                     bounded_bytes = tf.read(MAX_SUMMARY_READ_BYTES)
                 full_text = bounded_bytes.decode("utf-8", errors="replace")
+                direction = SupportedFileCatalog.detect_text_direction(full_text, clean_rel)
                 lines = full_text.splitlines()
                 lines_count = len(lines)
 
@@ -452,6 +454,7 @@ class FileTreeService:
             is_binary=is_binary,
             lines_count=lines_count,
             language_id=language_id,
+            direction=direction,
             summary=summary_text,
             preview=preview_text,
             modified_at=mtime_str,

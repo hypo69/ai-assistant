@@ -17,11 +17,11 @@
  * Package: apps/ai_assistant/electron
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-11-07 00:55:00
+ * Updated: 2026-11-19 17:43:00
  * =============================================================================
  */
 
-const { app, BrowserWindow, ipcMain, shell, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -124,13 +124,13 @@ function loadSavedWorkspaceId() {
  * @param {string} wsId 
  */
 function saveActiveWorkspaceId(wsId) {
-  if (!wsId) return;
+  const cleanId = String(wsId || '').trim();
   try {
     const file = getStateFilePath();
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(
       file,
-      JSON.stringify({ active_workspace_id: wsId, updated_at: new Date().toISOString() }, null, 2),
+      JSON.stringify({ active_workspace_id: cleanId, updated_at: new Date().toISOString() }, null, 2),
       'utf-8'
     );
   } catch (err) {
@@ -142,8 +142,8 @@ function saveActiveWorkspaceId(wsId) {
     const appCfgPath = path.resolve(PROJECT_ROOT_DIR, 'apps', 'ai_assistant', 'config.json');
     if (fs.existsSync(appCfgPath)) {
       const cfg = JSON.parse(fs.readFileSync(appCfgPath, 'utf-8'));
-      cfg.active_workspace = wsId;
-      cfg.last_active_workspace = wsId;
+      cfg.active_workspace = cleanId;
+      cfg.last_active_workspace = cleanId;
       fs.writeFileSync(appCfgPath, JSON.stringify(cfg, null, 2), 'utf-8');
     }
   } catch (_) {}
@@ -265,14 +265,15 @@ function scanGitWorkspaces() {
 function updateApplicationMenu(selectedWsId = null) {
   const gitWorkspaces = scanGitWorkspaces();
 
-  if (selectedWsId) {
+  if (gitWorkspaces.length === 0) {
+    currentActiveWorkspaceId = '';
+    saveActiveWorkspaceId('');
+  } else if (selectedWsId && gitWorkspaces.some((w) => w.workspace_id === selectedWsId)) {
     currentActiveWorkspaceId = selectedWsId;
     saveActiveWorkspaceId(selectedWsId);
-  } else if (!currentActiveWorkspaceId) {
+  } else if (!currentActiveWorkspaceId || !gitWorkspaces.some((w) => w.workspace_id === currentActiveWorkspaceId)) {
     currentActiveWorkspaceId = resolveInitialActiveWorkspace(gitWorkspaces);
-    if (currentActiveWorkspaceId) {
-      saveActiveWorkspaceId(currentActiveWorkspaceId);
-    }
+    saveActiveWorkspaceId(currentActiveWorkspaceId);
   }
 
   const workspaceMenuItems = gitWorkspaces.length > 0
@@ -480,12 +481,15 @@ function createWindow() {
   });
 
   let targetUrl = BACKEND_URL;
-  if (!targetUrl.includes('workspace=') && currentActiveWorkspaceId) {
+  if (!currentActiveWorkspaceId) {
+    const base = targetUrl.split('#')[0].replace(/\/+$/, '');
+    targetUrl = `${base}/#tab-create-workspace`;
+  } else if (!targetUrl.includes('workspace=')) {
     const base = targetUrl.split('#')[0].replace(/\/+$/, '');
     targetUrl = `${base}/#tab-workspace#panel-chat#workspace=${encodeURIComponent(currentActiveWorkspaceId)}`;
   } else if (!targetUrl.includes('#')) {
     const base = targetUrl.split('#')[0].replace(/\/+$/, '');
-    targetUrl = `${base}/#tab-workspace#panel-chat`;
+    targetUrl = `${base}/#tab-create-workspace`;
   }
 
   mainWindow.loadURL(targetUrl);
@@ -631,6 +635,24 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    // Настройка безопасной политики Content Security Policy (CSP) для сессии
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      const headers = { ...details.responseHeaders };
+      delete headers['content-security-policy'];
+      delete headers['Content-Security-Policy'];
+      headers['Content-Security-Policy'] = [
+        "default-src 'self' 'unsafe-inline' data: blob:; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net blob:; " +
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "img-src 'self' data: blob: https: http:; " +
+        "font-src 'self' data: https://cdn.jsdelivr.net; " +
+        "connect-src 'self' http: https: ws: wss:; " +
+        "worker-src 'self' blob:; " +
+        "frame-src 'self' obsidian:;"
+      ];
+      callback({ responseHeaders: headers });
+    });
+
     createWindow();
     createTray();
 

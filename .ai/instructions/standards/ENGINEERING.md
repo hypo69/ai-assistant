@@ -4,7 +4,7 @@
 **Версия:** 1.2 (AI-Assistant Edition)  
 **Автор:** hypo69  
 **Copyright:** © 2026 hypo69  
-**Updated:** 2026-11-11 21:25:00
+**Updated:** 2026-11-15 19:55:00
 
 ---
 
@@ -229,10 +229,11 @@ def fetch_data():
 - Optional chaining `?.` и nullish coalescing `??` обязательны.
 - Типы JSDoc **MUST** указываться для публичных функций.
 
-### 4.3 HTML / CSS
+### 4.3 HTML / CSS и двухслойная архитектура WebGUI (`apps/ai_assistant/api/webgui` + `apps/common/webgui`)
 - CSS-классы используют `kebab-case`.
 - Строгое использование CSS-переменных активной темы (`var(--...)`) без хардкода HEX/RGB цветов.
-- **Строгий стандарт шаблонизации i18n (`WEBGUI.md` § 4):** все пользовательские строки в HTML размечаются через `data-i18n`, `data-i18n-title`, `data-i18n-placeholder` с уникальным `id` и строго токенами `{{key}}` вместо текста по умолчанию (нулевой хардкод; серверная подстановка через `apps/common/webgui/i18n_renderer.py`). Иконки `<i>` и обязательные маркеры `*` выносятся за пределы `span[data-i18n]`.
+- **Строгий стандарт шаблонизации i18n (`WEBGUI.md` § 4):** все пользовательские строки в HTML размечаются через `data-i18n`, `data-i18n-title`, `data-i18n-placeholder`, `data-i18n-aria-label` с уникальным `id` и строго токенами `{{key}}` (`title="{{key}}"`, `placeholder="{{key}}"`, `aria-label="{{key}}"`) вместо текста по умолчанию (нулевой хардкод; серверная подстановка через `apps/common/webgui/i18n_renderer.py`). Иконки `<i>` и обязательные маркеры `*` выносятся за пределы `span[data-i18n]`.
+- **Обязательный охват `apps/common/webgui`:** веб-интерфейс собирается из `apps/ai_assistant/api/webgui/` и общего слоя `apps/common/webgui/` (`SmartMultiDirStaticFiles`). Любая ревизия, аудит или модификация UI и словарей `locales/{ru,en,he,uk}.json` **MUST** охватывать и синхронизировать оба каталога.
 
 ---
 

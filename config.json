@@ -7,7 +7,7 @@
     },
     "server": {
         "host": "127.0.0.1",
-        "port": 8001,
+        "port": 8002,
         "protocol": "http",
         "title": "AI-Windows-Admin Windows Internal API",
         "description": "Сервис TC/Windows: телеметрия, дашборды, диагностика.",
@@ -21,13 +21,13 @@
         "enable_narrator": false,
         "preload_silero": false,
         "realtime_streaming": true,
-        "default_provider": "agy",
-        "default_model": "agy-gemini-3.1-flash-lite",
+        "default_provider": "gemini",
+        "default_model": "gemini-3.1-flash-lite",
         "providers": {
             "gemini": {
                 "enabled": true,
                 "api_key_names": "*",
-                "default_model": "gemini-3.5-flash",
+                "default_model": "gemini-3.1-flash-lite",
                 "unsupported_models": [
                     "agy-gemini-3.5-flash-lite",
                     "gemini-1.0-pro",
@@ -40,7 +40,7 @@
                     "gemini-2.5-pro",
                     "gemini-old"
                 ],
-                "model": "gemini-3.5-flash"
+                "model": "gemini-3.1-flash-lite"
             },
             "gemini_cli": {
                 "enabled": true,
@@ -52,14 +52,14 @@
             },
             "agy": {
                 "enabled": true,
-                "default_model": "agy-gemini-3.1-flash-lite",
+                "default_model": "agy-gemini-3.8-flash",
                 "effort": "medium",
                 "unsupported_models": [
                     "gemini-1.5-flash",
                     "gemini-2.0-flash",
                     "gemini-2.5-flash-lite"
                 ],
-                "model": "agy-gemini-3.1-flash-lite"
+                "model": "agy-gemini-3.8-flash"
             },
             "foundry": {
                 "enabled": false,
@@ -92,6 +92,22 @@
                 "enabled": false,
                 "model": "",
                 "unsupported_models": []
+            },
+            "local_bert": {
+                "enabled": true,
+                "mode": "per_language",
+                "default_model": "Xenova/multilingual-e5-small",
+                "per_language_models": {
+                    "ru": "TrendHD/rubert-tiny2-int8",
+                    "en": "Xenova/all-MiniLM-L6-v2",
+                    "he": "codewithkyrian/heBERT",
+                    "uk": "Xenova/multilingual-e5-small"
+                },
+                "execution_backend": "wasm",
+                "quantization": "q8",
+                "enable_intent_routing": true,
+                "enable_semantic_cache": true,
+                "semantic_cache_threshold": 0.9
             }
         }
     },
@@ -186,7 +202,6 @@
             "youtube_mp3"
         ],
         "disabled": [
-            "user_storage",
             "sqlite_db_viewer"
         ]
     },
@@ -205,7 +220,7 @@
         "upload_timeout_sec": 120,
         "retries": 3,
         "workspace_tag_prefix": "",
-        "runtime_dir": "paperless-ngx/runtime",
+        "runtime_dir": "docker",
         "autostart": true,
         "startup_timeout_sec": 180,
         "startup_poll_sec": 5,

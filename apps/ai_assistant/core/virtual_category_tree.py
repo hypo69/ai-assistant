@@ -22,7 +22,7 @@
 # Package: apps.ai_assistant.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-11-10 13:50:00
+# Updated: 2026-11-13 15:30:00
 # =============================================================================
 
 from __future__ import annotations
@@ -37,6 +37,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 from logger import logger
+from src.utils.jjson import j_dumps
 from apps.ai_assistant.core.workspace_relocator import WorkspaceRelocator
 
 if TYPE_CHECKING:
@@ -640,13 +641,8 @@ class VirtualCategoryTreeEngine:
             if not raw_resp:
                 return None
 
-            # Извлекаем JSON-блок из ответа модели
-            cleaned = raw_resp.strip()
-            if "```" in cleaned:
-                match = re.search(r"\{[\s\S]*\}", cleaned)
-                if match:
-                    cleaned = match.group(0)
-            parsed = json.loads(cleaned)
+            # Извлекаем JSON-блок из ответа модели через j_dumps
+            parsed = j_dumps(raw_resp, exc_info=False)
             if isinstance(parsed, dict) and isinstance(parsed.get("assignments"), dict):
                 self.wm.store.log_model_usage(
                     workspace_id=workspace_id,

@@ -1,0 +1,17 @@
+{
+  "id": "google",
+  "name": "Google Workspace Hub",
+  "version": "1.0.0",
+  "description": "Автономный микросервис интеграции с Google Workspace (Gmail, Calendar, Drive, Contacts) с интеллектуальной RAG-индексацией писем.",
+  "author": "hypo69",
+  "enabled": true,
+  "category": "productivity",
+  "entrypoint": "apps.google",
+  "api_prefix": "/api/v1/google",
+  "routes": [
+    "/api/v1/gmail",
+    "/api/v1/calendar",
+    "/api/v1/drive",
+    "/api/v1/contacts"
+  ]
+}
